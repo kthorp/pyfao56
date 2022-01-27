@@ -72,7 +72,7 @@ An example of the model output file is [here](https://github.com/kthorp/pyfao56/
 * To load data from a file: `upd.loadfile('myfilename.upd')`
 * To write data to a file: `upd.savefile('myfilename.upd')`
 * Instantiate a model class with updating (provide starting yyyy-ddd, ending yyyy-ddd and classes for Parameters, Weather, Irrigation, and Updates): `mdl = fao.Model('2019-108','2019-274', par, wth, irr, upd)`
-To run the model: `mdl.run()`
+* To run the model: `mdl.run()`
 
 An example of the update file format is [here](https://github.com/kthorp/pyfao56/tree/main/tests/test3/cotton2019.upd).
 
@@ -81,7 +81,7 @@ Further example scripts for setting up and running the model are [here](https://
 
 [test1](https://github.com/kthorp/pyfao56/tree/main/tests/test1) - The cottondry2013.py  and cottonwet2013.py modules contain code to setup and run pyfao56 for the water-limited and well-watered treatments for a 2013 cotton field study at Maricopa, Arizona.
 
-[test2](https://github.com/kthorp/pyfao56/tree/main/tests/test2) - The refet_testA.py module contains a function to compare the short crop reference evapotranspiration (ETo) calculation from the pyfao56 refet.py module with ETo reported by the AZMET station at Maricopa, Arizona for 2003 through 2020. The refet_testB.py module contains a function to compare the short crop reference evapotranspiration (ETo) and tall crop reference evapotranspiration (ETr) calculations from the pyfao56 refet.py module with ETo and ETr computed by Ref-ET software (University of Idaho) based on weather data from the AZMET station at Maricopa, Arizona for 2003 through 2020.
+[test2](https://github.com/kthorp/pyfao56/tree/main/tests/test2) - The refet_testA.py module contains a function to compare the short crop reference evapotranspiration (ETo) calculation from the pyfao56 refet.py module with ETo reported by the AZMET station at Maricopa, Arizona for 2003 through 2020. The refet_testB.py module contains a function to compare the short crop reference evapotranspiration (ETo) and tall crop reference evapotranspiration (ETr) calculations from the pyfao56 refet.py module with ETo and ETr computed by [Ref-ET software](https://www.uidaho.edu/cals/kimberly-research-and-extension-center/research/water-resources/ref-et-software) based on weather data from the AZMET station at Maricopa, Arizona for 2003 through 2020.
 
 [test3](https://github.com/kthorp/pyfao56/tree/main/tests/test3) - The updateKcb.py module contains a function to setup and run pyfao56 with basal crop coefficient (Kcb) updates for Zone 12-11 in a 2019 cotton field study at Maricopa, Arizona. The Kcb was estimated from fractional cover measurements based on weekly imagery from a small unoccupied aircraft system (sUAS).
 
