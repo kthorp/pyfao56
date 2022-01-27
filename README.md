@@ -37,7 +37,7 @@ The pyfao56 package contains a subpackage called [custom](https://github.com/kth
 * To load values from a file: `par.loadfile('myfilename.par')`
 * To write values to a file: `par.savefile('myfilename.par')`
 
-Examples of the parameter file format are [here](https://github.com/kthorp/pyfao56/tree/main/tests).
+An example of the parameter file format is [here](https://github.com/kthorp/pyfao56/tree/main/tests/test1/cotton2013.par).
 
 ### Define the weather information
 * Instantiate a weather data class: `wth = fao.Weather()`
@@ -46,10 +46,9 @@ Examples of the parameter file format are [here](https://github.com/kthorp/pyfao
 * To write data to a file: `wth.savefile('myfilename.wth')`
 * To compute daily reference ET for yyyy-ddd (4-digit year and day of year): `refet = wth.compute_etref('2021-150')`
 
-Examples of the weather file format are [here](https://github.com/kthorp/pyfao56/tree/main/tests).
+An examples of the weather file format is [here](https://github.com/kthorp/pyfao56/tree/main/tests/test1/cotton2013.wth).
 
-Users can customize loading of weather data with wth.customload()
-The azmet_maricopa.py module in the custom subpackage provides an example for developing a custom weather data class that inherits from Weather and overrides its customload() function.
+Users can customize loading of weather data with wth.customload(). The azmet_maricopa.py module in the custom subpackage provides an example for developing a custom weather data class that inherits from Weather and overrides its customload() function.
 
 ### Define the irrigation management information
 * Instantiate an irrigation data class: `irr = fao.Irrigation()`
@@ -58,7 +57,7 @@ The azmet_maricopa.py module in the custom subpackage provides an example for de
 * To write data to a file: `irr.savefile('myfilename.irr')`
 * To add an irrigation event (provide yyyy, ddd, depth in mm, and fw): `irr.addevent(2019, 249, 28.3, 1.00)`
 
-Examples of the irrigation file format are [here](https://github.com/kthorp/pyfao56/tree/main/tests).
+An example of the irrigation file format is [here](https://github.com/kthorp/pyfao56/tree/main/tests/test1/cottondry2013.irr).
 
 ### Run the daily soil water balance model
 * Instantiate a model class (provide starting yyyy-ddd, ending yyyy-ddd and classes for Parameters, Weather, and Irrigation): `mdl = fao.Model('2013-113','2013-312', par, wth, irr)`
@@ -66,7 +65,7 @@ Examples of the irrigation file format are [here](https://github.com/kthorp/pyfa
 * To print the output: `print(mdl)`
 * To save the output to file: `mdl.savefile('myoutputfile.out')`
 
-Examples of the model output file are [here](https://github.com/kthorp/pyfao56/tree/main/tests).
+An example of the model output file is [here](https://github.com/kthorp/pyfao56/tree/main/tests/test1/cottondry2013.out).
 
 ### Update basal crop coefficients (Kcb), crop height (h), or crop cover (fc)
 * Instantiate an update class: `upd = fao.Update()`
@@ -75,7 +74,7 @@ Examples of the model output file are [here](https://github.com/kthorp/pyfao56/t
 * Instantiate a model class with updating (provide starting yyyy-ddd, ending yyyy-ddd and classes for Parameters, Weather, Irrigation, and Updates): `mdl = fao.Model('2019-108','2019-274', par, wth, irr, upd)`
 To run the model: `mdl.run()`
 
-An example of the update file format is [here](https://github.com/kthorp/pyfao56/tree/main/tests).
+An example of the update file format is [here](https://github.com/kthorp/pyfao56/tree/main/tests/test3/cotton2019.upd).
 
 ## Further examples
 Further example scripts for setting up and running the model are [here](https://github.com/kthorp/pyfao56/tree/main/tests).
