@@ -20,7 +20,7 @@ The main pyfao56 package contains the following modules:
 
 The source code is available [here](http://github.com/kthorp/pyfao56/). It uses a basic object-oriented design with separate classes to make FAO-56 calculations and to manage parameter, weather, and irrigation management data. [Pandas](https://pandas.pydata.org/) data frames are used for data storage and management. Further documentation of the class structure is contained in the source files.
 
-The pyfao56 package contains a subpackage called [custom](https://github.com/kthorp/pyfao56/tree/main/pyfao56/custom). It contains modules for development of customized weather files using data from the Arizona Meteorological Network ([AZMET](https://ag.arizona.edu/azmet/)) station at Maricopa, Arizona and from the National Digital Forecast Database ([NDFD](https://graphical.weather.gov/xml/rest.php)). These modules were developed to facilitate irrigation management for field studies conducted at the Maricopa Agricultural Center. Users can follow this example to create customized weather tools for other weather data sources.
+The pyfao56 package contains a subpackage called [custom](https://github.com/kthorp/pyfao56/tree/main/src/pyfao56/custom). It contains modules for development of customized weather files using data from the Arizona Meteorological Network ([AZMET](https://ag.arizona.edu/azmet/)) station at Maricopa, Arizona and from the National Digital Forecast Database ([NDFD](https://graphical.weather.gov/xml/rest.php)). These modules were developed to facilitate irrigation management for field studies conducted at the Maricopa Agricultural Center. Users can follow this example to create customized weather tools for other weather data sources.
 
 ## Install
 `pip install pyfao56`
@@ -30,7 +30,7 @@ The pyfao56 package contains a subpackage called [custom](https://github.com/kth
 ### Import the package
 `import pyfao56 as fao`
 
-### Define the model parameters
+### Specify the model parameters
 * Instantiate a parameters class: `par = fao.Parameters()`
 * To print parameter values: `print(par)`
 * To adjust parameter values: `par.Kcbmid = 1.225`
@@ -39,7 +39,7 @@ The pyfao56 package contains a subpackage called [custom](https://github.com/kth
 
 An example of the parameter file format is [here](https://github.com/kthorp/pyfao56/tree/main/tests/test1/cotton2013.par).
 
-### Define the weather information
+### Specify the weather information
 * Instantiate a weather data class: `wth = fao.Weather()`
 * To print weather data: `print(wth)`
 * To load data from a file: `wth.loadfile('myfilename.wth')`
@@ -50,7 +50,7 @@ An examples of the weather file format is [here](https://github.com/kthorp/pyfao
 
 Users can customize loading of weather data with wth.customload(). The azmet_maricopa.py module in the custom subpackage provides an example for developing a custom weather data class that inherits from Weather and overrides its customload() function.
 
-### Define the irrigation management information
+### Specify the irrigation management information
 * Instantiate an irrigation data class: `irr = fao.Irrigation()`
 * To print irrigation data: `print(irr)`
 * To load data from a file: `irr.loadfile('myfilename.irr')`
