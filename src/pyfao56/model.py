@@ -32,21 +32,64 @@ class Model:
 
     Attributes
     ----------
-    start : str
-        Simulation start year and doy ('yyyy-ddd')
-    end : str
-        Simulation end year and doy ('yyyy-ddd')
-    par : pyfao56 Parameters object
+    startDate : datetime
+        Simulation start date in datetime format
+    end : datetime
+        Simulation end date in datetime format
+    par : pyfao56 Parameters class
         Provides the parameter data for simulations
-    wth : pyfao56 Weather object
+    wth : pyfao56 Weather class
         Provides the weather data for simulations
-    irr : pyfao56 Irrigation object
+    irr : pyfao56 Irrigation class
         Provides the irrigation data for simulations
-    upd : pyfao56 Update object, optional
+    upd : pyfao56 Updateclass, optional
         Provides data and methods for state variable updating
         (default = None)
-    ModelClass : Class
+    ModelState : class
         Contains parameters and model states for a single timestep
+    cnames : list
+        Column names for odata
+    odata : DataFrame
+        Model output data as float
+        index - Year and day of year as string ('yyyy-ddd')
+        columns - ['Year','DOY','DOW','Date','ETref','Kcb','h','Kcmax',
+                   'fc','fw','few','De','Kr','Ke','E','DPe','Kc','ETc',
+                   'TAW','Zr','p','RAW','Ks','ETcadj','T','DP','Dr',
+                   'PerDr','Irrig','Rain','Year','DOY','DOW','Date']
+            Year   - 4-digit year (yyyy)
+            DOY    - Day of year (ddd)
+            DOW    - Day of week
+            Date   - Month/Day/Year (mm/dd/yy)
+            ETref  - Daily reference evapotranspiration (mm)
+            Kcb    - Basal crop coefficient
+            h      - Plant height (m)
+            Kcmax  - Upper limit crop coefficient, FAO-56 Eq. 72
+            fc     - Canopy cover fraction, FAO-56 Eq. 76
+            fw     - Fraction soil surface wetted, FAO-56 Table 20
+            few    - Exposed & wetted soil fraction, FAO-56 Eq. 75
+            De     - Cumulative depth of evaporation, FAO-56 Eqs. 77&78
+            Kr     - Evaporation reduction coefficient, FAO-56 Eq. 74
+            Ke     - Evaporation coefficient, FAO-56 Eq. 71
+            E      - Soil water evaporation (mm), FAO-56 Eq. 69
+            DPe    - Percolation under exposed soil (mm), FAO-56 Eq. 79
+            Kc     - Crop coefficient, FAO-56 Eq. 69
+            ETc    - Non-stressed crop ET (mm), FAO-56 Eq. 69
+            TAW    - Total available water (mm), FAO-56 Eq. 82
+            Zr     - Root depth (m), FAO-56 page 279
+            p      - Fraction depleted TAW, FAO-56 p162 and Table 22
+            RAW    - Readily available water (mm), FAO-56 Equation 83
+            Ks     - Transpiration reduction factor, FAO-56 Eq. 84
+            ETcadj - Adjusted crop ET (mm), FAO-56 Eq. 80
+            T      - Adjusted crop transpiration (mm)
+            DP     - Deep percolation (mm), FAO-56 Eq. 88
+            Dr     - Soil water depletion (mm), FAO-56 Eqs. 85 & 86
+            PerDr  - Percent root zone soil water depletion (%)
+            Irrig  - Depth of irrigation (mm)
+            Rain   - Depth of precipitation (mm)
+            Year   - 4-digit year (yyyy)
+            DOY    - Day of year (ddd)
+            DOW    - Day of week
+            Date   - Month/Day/Year (mm/dd/yy)
 
     Methods
     -------
@@ -281,7 +324,7 @@ class Model:
         io.Kcmax = max([1.2+(0.04*(u2-2.0)-0.004*(rhmin-45.0))*
                         (io.h/3.0)**.3, io.Kcb+0.05])
 
-        #Canopy cover (fc, 0.0-0.99) - FAO-56 Eq. 76
+        #Canopy cover fraction (fc, 0.0-0.99) - FAO-56 Eq. 76
         io.fc = sorted([0.0,((io.Kcb-io.Kcbini)/(io.Kcmax-io.Kcbini))**
                         (1.0+0.5*io.h),0.99])[1]
         if io.updfc > 0: io.fc = io.updfc
@@ -331,7 +374,7 @@ class Model:
         #Readily available water (RAW, mm) - FAO-56 Equation 83
         io.RAW = io.p * io.TAW
 
-        #Transpiration reduction factor (Ks, mm) - FAO-56 Eq. 84
+        #Transpiration reduction factor (Ks, 0.0-1.0) - FAO-56 Eq. 84
         io.Ks = sorted([0.0, (io.TAW-io.Dr)/(io.TAW-io.RAW), 1.0])[1]
 
         #Adjusted crop evapotranspiration (ETcadj, mm) - FAO-56 Eq. 80

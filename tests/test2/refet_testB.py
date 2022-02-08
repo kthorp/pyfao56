@@ -90,6 +90,9 @@ def run(start='2003-001',end='2020-366'):
     pyfaoETo = np.array(pyfaoETo)
     refetETr = np.array(refetETr)
     pyfaoETr = np.array(pyfaoETr)
+    conc = np.concatenate(([refetETo],[pyfaoETo],
+                           [refetETr],[pyfaoETr]),axis=0)
+    np.savetxt("outputB.csv",conc.transpose(),delimiter=',')
 
     rmseETo = np.sqrt(np.mean((refetETo-pyfaoETo)**2))
     rmseETr = np.sqrt(np.mean((refetETr-pyfaoETr)**2))

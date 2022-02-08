@@ -76,6 +76,8 @@ def run(start='2003-001',end='2020-366'):
 
     azmetETo = np.array(azmetETo)
     pyfaoETo = np.array(pyfaoETo)
+    conc = np.concatenate(([azmetETo],[pyfaoETo]),axis=0)
+    np.savetxt("outputA.csv",conc.transpose(),delimiter=',')
 
     rmse = np.sqrt(np.mean((azmetETo-pyfaoETo)**2))
 

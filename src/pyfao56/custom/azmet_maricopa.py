@@ -39,6 +39,8 @@ class AzmetMaricopa(Weather):
         Weather station latitude (decimal degrees)
     wndht : float
         Weather station wind speed measurement height (m)
+    cnames : list
+        Column names for wdata
     wdata : DataFrame
         Weather data as float
         index - Year and day of year as string ('yyyy-ddd')
