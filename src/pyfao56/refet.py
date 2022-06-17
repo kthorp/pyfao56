@@ -90,16 +90,16 @@ def ascedaily(rfcrp,z,lat,doy,israd,tmax,tmin,
     es = (emax+emin)/2.0
 
     #ea (float): Actual vapor pressure (kPa) ASCE (2005) Table 3
-    if tdew is not float('NaN'):
+    if not math.isnan(tdew):
         #ASCE (2005) Eq. 8
         ea = 0.6108*math.exp((17.27*tdew)/(tdew+237.3))
-    elif rhmax is not float('NaN') and rhmin is not float('NaN'):
+    elif not math.isnan(rhmax) and not math.isnan(rhmin):
         #ASCE (2005) Eq. 11
         ea = (emin*rhmax/100. + emax*rhmin/100.)/2.0
-    elif rhmax is not float('NaN'):
+    elif not math.isnan(rhmax):
         #ASCE (2005) Eq. 12
         ea = emin*rhmax/100.
-    elif rhmin is not float('NaN'):
+    elif not math.isnan(rhmin):
         #ASCE (2005) Eq. 13
         ea = emax*rhmin/100.
     else:
@@ -143,7 +143,7 @@ def ascedaily(rfcrp,z,lat,doy,israd,tmax,tmin,
 
     #u2 (float) : Wind profile relationship (m s^-1)
     #ASCE (2005) Eq. 33 and Appendix E
-    if wndsp is float('NaN'): wndsp = 2.0
+    if math.isnan(wndsp): wndsp = 2.0
     u2 = wndsp * (4.87/math.log(67.8*wndht-5.42))
 
     #Aerodynamic roughness and surface resistance constants

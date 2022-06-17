@@ -232,14 +232,14 @@ class Model:
 
             #Update ModelState object
             io.ETref = self.wth.wdata.loc[mykey,'ETref']
-            if io.ETref is float('NaN'):
+            if math.isnan(io.ETref):
                 io.ETref = self.wth.compute_etref(mykey)
             io.rain = self.wth.wdata.loc[mykey,'Rain']
             io.wndsp = self.wth.wdata.loc[mykey,'Wndsp']
-            if io.wndsp is float('NaN'):
+            if math.isnan(io.wndsp):
                 io.wndsp = 2.0
             io.rhmin = self.wth.wdata.loc[mykey,'RHmin']
-            if io.rhmin is float('NaN'):
+            if math.isnan(io.rhmin):
                 tmax = self.wth.wdata.loc[mykey,'Tmax']
                 tdew = self.wth.wdata.loc[mykey,'Tmin']
                 emax = 0.6108*math.exp((17.27*io.tmax)/
@@ -247,7 +247,7 @@ class Model:
                 ea   = 0.6108*math.exp((17.27*io.tdew)/
                                        (io.tdew+237.3))
                 io.rhmin = ea/emax*100.
-            if io.rhmin is float('NaN'):
+            if math.isnan(io.rhmin):
                 io.rhmin = 45.
             if mykey in self.irr.idata.index:
                 io.idep = self.irr.idata.loc[mykey,'Depth']
