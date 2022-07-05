@@ -327,8 +327,6 @@ class Model:
                             (io.h/3.0)**.3, io.Kcb+0.05])
         elif io.rfcrp == 'T':
             io.Kcmax = max([1.0, io.Kcb + 0.05])
-        else:
-            print(f"The reference crop is set at {io.rfcrp}, but it should be 'S' or 'T'. Please rerun the model.")
 
         #Canopy cover fraction (fc, 0.0-0.99) - FAO-56 Eq. 76
         io.fc = sorted([0.0,((io.Kcb-io.Kcbini)/(io.Kcmax-io.Kcbini))**
