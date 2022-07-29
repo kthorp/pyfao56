@@ -226,6 +226,7 @@ class Model:
         io.fw = 1.0
         io.wndht = self.wth.wndht
         self.odata = pd.DataFrame(columns=self.cnames)
+        io.rfcrp = self.wth.rfcrp
 
         while tcurrent <= self.endDate:
             mykey = tcurrent.strftime('%Y-%j')
@@ -321,8 +322,11 @@ class Model:
         u2 = io.wndsp * (4.87/math.log(67.8*io.wndht-5.42))
         u2 = sorted([1.0,u2,6.0])[1]
         rhmin = sorted([20.0,io.rhmin,80.])[1]
-        io.Kcmax = max([1.2+(0.04*(u2-2.0)-0.004*(rhmin-45.0))*
-                        (io.h/3.0)**.3, io.Kcb+0.05])
+        if io.rfcrp == 'S':
+            io.Kcmax = max([1.2+(0.04*(u2-2.0)-0.004*(rhmin-45.0))*
+                            (io.h/3.0)**.3, io.Kcb+0.05])
+        elif io.rfcrp == 'T':
+            io.Kcmax = max([1.0, io.Kcb + 0.05])
 
         #Canopy cover fraction (fc, 0.0-0.99) - FAO-56 Eq. 76
         io.fc = sorted([0.0,((io.Kcb-io.Kcbini)/(io.Kcmax-io.Kcbini))**
