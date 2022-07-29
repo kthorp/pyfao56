@@ -225,8 +225,8 @@ class Model:
         io.Zr = io.Zrini
         io.fw = 1.0
         io.wndht = self.wth.wndht
-        self.odata = pd.DataFrame(columns=self.cnames)
         io.rfcrp = self.wth.rfcrp
+        self.odata = pd.DataFrame(columns=self.cnames)
 
         while tcurrent <= self.endDate:
             mykey = tcurrent.strftime('%Y-%j')
