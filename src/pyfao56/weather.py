@@ -9,6 +9,7 @@ The weather.py module contains the following:
 
 01/07/2016 Initial Python functions developed by Kelly Thorp
 11/04/2021 Finalized updates for inclusion in the pyfao56 Python package
+08/03/2022 Added an input variable for measured vapor pressure
 ########################################################################
 """
 
@@ -33,11 +34,12 @@ class Weather:
     wdata : DataFrame
         Weather data as float
         index - Year and day of year as string ('yyyy-ddd')
-        columns - ['Srad','Tmax','Tmin','Tdew','RHmax','RHmin',
+        columns - ['Srad','Tmax','Tmin','Vapr','Tdew','RHmax','RHmin',
                    'Wndsp','Rain','ETref','MorP']
             Srad  - Incoming solar radiation (MJ/m2)
             Tmax  - Daily maximum air temperature (deg C)
             Tmin  - Daily minimum air temperature (deg C)
+            Vapr  - Daily average vapor pressure (kPa)
             Tdew  - Daily average dew point temperature (deg C)
             RHmax - Daily maximum relative humidity (%)
             RHmin - Daily minimum relative humidity (%)
@@ -75,8 +77,8 @@ class Weather:
         self.z     = float('NaN')
         self.lat   = float('NaN')
         self.wndht = float('NaN')
-        self.cnames = ['Srad','Tmax','Tmin','Tdew','RHmax','RHmin',
-                       'Wndsp','Rain','ETref','MorP']
+        self.cnames = ['Srad','Tmax','Tmin','Vapr','Tdew','RHmax',
+                       'RHmin','Wndsp','Rain','ETref','MorP']
         self.wdata = pd.DataFrame(columns=self.cnames)
 
         if filepath is not None:
@@ -87,9 +89,10 @@ class Weather:
 
         fmts = {'Srad':'{:6.2f}'.format,'Tmax':'{:6.2f}'.format,
                 'Tmin':'{:6.2f}'.format,'Tdew':'{:6.2f}'.format,
-                'RHmax':'{:6.2f}'.format,'RHmin':'{:6.2f}'.format,
-                'Wndsp':'{:6.2f}'.format,'Rain':'{:6.2f}'.format,
-                'ETref':'{:6.2f}'.format,'MorP':'{:>5s}'.format }
+                'Vapr':'{:6.2f}'.format,'RHmax':'{:6.2f}'.format,
+                'RHmin':'{:6.2f}'.format,'Wndsp':'{:6.2f}'.format,
+                'Rain':'{:6.2f}'.format,'ETref':'{:6.2f}'.format,
+                'MorP':'{:>5s}'.format }
         ast='*'*72
         s = ('{:s}\n'
              'pyfao56: FAO-56 in Python\n'
@@ -156,16 +159,15 @@ class Weather:
             self.lat = float(lines[6][:12])
             self.wndht = float(lines[7][:12])
             self.wdata = pd.DataFrame(columns=self.cnames)
-            data = []
             for line in lines[11:]:
                 line = line.strip().split()
                 year = line[0][:4]
                 doy = line[0][-3:]
                 key = '{:04d}-{:03d}'.format(int(year),int(doy))
-                data[:] = []
-                for i in list(range(1,10)):
+                data = list()
+                for i in list(range(1,11)):
                     data.append(float(line[i]))
-                data.append(line[10].strip())
+                data.append(line[11].strip())
                 self.wdata.loc[key] = data
 
     def customload(self):
@@ -195,6 +197,7 @@ class Weather:
                                 self.wdata.loc[index,'Srad'],
                                 self.wdata.loc[index,'Tmax'],
                                 self.wdata.loc[index,'Tmin'],
+                                self.wdata.loc[index,'Vapr'],
                                 self.wdata.loc[index,'Tdew'],
                                 self.wdata.loc[index,'RHmax'],
                                 self.wdata.loc[index,'RHmin'],

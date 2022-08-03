@@ -20,13 +20,16 @@ The refet.py module contains the following:
 
 01/07/2016 Initial Python script by Kelly Thorp
 11/04/2021 Finalized updates for inclusion in pyfao56 Python package
+08/01/2022 Added the ASCE hourly reference ET algorithm
+08/03/2022 Added functionality to input vapor pressure
 ########################################################################
 """
 
 import math
 
 def ascedaily(rfcrp,z,lat,doy,israd,tmax,tmin,
-              tdew=float('NaN'),rhmax=float('NaN'),rhmin=float('NaN'),
+              vapr=float('NaN'),tdew=float('NaN'),
+              rhmax=float('NaN'),rhmin=float('NaN'),
               wndsp=float('NaN'),wndht=2.0):
     """Compute daily ASCE Standardized Reference Evapotranspiration
 
@@ -47,6 +50,8 @@ def ascedaily(rfcrp,z,lat,doy,israd,tmax,tmin,
         Daily maximum air temperature (deg C)
     tmin : float
         Daily minimum air temperature (deg C)
+    vapr : float, optional (but recommended)
+        Daily average vapor pressure (kPa) (default = NaN)
     tdew : float, optional (but recommended)
         Daily average dew point temperature (deg C) (default = NaN)
     rhmax : float, optional
@@ -90,7 +95,10 @@ def ascedaily(rfcrp,z,lat,doy,israd,tmax,tmin,
     es = (emax+emin)/2.0
 
     #ea (float): Actual vapor pressure (kPa) ASCE (2005) Table 3
-    if not math.isnan(tdew):
+    if not math.isnan(vapr):
+        #ASCE (2005) Table 3
+        ea = vapr
+    elif not math.isnan(tdew):
         #ASCE (2005) Eq. 8
         ea = 0.6108*math.exp((17.27*tdew)/(tdew+237.3))
     elif not math.isnan(rhmax) and not math.isnan(rhmin):
@@ -162,7 +170,7 @@ def ascedaily(rfcrp,z,lat,doy,israd,tmax,tmin,
 
     return etsz
 
-def ascehourly(rfcrp,z,lat,lon,lzn,doy,sct,israd,tavg,
+def ascehourly(rfcrp,z,lat,lon,lzn,doy,sct,israd,tavg,vapr=float('NaN'),
                tdew=float('NaN'),rhum=float('NaN'),tmin=float('NaN'),               wndsp=float('NaN'),wndht=2.0,tl=1.0,csreq='D',fcdpt=1.0):
     """Compute hourly ASCE Standardized Reference Evapotranspiration
 
@@ -188,6 +196,8 @@ def ascehourly(rfcrp,z,lat,lon,lzn,doy,sct,israd,tavg,
         Incoming solar radiation (MJ m^-2 d^-1)
     tavg : float
         Average air temperature (deg C)
+    vapr : float, optional (but recommended)
+        Average vapor pressure (kPa) (default = NaN)
     tdew : float, optional (but recommended)
         Average dew point temperature (deg C) (default = NaN)
     rhum : float, optional
@@ -233,7 +243,10 @@ def ascehourly(rfcrp,z,lat,lon,lzn,doy,sct,israd,tavg,
     es = 0.6108*math.exp((17.27*tavg)/(tavg+237.3))
 
     #ea (float): Actual vapor pressure (kPa) ASCE (2005) Table 4
-    if not math.isnan(tdew):
+    if not math.isnan(vapr):
+        #ASCE (2005) Table 4
+        ea = vapr
+    elif not math.isnan(tdew):
         #ASCE (2005) Eq. 38
         ea = 0.6108*math.exp((17.27*tdew)/(tdew+237.3))
     elif not math.isnan(rhum):

@@ -134,6 +134,7 @@ def run(start='2003-001',end='2020-366'):
                                      row[2]-.5, #sct
                                      row[3], #israd
                                      row[4], #tavg
+                                     float('NaN'), #vapr
                                      row[5], #tdew
                                      row[6], #rhum
                                      float('NaN'), #tmin
@@ -148,6 +149,7 @@ def run(start='2003-001',end='2020-366'):
                                      row[2]-.5, #sct
                                      row[3], #israd
                                      row[4], #tavg
+                                     float('NaN'), #vapr
                                      row[5], #tdew
                                      row[6], #rhum
                                      float('NaN'), #tmin
