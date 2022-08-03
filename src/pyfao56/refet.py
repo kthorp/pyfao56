@@ -211,7 +211,7 @@ def ascehourly(rfcrp,z,lat,lon,lzn,doy,sct,israd,tavg,
     etsz : float
         Hourly standardized reference evapotranspiration for the
         short or tall reference crop (mm)
-    fcd : Cloudiness value for use in nighttime calculations
+    fcd : Cloudiness value for possible use in next timestep
     """
 
     #patm (float) : Mean atmospheric pressure at weather station (kPa)
@@ -254,7 +254,7 @@ def ascehourly(rfcrp,z,lat,lon,lzn,doy,sct,israd,tavg,
     dr = 1.0+0.033*math.cos(2.0*math.pi/365.0*doy) #Eq. 50
     ldelta = 0.409*math.sin(2.0*math.pi/365.0*doy-1.39) #Eq. 51
     b = 2.0*math.pi*(doy-81.0)/364.0 #Eq. 58
-    sc = 0.1645*math.sin(2.0*b)-0.1255*math.cos(b)-0.025*sin(b) #Eq. 57
+    sc = 0.1645*math.sin(2.0*b)-0.1255*math.cos(b)-0.025*math.sin(b) #57
     wmid = math.pi/12.0*((sct+0.06667*(lzn-lon)+sc)-12.) #Eq. 55
     w1 = wmid-math.pi*tl/24.0 #Eq. 53
     w2 = wmid+math.pi*tl/24.0 #Eq. 54
@@ -278,26 +278,26 @@ def ascehourly(rfcrp,z,lat,lon,lzn,doy,sct,israd,tavg,
     beta1 = math.sin(latrad)*math.sin(ldelta)
     beta2 = math.cos(latrad)*math.cos(ldelta)*math.cos(wmid)
     beta = math.asin(beta1+beta2) #Eq. 62 or D.6
-    if csreq == 'S'
+    if csreq == 'S':
         rso = (0.75+2e-5*z)*ra #Eq. 47
     else:
-        pwat = 0.14*ea*patm+2.1 #Eq. D.3
-        kt = 1.0
-        kb1 = -0.00146*patm/(kt*math.sin(beta))
-        kb2 = 0.075*(pwat/sin(beta))**0.4)
-        kb = 0.98*math.exp(kb1-kb2) #Eq. D.2
-        if kb >= 0.15:
-            kd = 0.35-0.36*kb #Eq. D.4
-        else:
-            kd = 0.18+0.82*kb #Eq. D.4
-        if wmid < -1.0*ws or wmid > ws:
+        if beta < 0.3:
             rso = 0.0
         else:
+            pwat = 0.14*ea*patm+2.1 #Eq. D.3
+            kt = 1.0
+            kb1 = -0.00146*patm/(kt*math.sin(beta))
+            kb2 = 0.075*(pwat/math.sin(beta))**0.4
+            kb = 0.98*math.exp(kb1-kb2) #Eq. D.2
+            if kb >= 0.15:
+                kd = 0.35-0.36*kb #Eq. D.4
+            else:
+                kd = 0.18+0.82*kb #Eq. D.4
             rso = (kb + kd)*ra #Eq. D.1
 
     #rnl (float) : Net longwave radiation (MJ m^-2 h^-1)
     #ASCE (2005) Eqs. 44, 45, and 62
-    if beta < 0.3 or rso == 0.0: #nighttime
+    if beta < 0.3 or rso <= 0.0: #nighttime
         fcd = fcdpt
     else: #daytime
         ratio = sorted([0.3,israd/rso,1.0])[1] #Eq. 45

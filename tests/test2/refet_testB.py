@@ -1,7 +1,7 @@
 """
 ########################################################################
-The refet_testB.py module contains a function to compare the short crop
-reference evapotranspiration (ETo) and tall crop reference
+The refet_testB.py module contains a function to compare the daily short
+crop reference evapotranspiration (ETo) and daily tall crop reference
 evapotranspiration (ETr) calculations from the pyfao56 refet.py module
 with ETo and ETr computed by Ref-ET software (University of Idaho) based
 on weather data from the Arizona Meteorological Network (AZMET) station
@@ -9,7 +9,7 @@ at Maricopa, Arizona for 2003 through 2020.
 
 The refet_testB.py module contains the following:
     run - function to compute the root mean squared error (RMSE) between
-    reference ET from pyfao56 and that from Ref-ET software
+    daily reference ET from pyfao56 and that from Ref-ET software
 
 12/02/2021 Scripts developed for comparing ET from pyfao56 and Ref-ET
 ########################################################################
@@ -23,7 +23,7 @@ import pandas as pd
 import numpy as np
 
 def run(start='2003-001',end='2020-366'):
-    """Compare ETo and ETr from pyfao56 and Ref-ET software
+    """Compare daily ETo and ETr from pyfao56 and Ref-ET software
 
     Parameters
     ----------

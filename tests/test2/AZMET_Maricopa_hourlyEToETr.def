@@ -1,0 +1,22 @@
+ 63(1,4) 64(6,8) 60(10,11) 13(12,18) 7(19,25) 17(26,32) 21(33,39) 29(40,46) 56(47,53) 0(54,60) 0(61,67)
+3,1.5,361,33.068941,111.972244
+2,1,-999
+1.25,.5,.12,.12,1000
+ .. 
+Longitude of timezone needed for hourly data)and Output flags:
+105
+0,0,2,1,1,1,0,1,0
+0,0,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0 
+1,.16,0,1,2,1,0,90
+aaaaaaaba, <--delimiter code.  The next line contains 24hr, daytime, &nighttime rs for alfalfa and for grass
+45,30,200,70,50,200
+
+This definition file is named:
+"C:\Users\Kelly.Thorp\Desktop\AZMET_Maricopa_hourlyEToETr.def"
+This definition file is used to read data file:
+"C:\Users\Kelly.Thorp\Desktop\AZMET_Maricopa_hourlyEToETr.txt"
+
+This definition file was created by and is used by program REF-ET Windows Ver 3.1
+NOTE:  It is important that you do not change the order or structure
+       of this definition file.  Otherwise, REF-ET may have difficulty
+       reading it the next time it is utilized.
