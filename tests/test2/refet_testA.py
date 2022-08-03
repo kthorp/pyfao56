@@ -81,7 +81,7 @@ def run(start='2003-001',end='2020-366'):
 
     rmse = np.sqrt(np.mean((azmetETo-pyfaoETo)**2))
 
-    s  = 'The RMSE between pyfao56 ETo and AZMET ETo is '
+    s  = 'The RMSE between pyfao56 ETo and AZMET ETo is ' #0.049 mm
     s += '{:6.3f} mm.'.format(rmse)
     print(s)
 

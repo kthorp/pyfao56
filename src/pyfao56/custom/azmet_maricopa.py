@@ -49,6 +49,7 @@ class AzmetMaricopa(Weather):
             Srad  - Incoming solar radiation (MJ/m2)
             Tmax  - Daily maximum air temperature (deg C)
             Tmin  - Daily minimum air temperature (deg C)
+            Vapr  - Daily average vapor pressure (kPa)
             Tdew  - Daily average dew point temperature (deg C)
             RHmax - Daily maximum relative humidity (%)
             RHmin - Daily minimum relative humidity (%)
@@ -113,6 +114,7 @@ class AzmetMaricopa(Weather):
                     mydict.update({'Tmax':float(line[3])})
                 if -15.0 <= float(line[4]) <= 40.0:
                     mydict.update({'Tmin':float(line[4])})
+                mydict.update({'Vapr':float('NaN')})
                 if year >= 2003:
                     if -50.0 <= float(line[27]) <= 50.0:
                         mydict.update({'Tdew':float(line[27])})
@@ -135,7 +137,8 @@ class AzmetMaricopa(Weather):
                     mydict.update({'Rain':float(line[11])})
                 azmet.append(mydict)
         azmet = pd.DataFrame(azmet)
-        nanrows = azmet.isna().any(1).to_numpy().nonzero()[0]
+        lessvapr = azmet.drop('Vapr', axis=1)
+        nanrows = lessvapr.isna().any(1).to_numpy().nonzero()[0]
         for item in nanrows:
             mykey = azmet.loc[item,'Date']
             print('Warning: Questionable weather data: ' + mykey)
@@ -210,7 +213,8 @@ class AzmetMaricopa(Weather):
             self.wdata.loc[index,'ETref'] = etref
 
         #Check for NaN
-        nanrows = self.wdata.isna().any(1).to_numpy().nonzero()[0]
+        lessvapr = self.wdata.drop('Vapr', axis=1)
+        nanrows = lessvapr.isna().any(1).to_numpy().nonzero()[0]
         if len(nanrows) > 0:
             print('There were problems with the following records:')
             for item in nanrows:

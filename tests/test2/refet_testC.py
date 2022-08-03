@@ -249,10 +249,10 @@ def run(start='2003-001',end='2020-366'):
     rmseETo = np.sqrt(np.mean((refetETo-pyfaoETo)**2))
     rmseETr = np.sqrt(np.mean((refetETr-pyfaoETr)**2))
 
-    s  = 'The RMSE between pyfao56 ETo and Ref-ET ETo is '
+    s  = 'The RMSE between pyfao56 ETo and Ref-ET ETo is ' #0.057 mm
     s += '{:6.3f} mm.'.format(rmseETo)
     print(s)
-    s  = 'The RMSE between pyfao56 ETr and Ref-ET ETr is '
+    s  = 'The RMSE between pyfao56 ETr and Ref-ET ETr is ' #0.070 mm
     s += '{:6.3f} mm.'.format(rmseETr)
     print(s)
 
