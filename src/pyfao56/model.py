@@ -42,9 +42,12 @@ class Model:
         Provides the weather data for simulations
     irr : pyfao56 Irrigation class
         Provides the irrigation data for simulations
-    upd : pyfao56 Updateclass, optional
+    upd : pyfao56 Update class, optional
         Provides data and methods for state variable updating
         (default = None)
+    swc : pyfao56 SoilWater class, optional
+        Provides data for modeling with stratified soil layers and a
+        projected root zone curve for the whole season (default = None)
     ModelState : class
         Contains parameters and model states for a single timestep
     cnames : list
@@ -97,7 +100,7 @@ class Model:
         Conduct the FAO-56 calculations from start to end
     """
 
-    def __init__(self,start, end, par, wth, irr, upd=None):
+    def __init__(self,start, end, par, wth, irr, upd=None, swc=None):
         """Initialize the Model class attributes.
 
         Parameters
@@ -115,6 +118,10 @@ class Model:
         upd : pyfao56 Update object, optional
             Provides data and methods for state variable updating
             (default = None)
+        swc : pyfao56 Soil Water object, optional
+            Provides data for modeling with stratified soil layers and
+            a projected root zone curve for the whole season
+            (default = None)
         """
 
         self.startDate = datetime.datetime.strptime(start, '%Y-%j')
@@ -123,6 +130,7 @@ class Model:
         self.wth = wth
         self.irr = irr
         self.upd = upd
+        self.swc = swc
         self.cnames = ['Year','DOY','DOW','Date','ETref','Kcb','h',
                        'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
                        'Kc','ETc','TAW','Zr','p','RAW','Ks','ETcadj',
@@ -215,6 +223,13 @@ class Model:
         io.pbase   = self.par.pbase
         io.Ze      = self.par.Ze
         io.REW     = self.par.REW
+        # Switch to unpack thetaFC and theta0 from soil water class
+        if self.swc.soil_water_profile is not None:
+            all_thetas_list = list(self.swc.soil_water_profile.values())
+            first_layer_thetas = all_thetas_list[0]
+            io.thetaFC = first_layer_thetas[0]
+            io.theta0 = first_layer_thetas[1]
+            io.thetaWP = first_layer_thetas[2]
         #Total evaporable water (TEW, mm) - FAO-56 Equation 73
         io.TEW = 1000.0 * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
         #Initial depth of evaporation (De, mm) - FAO-56 page 153
@@ -314,6 +329,10 @@ class Model:
                     (io.Kcbmid-io.Kcbini),0.001,io.h])
         if io.updh > 0: io.h = io.updh
 
+        # Root depth (Zr, m) - FAO-56 page 279
+        io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*(io.Kcb-
+                                                     io.Kcbini)/
+                 (io.Kcbmid-io.Kcbini),0.001,io.Zr])
         #Root depth (Zr, m) - FAO-56 page 279
         io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*(io.Kcb-io.Kcbini)/
                      (io.Kcbmid-io.Kcbini),0.001,io.Zr])
@@ -369,8 +388,56 @@ class Model:
         #Non-stressed crop evapotranspiration (ETc, mm) - FAO-56 Eq. 69
         io.ETc = io.Kc * io.ETref
 
-        #Total available water (TAW, mm) - FAO-56 Eq. 82
-        io.TAW = 1000.0 * (io.thetaFC - io.thetaWP) * io.Zr
+        # A switch that allows user to use soil water class for TAW
+        if self.swc.soil_water_profile is not None:
+            # For loop to generate list of layers to use at each stage
+            layers_to_use = []
+            for index, depth in enumerate(self.swc.depths):
+                # When the root zone is greater than or equal the maximum
+                # provided depth, all depths are used.
+                if io.Zr >= max(self.swc.depths):
+                    layers_to_use = self.swc.depths
+                # When the root zone is not greater than or equal to the
+                # maximum provided depth, we should figure out which
+                # layers to use in our analysis.
+                else:
+                    # Getting the tuple with info about the layer
+                    tup_depth = self.swc.soil_water_profile[depth]
+                    # Getting the start of the layer
+                    start_layer = (tup_depth[3][0])
+                    # Getting the end of the layer
+                    stop_layer = (tup_depth[3][1])
+                    # Setting a variable to the next layer
+                    next_depth = index + 1
+                    if (start_layer <= io.Zr) and (io.Zr <= stop_layer):
+                        if index == 0:
+                            layers_list = [self.swc.depths[index]]
+                        else:
+                            layers_list = self.swc.depths[:next_depth]
+                        layers_to_use += layers_list
+
+            # For loop to calculate SWD in layer of the soil the root
+            # zone currently passes through
+            taw_by_layer = []
+            # Looping through layers_to_use list generated above
+            for layer in layers_to_use:
+                # Retrieving the layer information from the soil water
+                # dictionary
+                layer_info = self.swc.soil_water_profile[layer]
+                # Setting variable for the layer's thetaFC
+                thetaFC = layer_info[0]
+                # Setting variable for the layer's wilting point
+                thetaWP = layer_info[2]
+                # Calculating TAW (mm) in the layer
+                layer_taw = 1000.0 * (thetaFC - thetaWP) * io.Zr
+                # Adding TAW of the layer to list of TAW for layers used
+                taw_by_layer += [layer_taw]
+            # Summing TAW for all the layers used to find total TAW for
+            # the layers that the root zone currently passes through
+            io.TAW = sum(taw_by_layer)
+        else:
+            # Total available water (TAW, mm) - FAO-56 Eq. 82
+            io.TAW = 1000.0 * (io.thetaFC - io.thetaWP) * io.Zr
 
         #Fraction depleted TAW (p, 0.1-0.8) - FAO-56 p162 and Table 22
         io.p = sorted([0.1,io.pbase+0.04*(5.0-io.ETc),0.8])[1]
