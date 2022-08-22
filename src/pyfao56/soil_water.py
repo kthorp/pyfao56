@@ -145,7 +145,7 @@ class SoilWater:
                                   emergence_depth=0.06,
                                   full_rz_depth=1.05, emergence_dap=10,
                                   full_rz_dap=90):
-        """ Use planting date, end-of-season date, initial depth (m),
+        """Use planting date, end-of-season date, initial depth (m),
         emergence depth (m), full-root-zone depth (m), emergence days
         after planting, and full-root-zone days after planting to fit a
         curve for the projected root zone throughout the growing season.
