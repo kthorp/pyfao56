@@ -329,10 +329,6 @@ class Model:
                     (io.Kcbmid-io.Kcbini),0.001,io.h])
         if io.updh > 0: io.h = io.updh
 
-        # Root depth (Zr, m) - FAO-56 page 279
-        io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*(io.Kcb-
-                                                     io.Kcbini)/
-                 (io.Kcbmid-io.Kcbini),0.001,io.Zr])
         #Root depth (Zr, m) - FAO-56 page 279
         io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*(io.Kcb-io.Kcbini)/
                      (io.Kcbmid-io.Kcbini),0.001,io.Zr])
