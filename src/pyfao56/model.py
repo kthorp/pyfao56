@@ -386,11 +386,11 @@ class Model:
 
         # A switch that allows user to use soil water class for TAW
         if self.swc.soil_water_profile is not None:
-            # For loop to generate list of layers to use at each stage
+            # For loop to generate list of layers to use at each step
             layers_to_use = []
             for index, depth in enumerate(self.swc.depths):
-                # When the root zone is greater than or equal the maximum
-                # provided depth, all depths are used.
+                # When the root zone is greater than or equal to
+                # the maximum provided depth, all depths are used.
                 if io.Zr >= max(self.swc.depths):
                     layers_to_use = self.swc.depths
                 # When the root zone is not greater than or equal to the
@@ -411,25 +411,44 @@ class Model:
                         else:
                             layers_list = self.swc.depths[:next_depth]
                         layers_to_use += layers_list
-
-            # For loop to calculate SWD in layer of the soil the root
+            # For loop to calculate TAW in layers of the soil the root
             # zone currently passes through
             taw_by_layer = []
-            # Looping through layers_to_use list generated above
-            for layer in layers_to_use:
-                # Retrieving the layer information from the soil water
-                # dictionary
+            # Looping through reversed layers_to_use list so that we
+            # start by looking at the deepest layer
+            for index, layer in enumerate(reversed(layers_to_use)):
+                # Retrieving the layer information tuple
+                # from the soil water dictionary
                 layer_info = self.swc.soil_water_profile[layer]
-                # Setting variable for the layer's thetaFC
-                thetaFC = layer_info[0]
-                # Setting variable for the layer's wilting point
-                thetaWP = layer_info[2]
-                # Calculating TAW (mm) in the layer
-                layer_taw = 1000.0 * (thetaFC - thetaWP) * io.Zr
-                # Adding TAW of the layer to list of TAW for layers used
+                # Setting needed values to variables
+                layer_thetaFC = layer_info[0]
+                layer_thetaWP = layer_info[2]
+                layer_start = layer_info[3][0]
+                layer_field_capacity_mm = layer_info[5]
+                layer_wilting_point_mm = layer_info[6]
+                # On the deepest layer, need to calculate how far into
+                # the layer the root zone actually is and then only
+                # compute TAW for the portion of the layer that the root
+                # zone covers
+                if index == 0:
+                    # Find the difference, in mm, between the current
+                    # root depth and the start of the deepest layer
+                    marginal_soil = (io.Zr - layer_start) * 1000
+                    # Multiply fractional FC and WP by the amount of soil
+                    # in the layer that the roots actually reach
+                    field_capacity = layer_thetaFC * marginal_soil
+                    wilting_point = layer_thetaWP * marginal_soil
+                else:
+                    # If we aren't dealing with the deepest layer, then
+                    # the FC and WP for the whole layer can be used
+                    field_capacity = layer_field_capacity_mm
+                    wilting_point = layer_wilting_point_mm
+                # Calculate the TAW in the layer
+                layer_taw = field_capacity - wilting_point
+                # Add the layer's TAW to the list of TAW for each layer
+                # of soil that the root zone passes through.
                 taw_by_layer += [layer_taw]
-            # Summing TAW for all the layers used to find total TAW for
-            # the layers that the root zone currently passes through
+            # Summing TAW for all the layers used to find total TAW
             io.TAW = sum(taw_by_layer)
         else:
             # Total available water (TAW, mm) - FAO-56 Eq. 82
