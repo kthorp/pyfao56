@@ -20,15 +20,16 @@ from scipy.interpolate import pchip
 
 class SoilWater:
     """A class for managing soil characteristics and soil water data used
-    for FAO-56 calculations applied to stratified soil layers.
+    for FAO-56 calculations applied to stratified soil layers and a
+    dynamic root zone.
 
     Attributes
     ----------
     rz_curve_df : DataFrame
         Contains depths (meters) of the root zone curve that is generated
-         by the projected_root_zone_curve class method. Root zone depths
-         are organized by date and days after planting (DAP) in this
-         pandas data frame.
+        by the projected_root_zone_curve class method. Root zone depths
+        are organized by date and days after planting (DAP) in this
+        pandas data frame.
     depths : tuple
         Depths (meters) that are assumed to be representative
         of each layer of soil. List depths in order from the most shallow
@@ -51,7 +52,9 @@ class SoilWater:
         should be constructed via the create_soil_water_profile class
         method. The values of the dictionary are the theta_FC for the
         layer, the theta_ini for the layer, the theta_WP for the layer,
-        and the boundaries of the soil layer in meters.
+        a tuple of the boundaries of the soil layer in meters, the layer
+        thickness in meters, the field capacity of the layer in
+        millimeters, and the wilting point of the layer in millimeters.
 
     Methods
     -------
@@ -281,8 +284,17 @@ class SoilWater:
         sw_profile_dict = {}
         # Iterating through the depths tuple to construct dictionary
         for index, depth in enumerate(depths):
-            tup_theta = (theta_fc[index], theta_ini[index],
-                         theta_wp[index], layer_boundaries[index])
+            layer_start = layer_boundaries[index][0]
+            layer_end = layer_boundaries[index][1]
+            layer_thickness = round((layer_end - layer_start), 3)
+            layer_thetaFC = theta_fc[index]
+            layer_thetaWP = theta_wp[index]
+            layer_theta_ini = theta_ini[index]
+            layer_FC_mm = (layer_thetaFC * 1000) * layer_thickness
+            layer_WP_mm = (layer_thetaWP * 1000) * layer_thickness
+            tup_theta = (layer_thetaFC, layer_theta_ini,
+                         layer_thetaWP, layer_boundaries[index],
+                         layer_thickness, layer_FC_mm, layer_WP_mm)
             sw_profile_dict[depth] = tup_theta
 
         # Setting class attributes equal to user-provided arguments
