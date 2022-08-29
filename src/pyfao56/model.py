@@ -100,7 +100,7 @@ class Model:
         Conduct the FAO-56 calculations from start to end
     """
 
-    def __init__(self,start, end, par, wth, irr, upd=None, swc=None):
+    def __init__(self, start, end, par, wth, irr, upd=None, swc=None):
         """Initialize the Model class attributes.
 
         Parameters
@@ -225,12 +225,11 @@ class Model:
         io.REW     = self.par.REW
         # Switch to unpack thetaFC and theta0 from soil water class
         if self.swc.soil_water_profile is not None:
-            all_thetas_list = list(self.swc.soil_water_profile.values())
-            first_layer_thetas = all_thetas_list[0]
-            io.thetaFC = first_layer_thetas[0]
-            io.theta0 = first_layer_thetas[1]
-            io.thetaWP = first_layer_thetas[2]
-        #Total evaporable water (TEW, mm) - FAO-56 Equation 73
+            io.thetaFC = self.swc.soil_water_profile.iloc[0]['Theta_FC']
+            io.theta0 = (self.swc.soil_water_profile.iloc[0]
+                                                      ['Theta_Initial'])
+            io.thetaWP = self.swc.soil_water_profile.iloc[0]['Theta_WP']
+        # Total evaporable water (TEW, mm) - FAO-56 Equation 73
         io.TEW = 1000.0 * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
         #Initial depth of evaporation (De, mm) - FAO-56 page 153
         io.De = 1000.0 * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
@@ -398,11 +397,11 @@ class Model:
                 # layers to use in our analysis.
                 else:
                     # Getting the tuple with info about the layer
-                    tup_depth = self.swc.soil_water_profile[depth]
+                    layer_info = list(self.swc.soil_water_profile.loc[depth])
                     # Getting the start of the layer
-                    start_layer = (tup_depth[3][0])
+                    start_layer = layer_info[0]
                     # Getting the end of the layer
-                    stop_layer = (tup_depth[3][1])
+                    stop_layer = layer_info[1]
                     # Setting a variable to the next layer
                     next_depth = index + 1
                     if (start_layer <= io.Zr) and (io.Zr <= stop_layer):
@@ -419,13 +418,13 @@ class Model:
             for index, layer in enumerate(reversed(layers_to_use)):
                 # Retrieving the layer information tuple
                 # from the soil water dictionary
-                layer_info = self.swc.soil_water_profile[layer]
+                layer_info = list(self.swc.soil_water_profile.loc[layer])
                 # Setting needed values to variables
-                layer_thetaFC = layer_info[0]
-                layer_thetaWP = layer_info[2]
-                layer_start = layer_info[3][0]
-                layer_field_capacity_mm = layer_info[5]
-                layer_wilting_point_mm = layer_info[6]
+                layer_thetaFC = layer_info[3]
+                layer_thetaWP = layer_info[5]
+                layer_start = layer_info[0]
+                layer_field_capacity_mm = layer_info[6]
+                layer_wilting_point_mm = layer_info[8]
                 # On the deepest layer, need to calculate how far into
                 # the layer the root zone actually is and then only
                 # compute TAW for the portion of the layer that the root

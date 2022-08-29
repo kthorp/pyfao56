@@ -11,12 +11,12 @@ from datetime import datetime
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+
 def run_e12_22():
     """Run pyfao56 with swc testing for E12FF in 2022 LIRF study"""
 
     # Creating a formatted date to add onto saved files
     date = datetime.today().strftime('%m_%d_%Y')
-
 
     # # PARAMETERS
     # Instantiate the parameters class of pyfao56
@@ -44,14 +44,14 @@ def run_e12_22():
     # I will define it as a weighted average, but my soil water class
     # should give me the ability to use thetaFC for each specific soil layer.
     # weighted average thetaFC = 217.4/1050
-    par.thetaFC = 217.4/1050
+    par.thetaFC = 217.4 / 1050
     # The soil water class should make it so that the theta0 parameter is
     # not used. To ensure that is the case, I am going to set it to -999.
     par.theta0 = -999
     # thetaWP is volumetric soil water content at wilting point (cm3/cm3)
     # Since the WaterBalance sets TEW to 12, it implicitly assumes that
     # PWP is approximately half of field capacity.
-    par.thetaWP = (par.thetaFC/2)
+    par.thetaWP = (par.thetaFC / 2)
     # Zrini is the initial rooting depth (m)
     # I pulled this from the WaterBalance Spreadsheet where it was given
     # in mm
@@ -73,7 +73,6 @@ def run_e12_22():
     par.REW = 8
     # I split the difference between 6 and 10...not sure what else to put
 
-
     # # WEATHER
     # Instantiate the Greeley 04 Weather Class with the overriding customload function
     wthr = Greeley04()
@@ -91,8 +90,7 @@ def run_e12_22():
     # Use customload function to feed daily weather raw data into the model wdata dataframe
     wthr.customload(weather_df, rfcrp='T')
     # Use the savefile function to save the weather dataframe as a text file
-    wthr.savefile(filepath= f'{out_folder_name}GLY04_Weather_File_{date}.wth')
-
+    wthr.savefile(filepath=f'{out_folder_name}GLY04_Weather_File_{date}.wth')
 
     # # IRRIGATION
     # Specify the irrigation schedule for the treatment
@@ -115,58 +113,65 @@ def run_e12_22():
     irr.addevent(2022, 217, 18.0, 1.0)
     irr.addevent(2022, 221, 26.0, 1.0)
     # Saving Irrigation Information to a file that can be used/updated later
-    irr.savefile(filepath= f'{out_folder_name}GLY04Irrigation_File_{date}.irr')
-
+    irr.savefile(filepath=f'{out_folder_name}GLY04Irrigation_File_{date}.irr')
 
     # # SOIL WATER CLASS
     # Instantiate the class
-    swc = SoilWater()
-    # Creating Root Zone Curve for E12FF
-    swc.projected_root_zone_curve(planting_date="2022-129",
-                                          end_date="2022-304",
-                                          full_rz_dap=98)
-    # Setting the Soil Water Profile Variables
     dep = (0.15, 0.30, 0.60, 0.90, 1.20, 1.50, 2.00)
     pro = ((0, 0.15), (0.15, 0.45), (0.45, 0.75), (0.75, 1.05), (1.05, 1.35), (1.35, 1.65), (1.65, 2.15))
-    # The three thetas that follow are the ones that I think should work.
     fc = (0.29, 0.24, 0.182, 0.158, 0.120, 0.108, 0.144)
     ini = (0.083, 0.058, 0.039, 0.033, 0.012, 0.005, 0.014)
-    wp = (fc[0]/2, fc[1]/2, fc[2]/2, fc[3]/2, fc[4]/2, fc[5]/2, fc[6]/2)
+    wp = (fc[0] / 2, fc[1] / 2, fc[2] / 2, fc[3] / 2, fc[4] / 2, fc[5] / 2, fc[6] / 2)
+    swc = SoilWater(depths=dep, theta_fc=fc, theta_ini=ini,
+                    layer_boundaries=pro, theta_wp=wp)
+    # Creating Root Zone Curve for E12FF
+    # swc.projected_root_zone_curve(planting_date="2022-129",
+    #                               end_date="2022-304",
+    #                               full_rz_dap=98)
+    # # Setting the Soil Water Profile Variables
+    # dep = (0.15, 0.30, 0.60, 0.90, 1.20, 1.50, 2.00)
+    # pro = ((0, 0.15), (0.15, 0.45), (0.45, 0.75), (0.75, 1.05), (1.05, 1.35), (1.35, 1.65), (1.65, 2.15))
+    # # The three thetas that follow are the ones that I think should work.
+    # fc = (0.29, 0.24, 0.182, 0.158, 0.120, 0.108, 0.144)
+    # ini = (0.083, 0.058, 0.039, 0.033, 0.012, 0.005, 0.014)
+    # wp = (fc[0] / 2, fc[1] / 2, fc[2] / 2, fc[3] / 2, fc[4] / 2, fc[5] / 2, fc[6] / 2)
 
-    swc.create_soil_water_profile(depths=dep, theta_fc=fc, theta_ini=ini,
-                                  layer_boundaries=pro, theta_wp=wp)
-    # print(swc.__str__())
+    # swc.create_soil_water_profile(depths=dep, theta_fc=fc, theta_ini=ini,
+    #                               layer_boundaries=pro, theta_wp=wp)
+    print(swc.__str__())
+    # print(swc.__str__()[0], '\n', swc.__str__()[1])
+    # print(swc.soil_water_profile)
 
-
-    # # MODEL
-    mdl = Model('2022-129', '2022-223', par=par, wth=wthr, irr=irr,
-                swc=swc)
-    # Run the model
-    mdl.run()
-    print(mdl)
-    # Save the model to file
-    mdl.savefile(f'{out_folder_name}Model_SWC_Integration_Testing_{date}')
-
-
-
-    # # Prototyping Evaluation / Visualization Tool
-    # # SWD graph
-    new_odata = mdl.odata.loc[:, ~mdl.odata.columns.duplicated()].copy()
-    sns.lineplot(data=new_odata, x='DOY', y='Dr')
-    plt.xticks([6, 16, 26, 36, 46, 56, 66, 76, 86, 96, 106, 116, 126, 136, 146, 156, 166, 176])
-    plt.yticks([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
-    plt.show()
-    # ETr vs Tc vs DOY Graph:
-    # sns.lineplot(data=new_odata, x='DOY', y='ETref', color='blue')
-    # sns.lineplot(data=new_odata, x='DOY', y='T', color='red')
+    # # # MODEL
+    # mdl = Model('2022-129', '2022-223', par=par, wth=wthr, irr=irr,
+    #             swc=swc)
+    # # Run the model
+    # mdl.run()
+    # print(mdl)
+    # # Save the model to file
+    # mdl.savefile(f'{out_folder_name}Model_SWC_Integration_Testing_{date}')
+    #
+    #
+    #
+    # # # Prototyping Evaluation / Visualization Tool
+    # # # SWD graph
+    # new_odata = mdl.odata.loc[:, ~mdl.odata.columns.duplicated()].copy()
+    # sns.lineplot(data=new_odata, x='DOY', y='Dr')
     # plt.xticks([6, 16, 26, 36, 46, 56, 66, 76, 86, 96, 106, 116, 126, 136, 146, 156, 166, 176])
-    # plt.yticks([0, 2, 4, 6, 8, 10, 12, 14])
+    # plt.yticks([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
     # plt.show()
-    # RAW over time graph
-    # sns.lineplot(data=new_odata, x='DOY', y='RAW')
-    # plt.show()
-    # Ks over time graph
-    # sns.lineplot(data=new_odata, x='DOY', y='Ks')
-    # plt.show()
+    # # ETr vs Tc vs DOY Graph:
+    # # sns.lineplot(data=new_odata, x='DOY', y='ETref', color='blue')
+    # # sns.lineplot(data=new_odata, x='DOY', y='T', color='red')
+    # # plt.xticks([6, 16, 26, 36, 46, 56, 66, 76, 86, 96, 106, 116, 126, 136, 146, 156, 166, 176])
+    # # plt.yticks([0, 2, 4, 6, 8, 10, 12, 14])
+    # # plt.show()
+    # # RAW over time graph
+    # # sns.lineplot(data=new_odata, x='DOY', y='RAW')
+    # # plt.show()
+    # # Ks over time graph
+    # # sns.lineplot(data=new_odata, x='DOY', y='Ks')
+    # # plt.show()
+
 
 run_e12_22()
