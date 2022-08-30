@@ -46,8 +46,8 @@ class Model:
         Provides data and methods for state variable updating
         (default = None)
     swc : pyfao56 SoilWater class, optional
-        Provides data for modeling with stratified soil layers and a
-        projected root zone curve for the whole season (default = None)
+        Provides data for modeling with stratified soil layers
+        (default = None)
     ModelState : class
         Contains parameters and model states for a single timestep
     cnames : list
@@ -96,6 +96,8 @@ class Model:
 
     Methods
     -------
+    savefile(filepath='pyfao56.out')
+        Save pyfao56 output data to a file.
     run()
         Conduct the FAO-56 calculations from start to end
     """
@@ -119,8 +121,7 @@ class Model:
             Provides data and methods for state variable updating
             (default = None)
         swc : pyfao56 Soil Water object, optional
-            Provides data for modeling with stratified soil layers and
-            a projected root zone curve for the whole season
+            Provides data for modeling with stratified soil layers
             (default = None)
         """
 
@@ -225,10 +226,9 @@ class Model:
         io.REW     = self.par.REW
         # Switch to unpack thetaFC and theta0 from soil water class
         if self.swc.soil_water_profile is not None:
-            io.thetaFC = self.swc.soil_water_profile.iloc[0]['Theta_FC']
-            io.theta0 = (self.swc.soil_water_profile.iloc[0]
-                                                      ['Theta_Initial'])
-            io.thetaWP = self.swc.soil_water_profile.iloc[0]['Theta_WP']
+            io.thetaFC = self.swc.soil_water_profile.iloc[0]['thetaFC']
+            io.theta0 = self.swc.soil_water_profile.iloc[0]['thetaIN']
+            io.thetaWP = self.swc.soil_water_profile.iloc[0]['thetaWP']
         # Total evaporable water (TEW, mm) - FAO-56 Equation 73
         io.TEW = 1000.0 * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
         #Initial depth of evaporation (De, mm) - FAO-56 page 153
@@ -328,9 +328,9 @@ class Model:
                     (io.Kcbmid-io.Kcbini),0.001,io.h])
         if io.updh > 0: io.h = io.updh
 
-        #Root depth (Zr, m) - FAO-56 page 279
-        io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*(io.Kcb-io.Kcbini)/
-                     (io.Kcbmid-io.Kcbini),0.001,io.Zr])
+        # Root depth (Zr, m) - FAO-56 page 279
+        io.Zr = max([io.Zrini + (io.Zrmax - io.Zrini) * (io.Kcb - io.Kcbini) /
+                     (io.Kcbmid - io.Kcbini), 0.001, io.Zr])
 
         #Upper limit crop coefficient (Kcmax) - FAO-56 Eq. 72
         u2 = io.wndsp * (4.87/math.log(67.8*io.wndht-5.42))
@@ -404,7 +404,7 @@ class Model:
                     stop_layer = layer_info[1]
                     # Setting a variable to the next layer
                     next_depth = index + 1
-                    if (start_layer <= io.Zr) and (io.Zr <= stop_layer):
+                    if (start_layer <= io.Zr) and (io.Zr < stop_layer):
                         if index == 0:
                             layers_list = [self.swc.depths[index]]
                         else:
