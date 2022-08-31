@@ -1,5 +1,5 @@
 {% set name = "pyfao56" %}
-{% set version = "1.0.10" %}
+{% set version = "1.0.11" %}
 
 
 package:
