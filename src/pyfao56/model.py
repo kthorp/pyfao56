@@ -388,29 +388,21 @@ class Model:
             # For loop to generate list of layers to use at each step
             layers_to_use = []
             for index, depth in enumerate(self.swc.depths):
-                # When the root zone is greater than or equal to
-                # the maximum provided depth, all depths are used.
-                if io.Zr >= max(self.swc.depths):
-                    layers_to_use = self.swc.depths
-                # When the root zone is not greater than or equal to the
-                # maximum provided depth, we should figure out which
-                # layers to use in our analysis.
-                else:
-                    # Getting the tuple with info about the layer
-                    layer_info = list(self.swc.soil_water_profile.
-                                      loc[depth])
-                    # Getting the start of the layer
-                    start_layer = layer_info[0]
-                    # Getting the end of the layer
-                    stop_layer = layer_info[1]
-                    # Setting a variable to the next layer
-                    next_depth = index + 1
-                    if (start_layer <= io.Zr) and (io.Zr < stop_layer):
-                        if index == 0:
-                            layers_list = [self.swc.depths[index]]
-                        else:
-                            layers_list = self.swc.depths[:next_depth]
-                        layers_to_use += layers_list
+                # Figure out which layers to use in our analysis.
+                # Getting the tuple with info about the layer
+                layer_info = list(self.swc.soil_water_profile.loc[depth])
+                # Getting the start of the layer
+                start_layer = layer_info[0]
+                # Getting the end of the layer
+                stop_layer = layer_info[1]
+                # Setting a variable to the next layer
+                next_depth = index + 1
+                if (start_layer <= io.Zr) and (io.Zr < stop_layer):
+                    if index == 0:
+                        layers_list = [self.swc.depths[index]]
+                    else:
+                        layers_list = self.swc.depths[:next_depth]
+                    layers_to_use += layers_list
             # For loop to calculate TAW in layers of the soil the root
             # zone currently passes through
             taw_by_layer = []
