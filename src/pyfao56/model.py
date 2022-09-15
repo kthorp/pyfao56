@@ -45,6 +45,9 @@ class Model:
     upd : pyfao56 Updateclass, optional
         Provides data and methods for state variable updating
         (default = None)
+    swc : pyfao56 SoilWater class, optional
+        Provides data for modeling with stratified soil layers
+        (default = None)
     ModelState : class
         Contains parameters and model states for a single timestep
     cnames : list
@@ -93,11 +96,13 @@ class Model:
 
     Methods
     -------
+    savefile(filepath='pyfao56.out')
+        Save pyfao56 output data to a file.
     run()
         Conduct the FAO-56 calculations from start to end
     """
 
-    def __init__(self,start, end, par, wth, irr, upd=None):
+    def __init__(self,start, end, par, wth, irr, upd=None, swc=None):
         """Initialize the Model class attributes.
 
         Parameters
@@ -115,6 +120,9 @@ class Model:
         upd : pyfao56 Update object, optional
             Provides data and methods for state variable updating
             (default = None)
+        swc : pyfao56 Soil Water object, optional
+            Provides data for modeling with stratified soil layers
+            (default = None)
         """
 
         self.startDate = datetime.datetime.strptime(start, '%Y-%j')
@@ -123,6 +131,7 @@ class Model:
         self.wth = wth
         self.irr = irr
         self.upd = upd
+        self.swc = swc
         self.cnames = ['Year','DOY','DOW','Date','ETref','Kcb','h',
                        'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
                        'Kc','ETc','TAW','Zr','p','RAW','Ks','ETcadj',
@@ -215,6 +224,11 @@ class Model:
         io.pbase   = self.par.pbase
         io.Ze      = self.par.Ze
         io.REW     = self.par.REW
+        # Switch to unpack thetaFC and theta0 from soil water class
+        if self.swc is not None:
+            io.thetaFC = self.swc.soil_water_profile.iloc[0]['thetaFC']
+            io.theta0 = self.swc.soil_water_profile.iloc[0]['thetaIN']
+            io.thetaWP = self.swc.soil_water_profile.iloc[0]['thetaWP']
         #Total evaporable water (TEW, mm) - FAO-56 Equation 73
         io.TEW = 1000.0 * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
         #Initial depth of evaporation (De, mm) - FAO-56 page 153
@@ -369,8 +383,78 @@ class Model:
         #Non-stressed crop evapotranspiration (ETc, mm) - FAO-56 Eq. 69
         io.ETc = io.Kc * io.ETref
 
-        #Total available water (TAW, mm) - FAO-56 Eq. 82
-        io.TAW = 1000.0 * (io.thetaFC - io.thetaWP) * io.Zr
+        # A switch that allows user to use soil water class for TAW
+        if self.swc is not None:
+            # For loop to generate list of layers to use at each step
+            layers_to_use = []
+            for index, depth in enumerate(self.swc.depths):
+                # When the root zone is greater than or equal to
+                # the maximum provided depth, all depths are used.
+                if io.Zr >= max(self.swc.depths):
+                    layers_to_use = self.swc.depths
+                # When the root zone is not greater than or equal to the
+                # maximum provided depth, we should figure out which
+                # layers to use in our analysis.
+                else:
+                    # Getting the tuple with info about the layer
+                    layer_info = list(self.swc.soil_water_profile.
+                                      loc[depth])
+                    # Getting the start of the layer
+                    start_layer = layer_info[0]
+                    # Getting the end of the layer
+                    stop_layer = layer_info[1]
+                    # Setting a variable to the next layer
+                    next_depth = index + 1
+                    if (start_layer <= io.Zr) and (io.Zr < stop_layer):
+                        if index == 0:
+                            layers_list = [self.swc.depths[index]]
+                        else:
+                            layers_list = self.swc.depths[:next_depth]
+                        layers_to_use += layers_list
+            # For loop to calculate TAW in layers of the soil the root
+            # zone currently passes through
+            taw_by_layer = []
+            # Looping through reversed layers_to_use list so that we
+            # start by looking at the deepest layer
+            for index, layer in enumerate(reversed(layers_to_use)):
+                # Retrieving the layer information tuple
+                # from the soil water dictionary
+                layer_info = list(self.swc.soil_water_profile.
+                                  loc[layer])
+                # Setting needed values to variables
+                layer_thetaFC = layer_info[3]
+                layer_thetaWP = layer_info[5]
+                layer_start = layer_info[0]
+                layer_field_capacity_mm = layer_info[6]
+                layer_wilting_point_mm = layer_info[8]
+                # On the deepest layer, need to calculate how far into
+                # the layer the root zone actually is and then only
+                # compute TAW for the portion of the layer that the root
+                # zone covers
+                if index == 0:
+                    # Find the difference, in mm, between the current
+                    # root depth and the start of the deepest layer
+                    marginal_soil = (io.Zr - layer_start) * 1000
+                    # Multiply fractional FC and WP of the deepest layer
+                    # by the amount of soil in the deepest layer that
+                    # the roots actually reach
+                    field_capacity = layer_thetaFC * marginal_soil
+                    wilting_point = layer_thetaWP * marginal_soil
+                else:
+                    # If we aren't dealing with the deepest layer, then
+                    # the FC and WP for the whole layer can be used
+                    field_capacity = layer_field_capacity_mm
+                    wilting_point = layer_wilting_point_mm
+                # Calculate the TAW in the layer
+                layer_taw = field_capacity - wilting_point
+                # Add the layer's TAW to the list of TAW for each layer
+                # of soil that the root zone passes through.
+                taw_by_layer += [layer_taw]
+            # Summing TAW for all the layers used to find total TAW
+            io.TAW = sum(taw_by_layer)
+        else:
+            #Total available water (TAW, mm) - FAO-56 Eq. 82
+            io.TAW = 1000.0 * (io.thetaFC - io.thetaWP) * io.Zr
 
         #Fraction depleted TAW (p, 0.1-0.8) - FAO-56 p162 and Table 22
         io.p = sorted([0.1,io.pbase+0.04*(5.0-io.ETc),0.8])[1]
