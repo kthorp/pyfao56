@@ -4,7 +4,7 @@ This file is meant to demonstrate a method of using the SoilWater class.
 
 # Loading in the SoilWater Class
 #   - change this once pyfao56 includes new SoilWater class
-from pyfao56_LIRF_features.src.pyfao56.soil_water import SoilWater
+from pyfao56.soil_water import SoilWater
 from datetime import datetime
 
 # # Creating a formatted date to add to the end of saved files:
