@@ -59,7 +59,7 @@ class Irrigation:
         pd.options.display.float_format = '{:6.2f}'.format
         ast='*'*72
         s=('{:s}\n'
-           'pyfao56: FAO-56 in Python\n'
+           'pyfao56: FAO-56 Evapotranspiration in Python\n'
            'Irrigation Data\n'
            '{:s}\n'
            'Year-DOY  Depth     fw\n'
@@ -84,7 +84,7 @@ class Irrigation:
         try:
             f = open(filepath, 'w')
         except FileNotFoundError:
-            print("The filepath for irrigation data is not found.")
+            print('The filepath for irrigation data is not found.')
         else:
             f.write(self.__str__())
             f.close()
@@ -106,7 +106,7 @@ class Irrigation:
         try:
             f = open(filepath, 'r')
         except FileNotFoundError:
-            print("The filepath for irrigation data is not found.")
+            print('The filepath for irrigation data is not found.')
         else:
             lines = f.readlines()
             f.close()

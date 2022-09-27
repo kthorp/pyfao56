@@ -150,7 +150,7 @@ class Model:
                 'Irrig':'{:7.3f}'.format,'Rain':'{:7.3f}'.format}
         ast='*'*72
         s = ('{:s}\n'
-             'pyfao56: FAO-56 in Python\n'
+             'pyfao56: FAO-56 Evapotranspiration in Python\n'
              'Output Data\n'
              '{:s}\n'
              'Year-DOY  Year  DOY  DOW      Date  ETref   Kcb     h'
@@ -179,7 +179,7 @@ class Model:
         try:
             f = open(filepath, 'w')
         except FileNotFoundError:
-            print("The filepath for output data is not found.")
+            print('The filepath for output data is not found.')
         else:
             f.write(self.__str__())
             f.close()

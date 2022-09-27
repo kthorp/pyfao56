@@ -116,7 +116,7 @@ class Parameters:
 
         ast='*'*72
         s=('{:s}\n'
-           'pyfao56: FAO-56 in Python\n'
+           'pyfao56: FAO-56 Evapotranspiration in Python\n'
            'Parameter Data\n'
            '{:s}\n'
            '{:9.4f} Kcbini, Kcb Initial (FAO-56 Table 17)\n'
@@ -166,7 +166,7 @@ class Parameters:
         try:
             f = open(filepath, 'w')
         except FileNotFoundError:
-            print("The filepath for parameter data is not found.")
+            print('The filepath for parameter data is not found.')
         else:
             f.write(self.__str__())
             f.close()
@@ -188,7 +188,7 @@ class Parameters:
         try:
             f = open(filepath, 'r')
         except FileNotFoundError:
-            print("The filepath for parameter data is not found.")
+            print('The filepath for parameter data is not found.')
         else:
             lines = f.readlines()
             f.close()
