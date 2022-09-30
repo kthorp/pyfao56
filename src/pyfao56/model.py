@@ -42,8 +42,11 @@ class Model:
         Provides the weather data for simulations
     irr : pyfao56 Irrigation class
         Provides the irrigation data for simulations
-    upd : pyfao56 Updateclass, optional
+    upd : pyfao56 Update class, optional
         Provides data and methods for state variable updating
+        (default = None)
+    sol : pyfao56 SoilProfile class, optional
+        Provides data for modeling with stratified soil layers
         (default = None)
     ModelState : class
         Contains parameters and model states for a single timestep
@@ -93,11 +96,13 @@ class Model:
 
     Methods
     -------
+    savefile(filepath='pyfao56.out')
+        Save pyfao56 output data to a file
     run()
         Conduct the FAO-56 calculations from start to end
     """
 
-    def __init__(self,start, end, par, wth, irr, upd=None):
+    def __init__(self,start, end, par, wth, irr, upd=None, sol=None):
         """Initialize the Model class attributes.
 
         Parameters
@@ -115,6 +120,9 @@ class Model:
         upd : pyfao56 Update object, optional
             Provides data and methods for state variable updating
             (default = None)
+        sol : pyfao56 SoilProfile object, optional
+            Provides data for modeling with stratified soil layers
+            (default = None)
         """
 
         self.startDate = datetime.datetime.strptime(start, '%Y-%j')
@@ -123,6 +131,7 @@ class Model:
         self.wth = wth
         self.irr = irr
         self.upd = upd
+        self.sol = sol
         self.cnames = ['Year','DOY','DOW','Date','ETref','Kcb','h',
                        'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
                        'Kc','ETc','TAW','Zr','p','RAW','Ks','ETcadj',
@@ -219,8 +228,32 @@ class Model:
         io.TEW = 1000.0 * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
         #Initial depth of evaporation (De, mm) - FAO-56 page 153
         io.De = 1000.0 * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
-        #Initial soil water depletion (Dr, mm) - FAO-56 Equation 87
-        io.Dr = 1000.0 * (io.thetaFC - io.theta0) * io.Zrini
+        # Accessing SoilProfile class if it is populated:
+        if self.sol is not None:
+            # Making lists of SoilProfile class variables:
+            io.BttmDpths = list(self.sol.sdata.index)
+            io.LayersFC = list(self.sol.sdata['thetaFC'])
+            io.LayersWP = list(self.sol.sdata['thetaWP'])
+            io.Layers0 = list(self.sol.sdata['theta0'])
+
+            # Using SoilProfile class variables for initialization of Dr
+            Dr = 0
+            # Getting initial root depth in cm
+            Zr_ini = io.Zrini * 100
+            # Iterating through soil profile in 1 cm increments
+            for dep in list(range(1, io.BttmDpths[-1] + 1)):
+                # Finding index of profile layer that the iteration
+                # depth is less than or equal to
+                end_idx = [idx for (idx, bdep) in
+                           enumerate(io.BttmDpths) if dep <= bdep][0]
+                # Computing initial soil water depletion
+                if dep <= Zr_ini:
+                    Dr += (io.LayersFC[end_idx] - io.Layers0[end_idx])
+            # Setting initial value (in mm, I think) - does this need to be multiplied by the initial root depth in mm? I think it is a fraction at this point
+            io.Dr = Dr
+        else:
+            #Initial soil water depletion (Dr, mm) - FAO-56 Equation 87
+            io.Dr = 1000.0 * (io.thetaFC - io.theta0) * io.Zrini
         io.h = io.hini
         io.Zr = io.Zrini
         io.fw = 1.0
