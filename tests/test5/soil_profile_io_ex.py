@@ -72,7 +72,7 @@ try:
     from pyfao56_LIRF_features.src.pyfao56.soil_profile import \
         SoilProfile
 except ModuleNotFoundError:
-    print(f'Opps! Something went wrong with importing SoilProfile.\n'
+    print(f'Oops! Something went wrong with importing SoilProfile.\n'
           f'Here is the current directory: {myCurrentDir}\n'
           f'Here is the parent directory: {parentDir}\n'
           f'Here is the grandparent directory: {grandparentDir}\n'
