@@ -127,12 +127,12 @@ mdl = Model(start='2022-129',
 mdl.run()
 mdl.savefile(filepath=model_output_file)
 
-# Making sure Model updates didn't break default version of the model:
-default_mdl = Model(start='2022-129',
-                    end='2022-248',
-                    par=par,
-                    wth=wth,
-                    irr=irr)
-default_mdl.run()
-default_mdl.savefile(filepath=f'{output_folder}default_model_'
-                              f'test_{date}.out')
+# # Making sure Model updates didn't break default version of the model:
+# default_mdl = Model(start='2022-129',
+#                     end='2022-248',
+#                     par=par,
+#                     wth=wth,
+#                     irr=irr)
+# default_mdl.run()
+# default_mdl.savefile(filepath=f'{output_folder}default_model_'
+#                               f'test_{date}.out')

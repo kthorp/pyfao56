@@ -1,50 +1,3 @@
-# # Notes for Kelly:
-# I thought it might be helpful to make a note that provides an overview of the changes I made here.
-# I am splitting the changes into three categories:
-#
-# 1) Model Initialization (in the run() method):
-#   - added a conditional to check if the soil profile class (sol variable) is populated
-#   - added lines to write soil profile data to lists
-#   - used soil profile data to compute:
-#       ~ initial soil water depletion in the initial root zone (io.Dr variable)
-#       ~ total available water in the full/maximum root zone (io.fullTAW variable)
-#       ~ initial soil water depletion in the full/maximum root zone (io.fullDr variable)
-#   - all of these calculations are based on the TAW calculation loop we discussed via email
-#
-# 2) Changes to the _advance() method:
-#   - added a conditional to check if the soil profile class is populated before calculating TAW
-#   - if sol is populated, then the data from the sol lists is used to calculate TAW
-#   - added lines to compute:
-#       ~ readily available water in the full/maximum root zone (io.fullRAW variable)
-#       ~ soil water depletion in the full/maximum root zone (io.fullDr variable)
-#       ~ percent depletion in the full/maximum root zone (io.FullPerDr variable)
-#   - I grouped all of the "full" variables next to their corresponding variables
-
-# 3) Changes to support alterations from 1) and 2) above:
-#   - Added information about the soil profile class to the docstrings
-#   - Added sol class to the Model class __init__ method
-#   - I did NOT make any alterations to the __str__ or savefile() methods
-#       ~ So, although I added new variables to the model (e.g. fullTAW, fullDr, etc), I did not add those variables to
-#           the model's output.
-#       ~ I want to check to see how you want to add these variables to the model output before I go through
-#           reworking the string. I also wanted you to double-check and make sure they are being computed correctly.
-#       ~ For most of the new variables, I think it makes sense to add another column to odata.
-#           -- In the case of fullTAW, I am not sure whether a new column is the preferred approach (since it is
-#               constant throughout the season). I think adding a new column for fullTAW will make graphing much easier
-#               down the line, though.
-#
-# General thoughts:
-#   - I realize "full" might be too long for these variable names. I am open to other ideas, and I can refactor the
-#       variables if you would like that.
-#   - I will add a script to the test5 directory to make sure that all of these changes are working properly.
-#   - The next change I would like to make: add optional parameters to the Parameters class for specifying initial
-#       depletion and allowing the user to make the depletion fraction (p) constant. I think that this is a fairly
-#       straightforward change, but I wanted to get your approval before embarking on it.
-#   - Hopefully this isn't too much for one PR. I think that all of these changes go hand-in-hand, so it doesn't make
-#       sense to me to separate them. Let me know if you think differently and want to split this into chunks.
-#
-# So, things to still do:
-# TODO: add new "full" variables to odata and the model output via the __str__ method.
 # TODO: double-check the computations of fullTAW, fullDr, fullRAW, and FullPerDr to ensure they are correct.
 
 
@@ -53,18 +6,14 @@
 The model.py module contains the Model class, which defines the
 equations for daily soil water balance calculations based on the FAO-56
 dual crop coefficient method for evapotranspiration (ET) estimation.
-
 The FAO-56 method is described in the following documentation:
 Allen, R. G., Pereira, L. S., Raes, D., Smith, M., 1998.  FAO Irrigation
 and Drainage Paper No. 56. Crop Evapotranspiration: Guidelines for
 Computing Crop Water Requirements. Food and Agriculture Organization of
 the United Nations, Rome Italy.
-
 http://www.fao.org/3/x0490e/x0490e00.htm
-
 The model.py module contains the following:
     Model - A class for managing FAO-56 soil water balance computations.
-
 01/07/2016 Initial Python functions developed by Kelly Thorp
 11/04/2021 Finalized updates for inclusion in the pyfao56 Python package
 ########################################################################
@@ -76,10 +25,8 @@ import math
 
 class Model:
     """A class for managing FAO-56 soil water balance computations.
-
     Manages computations based on FAO-56 methods for evapotranspiration
     and soil water balance calculations (Allen et al., 1998).
-
     Attributes
     ----------
     startDate : datetime
@@ -109,41 +56,44 @@ class Model:
                    'fc','fw','few','De','Kr','Ke','E','DPe','Kc','ETc',
                    'TAW','Zr','p','RAW','Ks','ETcadj','T','DP','Dr',
                    'PerDr','Irrig','Rain','Year','DOY','DOW','Date']
-            Year   - 4-digit year (yyyy)
-            DOY    - Day of year (ddd)
-            DOW    - Day of week
-            Date   - Month/Day/Year (mm/dd/yy)
-            ETref  - Daily reference evapotranspiration (mm)
-            Kcb    - Basal crop coefficient
-            h      - Plant height (m)
-            Kcmax  - Upper limit crop coefficient, FAO-56 Eq. 72
-            fc     - Canopy cover fraction, FAO-56 Eq. 76
-            fw     - Fraction soil surface wetted, FAO-56 Table 20
-            few    - Exposed & wetted soil fraction, FAO-56 Eq. 75
-            De     - Cumulative depth of evaporation, FAO-56 Eqs. 77&78
-            Kr     - Evaporation reduction coefficient, FAO-56 Eq. 74
-            Ke     - Evaporation coefficient, FAO-56 Eq. 71
-            E      - Soil water evaporation (mm), FAO-56 Eq. 69
-            DPe    - Percolation under exposed soil (mm), FAO-56 Eq. 79
-            Kc     - Crop coefficient, FAO-56 Eq. 69
-            ETc    - Non-stressed crop ET (mm), FAO-56 Eq. 69
-            TAW    - Total available water (mm), FAO-56 Eq. 82
-            Zr     - Root depth (m), FAO-56 page 279
-            p      - Fraction depleted TAW, FAO-56 p162 and Table 22
-            RAW    - Readily available water (mm), FAO-56 Equation 83
-            Ks     - Transpiration reduction factor, FAO-56 Eq. 84
-            ETcadj - Adjusted crop ET (mm), FAO-56 Eq. 80
-            T      - Adjusted crop transpiration (mm)
-            DP     - Deep percolation (mm), FAO-56 Eq. 88
-            Dr     - Soil water depletion (mm), FAO-56 Eqs. 85 & 86
-            PerDr  - Percent root zone soil water depletion (%)
-            Irrig  - Depth of irrigation (mm)
-            Rain   - Depth of precipitation (mm)
-            Year   - 4-digit year (yyyy)
-            DOY    - Day of year (ddd)
-            DOW    - Day of week
-            Date   - Month/Day/Year (mm/dd/yy)
-
+            Year    - 4-digit year (yyyy)
+            DOY     - Day of year (ddd)
+            DOW     - Day of week
+            Date    - Month/Day/Year (mm/dd/yy)
+            ETref   - Daily reference evapotranspiration (mm)
+            Kcb     - Basal crop coefficient
+            h       - Plant height (m)
+            Kcmax   - Upper limit crop coefficient, FAO-56 Eq. 72
+            fc      - Canopy cover fraction, FAO-56 Eq. 76
+            fw      - Fraction soil surface wetted, FAO-56 Table 20
+            few     - Exposed & wetted soil fraction, FAO-56 Eq. 75
+            De      - Cumulative depth of evaporation, FAO-56 Eqs. 77&78
+            Kr      - Evaporation reduction coefficient, FAO-56 Eq. 74
+            Ke      - Evaporation coefficient, FAO-56 Eq. 71
+            E       - Soil water evaporation (mm), FAO-56 Eq. 69
+            DPe     - Percolation under exposed soil (mm), FAO-56 Eq. 79
+            Kc      - Crop coefficient, FAO-56 Eq. 69
+            ETc     - Non-stressed crop ET (mm), FAO-56 Eq. 69
+            TAW     - Total available water (mm), FAO-56 Eq. 82
+            TAWrmax - Total available water (mm) in maximum root zone
+            Zr      - Root depth (m), FAO-56 page 279
+            p       - Fraction depleted TAW, FAO-56 p162 and Table 22
+            RAW     - Readily available water (mm), FAO-56 Equation 83
+            RAWrmax - Readily available water (mm) in maximum root zone
+            Ks      - Transpiration reduction factor, FAO-56 Eq. 84
+            ETcadj  - Adjusted crop ET (mm), FAO-56 Eq. 80
+            T       - Adjusted crop transpiration (mm)
+            DP      - Deep percolation (mm), FAO-56 Eq. 88
+            Dr      - Soil water depletion (mm), FAO-56 Eqs. 85 & 86
+            fDr     - Fractional root zone soil water depletion
+            Drmax   - Soil water depletion (mm) in maximum root zone
+            fDrmax  - Fractional soil water depletion in max root zone
+            Irrig   - Depth of irrigation (mm)
+            Rain    - Depth of precipitation (mm)
+            Year    - 4-digit year (yyyy)
+            DOY     - Day of year (ddd)
+            DOW     - Day of week
+            Date    - Month/Day/Year (mm/dd/yy)
     Methods
     -------
     savefile(filepath='pyfao56.out')
@@ -154,7 +104,6 @@ class Model:
 
     def __init__(self,start, end, par, wth, irr, upd=None, sol=None):
         """Initialize the Model class attributes.
-
         Parameters
         ----------
         start : str
@@ -184,8 +133,9 @@ class Model:
         self.sol = sol
         self.cnames = ['Year','DOY','DOW','Date','ETref','Kcb','h',
                        'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
-                       'Kc','ETc','TAW','Zr','p','RAW','Ks','ETcadj',
-                       'T','DP','Dr','PerDr','Irrig','Rain','Year',
+                       'Kc','ETc','TAW','TAWrmax','Zr','p','RAW',
+                       'RAWrmax','Ks','ETcadj','T','DP','Dr','fDr',
+                       'Drmax','fDrmax','Irrig','Rain','Year',
                        'DOY','DOW','Date']
         self.odata = pd.DataFrame(columns=self.cnames)
 
@@ -201,11 +151,13 @@ class Model:
                 'Kr':'{:5.3f}'.format,'Ke':'{:5.3f}'.format,
                 'E':'{:6.3f}'.format,'DPe':'{:7.3f}'.format,
                 'Kc':'{:5.3f}'.format,'ETc':'{:6.3f}'.format,
-                'TAW':'{:7.3f}'.format,'Zr':'{:5.3f}'.format,
-                'p':'{:5.3f}'.format,'RAW':'{:7.3f}'.format,
+                'TAW':'{:7.3f}'.format,'TAWrmax':'{:7.3f}'.format,
+                'Zr':'{:5.3f}'.format,'p':'{:5.3f}'.format,
+                'RAW':'{:7.3f}'.format,'RAWrmax':'{:7.3f}'.format,
                 'Ks':'{:5.3f}'.format,'ETcadj':'{:6.3f}'.format,
                 'T':'{:6.3f}'.format,'DP':'{:7.3f}'.format,
-                'Dr':'{:7.3f}'.format,'PerDr':'{:7.3f}'.format,
+                'Dr':'{:7.3f}'.format,'fDr':'{:7.3f}'.format,
+                'Drmax':'{:7.3f}'.format, 'fDrmax':'{:7.3f}'.format,
                 'Irrig':'{:7.3f}'.format,'Rain':'{:7.3f}'.format}
         ast = '*' * 72
         s = ('{:s}\n'
@@ -214,21 +166,20 @@ class Model:
              '{:s}\n'
              'Year-DOY  Year  DOY  DOW      Date  ETref   Kcb     h'
              ' Kcmax    fc    fw   few      De    Kr    Ke      E'
-             '     DPe    Kc    ETc     TAW    Zr     p     RAW'
-             '    Ks ETcadj      T      DP      Dr   PerDr   Irrig'
-             '    Rain  Year  DOY  DOW      Date\n'
+             '     DPe    Kc    ETc     TAW TAWrmax    Zr     p     '
+             'RAW RAWrmax    Ks ETcadj      T      DP      Dr     fDr'
+             '   Drmax  fDrmax   Irrig    Rain  Year  DOY  DOW      '
+             'Date\n'
              ).format(ast,ast)
         s += self.odata.to_string(header=False,formatters=fmts)
         return s
 
     def savefile(self,filepath='pyfao56.out'):
         """Save pyfao56 output data to a file.
-
         Parameters
         ----------
         filepath : str, optional
             Any valid filepath string (default = 'pyfao56.out')
-
         Raises
         ------
         FileNotFoundError
@@ -294,9 +245,9 @@ class Model:
 
             # Using SoilProfile class variables for initialization of Dr
             Dr = 0
-            fullDr = 0
-            # Setting fullTAW to zero at the start
-            fullTAW = 0
+            Drmax = 0
+            # Setting TAWrmax to zero at the start
+            TAWrmax = 0
             # Getting initial root depth in cm
             Zr_ini = io.Zrini * 100
             # Getting the maximum root zone depth in cm
@@ -313,21 +264,21 @@ class Model:
                 # Computing TAW in the full root zone by summing TAW
                 # of the iteration depths to the maximum root zone
                 if cm <= Zrmax:
-                    fullTAW += (io.LayersFC[end_idx] -
+                    TAWrmax += (io.LayersFC[end_idx] -
                                 io.LayersWP[end_idx])
-                    fullDr += (io.LayersFC[end_idx] -
+                    Drmax += (io.LayersFC[end_idx] -
                                io.Layers0[end_idx])
-            # Converting from cm to mm and setting initial Dr, fullTAW
+            # Converting from cm to mm and setting initial Dr, TAWrmax
             io.Dr = Dr * 10
-            io.fullTAW = fullTAW * 10
-            io.fullDr = fullDr * 10
+            io.TAWrmax = TAWrmax * 10
+            io.Drmax = Drmax * 10
         else:
             #Initial soil water depletion (Dr, mm) - FAO-56 Equation 87
             io.Dr = 1000.0 * (io.thetaFC - io.theta0) * io.Zrini
             # Initial soil water depletion for full soil profile
-            io.fullDr = 1000.0 * (io.thetaFC - io.theta0) * io.Zrmax
+            io.Drmax = 1000.0 * (io.thetaFC - io.theta0) * io.Zrmax
             # Total available water for full, homogenized soil layer
-            io.fullTAW = 1000.0 * (io.thetaFC - io.thetaWP) * io.Zrmax
+            io.TAWrmax = 1000.0 * (io.thetaFC - io.thetaWP) * io.Zrmax
 
         while tcurrent <= self.endDate:
             mykey = tcurrent.strftime('%Y-%j')
@@ -374,11 +325,12 @@ class Model:
             doy = tcurrent.strftime('%j') #Day of Year
             dow = tcurrent.strftime('%a') #Day of Week
             dat = tcurrent.strftime('%m/%d/%y') #Date mm/dd/yy
-            data = [year,doy,dow,dat,io.ETref,io.Kcb,io.h,io.Kcmax,
-                    io.fc,io.fw,io.few,io.De,io.Kr,io.Ke,io.E,io.DPe,
-                    io.Kc,io.ETc,io.TAW,io.Zr,io.p,io.RAW,io.Ks,
-                    io.ETcadj,io.T,io.DP,io.Dr,io.PerDr,io.idep,io.rain,
-                    year,doy,dow,dat]
+            data = [year, doy, dow, dat, io.ETref, io.Kcb, io.h,
+                    io.Kcmax, io.fc, io.fw, io.few, io.De, io.Kr, io.Ke,
+                    io.E, io.DPe, io.Kc, io.ETc, io.TAW, io.TAWrmax,
+                    io.Zr, io.p, io.RAW, io.RAWrmax, io.Ks, io.ETcadj,
+                    io.T, io.DP, io.Dr, io.fDr, io.Drmax, io.fDrmax,
+                    io.idep, io.rain, year, doy, dow, dat]
             self.odata.loc[mykey] = data
 
             tcurrent = tcurrent + tdelta
@@ -386,7 +338,6 @@ class Model:
 
     def _advance(self, io):
         """Advance the model by one daily timestep.
-
         Parameters
         ----------
         io : ModelState object
@@ -499,8 +450,8 @@ class Model:
 
         #Readily available water (RAW, mm) - FAO-56 Equation 83
         io.RAW = io.p * io.TAW
-        # Readily available water in full root zone (fullRAW, mm)
-        io.fullRAW = io.p * io.fullTAW
+        #Readily available water down to max root zone (RAWrmax, mm)
+        io.RAWrmax = io.p * io.TAWrmax
 
         #Transpiration reduction factor (Ks, 0.0-1.0) - FAO-56 Eq. 84
         io.Ks = sorted([0.0, (io.TAW-io.Dr)/(io.TAW-io.RAW), 1.0])[1]
@@ -517,12 +468,12 @@ class Model:
         #Root zone soil water depletion (Dr, mm) - FAO-56 Eqs. 85 & 86
         Dr = io.Dr - (io.rain - runoff) - io.idep + io.ETcadj + io.DP
         io.Dr = sorted([0.0, Dr, io.TAW])[1]
-        # Full profile soil water depletion (fullDr, mm)
-        fullDr = io.fullDr - (io.rain - runoff) - io.idep + io.ETcadj \
+        #Max root zone depth soil water depletion (Drmax, mm)
+        Drmax = io.Drmax - (io.rain - runoff) - io.idep + io.ETcadj \
                  + io.DP
-        io.fullDr = sorted([0.0, fullDr, io.fullTAW])[1]
+        io.Drmax = sorted([0.0, Drmax, io.TAWrmax])[1]
 
-        #Percent root zone soil water depletion (PerDr, %)
-        io.PerDr = (1.0-((io.TAW - io.Dr)/io.TAW))*100.0
-        # Percent full profile soil water depletion (PerFullDr, %)
-        io.PerFullDr = (1.0-((io.fullTAW - io.fullDr)/io.fullTAW))*100.0
+        #Fractional root zone soil water depletion (fDr)
+        io.fDr = (1.0 - ((io.TAW - io.Dr) / io.TAW))
+        #Fractional soil water depletion in max root zone (fDrmax)
+        io.fDrmax = (1.0 - ((io.TAWrmax - io.Drmax) / io.TAWrmax))
