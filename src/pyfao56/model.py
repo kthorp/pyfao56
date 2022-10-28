@@ -1,21 +1,23 @@
-# TODO: double-check the computations of fullTAW, fullDr, fullRAW, and FullPerDr to ensure they are correct.
-
-
 """
 ########################################################################
 The model.py module contains the Model class, which defines the
 equations for daily soil water balance calculations based on the FAO-56
 dual crop coefficient method for evapotranspiration (ET) estimation.
+
 The FAO-56 method is described in the following documentation:
 Allen, R. G., Pereira, L. S., Raes, D., Smith, M., 1998.  FAO Irrigation
 and Drainage Paper No. 56. Crop Evapotranspiration: Guidelines for
 Computing Crop Water Requirements. Food and Agriculture Organization of
 the United Nations, Rome Italy.
+
 http://www.fao.org/3/x0490e/x0490e00.htm
+
 The model.py module contains the following:
     Model - A class for managing FAO-56 soil water balance computations.
+
 01/07/2016 Initial Python functions developed by Kelly Thorp
 11/04/2021 Finalized updates for inclusion in the pyfao56 Python package
+10/27/2022 Incorporated Fort Collins ARS stratified soil layers approach
 ########################################################################
 """
 
@@ -25,8 +27,10 @@ import math
 
 class Model:
     """A class for managing FAO-56 soil water balance computations.
+
     Manages computations based on FAO-56 methods for evapotranspiration
     and soil water balance calculations (Allen et al., 1998).
+
     Attributes
     ----------
     startDate : datetime
@@ -39,11 +43,11 @@ class Model:
         Provides the weather data for simulations
     irr : pyfao56 Irrigation class
         Provides the irrigation data for simulations
-    upd : pyfao56 Update class, optional
-        Provides data and methods for state variable updating
-        (default = None)
     sol : pyfao56 SoilProfile class, optional
         Provides data for modeling with stratified soil layers
+        (default = None)
+    upd : pyfao56 Update class, optional
+        Provides data and methods for state variable updating
         (default = None)
     ModelState : class
         Contains parameters and model states for a single timestep
@@ -102,8 +106,9 @@ class Model:
         Conduct the FAO-56 calculations from start to end
     """
 
-    def __init__(self,start, end, par, wth, irr, upd=None, sol=None):
+    def __init__(self,start, end, par, wth, irr, sol=None, upd=None):
         """Initialize the Model class attributes.
+
         Parameters
         ----------
         start : str
@@ -116,11 +121,11 @@ class Model:
             Provides the weather data for simulations
         irr : pyfao56 Irrigation object
             Provides the irrigation data for simulations
-        upd : pyfao56 Update object, optional
-            Provides data and methods for state variable updating
-            (default = None)
         sol : pyfao56 SoilProfile object, optional
             Provides data for modeling with stratified soil layers
+            (default = None)
+        upd : pyfao56 Update object, optional
+            Provides data and methods for state variable updating
             (default = None)
         """
 
@@ -129,8 +134,8 @@ class Model:
         self.par = par
         self.wth = wth
         self.irr = irr
-        self.upd = upd
         self.sol = sol
+        self.upd = upd
         self.cnames = ['Year','DOY','DOW','Date','ETref','Kcb','h',
                        'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
                        'Kc','ETc','TAW','TAWrmax','Zr','p','RAW',
@@ -159,7 +164,7 @@ class Model:
                 'Dr':'{:7.3f}'.format,'fDr':'{:7.3f}'.format,
                 'Drmax':'{:7.3f}'.format, 'fDrmax':'{:7.3f}'.format,
                 'Irrig':'{:7.3f}'.format,'Rain':'{:7.3f}'.format}
-        ast = '*' * 72
+        ast='*'*72
         s = ('{:s}\n'
              'pyfao56: FAO-56 Evapotranspiration in Python\n'
              'Output Data\n'
@@ -176,10 +181,12 @@ class Model:
 
     def savefile(self,filepath='pyfao56.out'):
         """Save pyfao56 output data to a file.
+
         Parameters
         ----------
         filepath : str, optional
             Any valid filepath string (default = 'pyfao56.out')
+
         Raises
         ------
         FileNotFoundError
@@ -226,59 +233,49 @@ class Model:
         io.Ze      = self.par.Ze
         io.REW     = self.par.REW
         #Total evaporable water (TEW, mm) - FAO-56 Equation 73
-        io.TEW = 1000.0 * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
+        io.TEW = 1000. * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
         #Initial depth of evaporation (De, mm) - FAO-56 page 153
-        io.De = 1000.0 * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
+        io.De = 1000. * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
+        if self.sol is None:
+            io.solmthd = 'D' #Default homogeneous soil from Parameters
+            #Initial root zone depletion (Dr, mm) - FAO-56 Equation 87
+            io.Dr = 1000. * (io.thetaFC - io.theta0) * io.Zrini
+            #Initial soil depletion for max root depth (Drmax, mm)
+            io.Drmax = 1000. * (io.thetaFC - io.theta0) * io.Zrmax
+            #Total available water for max root depth (TAWrmax, mm)
+            io.TAWrmax = 1000. * (io.thetaFC - io.thetaWP) * io.Zrmax
+        else:
+            io.solmthd = 'L' #Layered soil profile from SoilProfile
+            io.lyr_dpths = list(self.sol.sdata.index)
+            io.lyr_thFC  = list(self.sol.sdata['thetaFC'])
+            io.lyr_thWP  = list(self.sol.sdata['thetaWP'])
+            io.lyr_th0   = list(self.sol.sdata['theta0'])
+            io.Dr = 0.
+            io.Drmax = 0.
+            io.TAWrmax = 0.
+            #Iterate down the soil profile in 1 cm increments
+            for dpthcm in list(range(1, io.lyr_dpths[-1] + 1)):
+                #Find soil layer index that contains dpthcm
+                lyr_idx = [idx for (idx, dpth) in
+                           enumerate(io.lyr_dpths) if dpthcm <= dpth][0]
+                #Initial root zone depletion (Dr, mm)
+                if dpthcm <= io.Zrini * 100.: #cm
+                    diff = (io.lyr_thFC[lyr_idx] - io.lyr_th0[lyr_idx])
+                    Dr += (diff * 10.) #mm
+                #Initial depletion for max root depth (Drmax, mm)
+                if dpthcm <= io.Zrmax * 100.: #cm
+                    diff = (io.lyr_thFC[lyr_idx] - io.lyr_th0[lyr_idx])
+                    Drmax += (diff * 10.) #mm
+                #Total available water for max root depth (TAWrmax, mm)
+                if dpthcm <= io.Zrmax * 100.: #cm
+                    diff = (io.lyr_thFC[lyr_idx] - io.lyr_thWP[lyr_idx])
+                    TAWrmax += (diff * 10.) #mm
         io.h = io.hini
         io.Zr = io.Zrini
         io.fw = 1.0
         io.wndht = self.wth.wndht
         io.rfcrp = self.wth.rfcrp
         self.odata = pd.DataFrame(columns=self.cnames)
-        # Accessing SoilProfile class if it is populated:
-        if self.sol is not None:
-            # Making lists of SoilProfile class variables:
-            io.BttmDpths = list(self.sol.sdata.index)
-            io.LayersFC = list(self.sol.sdata['thetaFC'])
-            io.LayersWP = list(self.sol.sdata['thetaWP'])
-            io.Layers0 = list(self.sol.sdata['theta0'])
-
-            # Using SoilProfile class variables for initialization of Dr
-            Dr = 0
-            Drmax = 0
-            # Setting TAWrmax to zero at the start
-            TAWrmax = 0
-            # Getting initial root depth in cm
-            Zr_ini = io.Zrini * 100
-            # Getting the maximum root zone depth in cm
-            Zrmax = io.Zrmax * 100
-            # Iterating through soil profile in 1 cm increments
-            for cm in list(range(1, io.BttmDpths[-1] + 1)):
-                # Finding index of profile layer that the iteration
-                # depth is less than or equal to
-                end_idx = [idx for (idx, bdep) in
-                           enumerate(io.BttmDpths) if cm <= bdep][0]
-                # Computing initial soil water depletion
-                if cm <= Zr_ini:
-                    Dr += (io.LayersFC[end_idx] - io.Layers0[end_idx])
-                # Computing TAW in the full root zone by summing TAW
-                # of the iteration depths to the maximum root zone
-                if cm <= Zrmax:
-                    TAWrmax += (io.LayersFC[end_idx] -
-                                io.LayersWP[end_idx])
-                    Drmax += (io.LayersFC[end_idx] -
-                               io.Layers0[end_idx])
-            # Converting from cm to mm and setting initial Dr, TAWrmax
-            io.Dr = Dr * 10
-            io.TAWrmax = TAWrmax * 10
-            io.Drmax = Drmax * 10
-        else:
-            #Initial soil water depletion (Dr, mm) - FAO-56 Equation 87
-            io.Dr = 1000.0 * (io.thetaFC - io.theta0) * io.Zrini
-            # Initial soil water depletion for full soil profile
-            io.Drmax = 1000.0 * (io.thetaFC - io.theta0) * io.Zrmax
-            # Total available water for full, homogenized soil layer
-            io.TAWrmax = 1000.0 * (io.thetaFC - io.thetaWP) * io.Zrmax
 
         while tcurrent <= self.endDate:
             mykey = tcurrent.strftime('%Y-%j')
@@ -338,6 +335,7 @@ class Model:
 
     def _advance(self, io):
         """Advance the model by one daily timestep.
+
         Parameters
         ----------
         io : ModelState object
@@ -421,36 +419,28 @@ class Model:
         #Non-stressed crop evapotranspiration (ETc, mm) - FAO-56 Eq. 69
         io.ETc = io.Kc * io.ETref
 
-        if self.sol is not None:
-            # Setting root zone TAW to 0 for the start of the timestep
-            rzTAW = 0
-            # Getting the current root zone depth in cm
-            Zr = io.Zr * 100
-
-            # Iterating through the whole soil profile in 1cm increments
-            for cm in list(range(1, io.BttmDpths[-1] + 1)):
-                # Finding the index of the profile layer that the
-                # iteration depth is less than or equal to
-                end_idx = [idx for (idx, bdep) in
-                           enumerate(io.BttmDpths) if cm <= bdep][0]
-                # Computing TAW in the current root zone by summing TAW
-                # of al the iteration depths to the current roots
-                if cm <= Zr:
-                    rzTAW += (io.LayersFC[end_idx] -
-                              io.LayersWP[end_idx])
-
-            # Converting TAW from cm to mm while setting timestep TAW
-            io.TAW = rzTAW * 10
-        else:
+        if io.solmthd == 'D':
             # Total available water (TAW, mm) - FAO-56 Eq. 82
             io.TAW = 1000.0 * (io.thetaFC - io.thetaWP) * io.Zr
+        elif io.solmthd == 'L':
+            io.TAW = 0.
+            #Iterate down the soil profile in 1 cm increments
+            for dpthcm in list(range(1, io.lyr_dpths[-1] + 1)):
+                #Find soil layer index that contains dpthcm
+                lyr_idx = [idx for (idx, dpth) in
+                           enumerate(io.lyr_dpths) if dpthcm <= dpth][0]
+                #Total available water (TAW, mm)
+                if dpthcm <= io.Zr * 100.: #cm
+                    diff = (io.lyr_thFC[lyr_idx] - io.lyr_thWP[lyr_idx])
+                    io.TAW += (diff * 10.) #mm
 
         #Fraction depleted TAW (p, 0.1-0.8) - FAO-56 p162 and Table 22
         io.p = sorted([0.1,io.pbase+0.04*(5.0-io.ETc),0.8])[1]
 
         #Readily available water (RAW, mm) - FAO-56 Equation 83
         io.RAW = io.p * io.TAW
-        #Readily available water down to max root zone (RAWrmax, mm)
+
+        # Readily available water for max root depth (RAWrmax, mm)
         io.RAWrmax = io.p * io.TAWrmax
 
         #Transpiration reduction factor (Ks, 0.0-1.0) - FAO-56 Eq. 84
@@ -468,12 +458,13 @@ class Model:
         #Root zone soil water depletion (Dr, mm) - FAO-56 Eqs. 85 & 86
         Dr = io.Dr - (io.rain - runoff) - io.idep + io.ETcadj + io.DP
         io.Dr = sorted([0.0, Dr, io.TAW])[1]
-        #Max root zone depth soil water depletion (Drmax, mm)
-        Drmax = io.Drmax - (io.rain - runoff) - io.idep + io.ETcadj \
-                 + io.DP
+
+        #Soil water depletion at max root depth (Drmax, mm)
+        Drmax= io.Drmax - (io.rain-runoff) - io.idep + io.ETcadj + io.DP
         io.Drmax = sorted([0.0, Drmax, io.TAWrmax])[1]
 
-        #Fractional root zone soil water depletion (fDr)
-        io.fDr = (1.0 - ((io.TAW - io.Dr) / io.TAW))
-        #Fractional soil water depletion in max root zone (fDrmax)
-        io.fDrmax = (1.0 - ((io.TAWrmax - io.Drmax) / io.TAWrmax))
+        #Root zone soil water depletion fraction (fDr, mm/mm)
+        io.fDr = (1.0-((io.TAW - io.Dr)/io.TAW))
+
+        #Soil water depletion fraction at max root depth (fDrmax, mm/mm)
+        io.fDrmax = (1.0-((io.TAWrmax - io.fDr)/io.TAWrmax))

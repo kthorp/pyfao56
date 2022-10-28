@@ -12,7 +12,7 @@ layer.
 The soil_profile.py module contains the following:
     SoilProfile - A class for managing soil properties stratified
        by soil layer
-       
+
 08/10/2022 Initial Python functions developed by Josh Brekel, USDA-ARS
 09/27/2022 Finalized updates for inclusion in the pyfao56 Python package
 ########################################################################
@@ -22,7 +22,7 @@ import pandas as pd
 
 class SoilProfile:
     """A class for managing layered soil profile data in pyfao56.
-    
+
     Attributes
     ----------
     cnames : list
@@ -37,7 +37,7 @@ class SoilProfile:
                       (cm^3/cm^3)
             theta0  - Volumetric Soil Water Content, Initial
                       (cm^3/cm^3)
-                      
+
     Methods
     -------
     savefile(filepath='pyfao56.sol')
@@ -50,9 +50,9 @@ class SoilProfile:
 
     def __init__(self, filepath=None):
         """Initialize the SoilProfile class attributes.
-        
+
         If filepath is provided, soil data is loaded from the file.
-        
+
         Parameters
         ----------
         filepath : str, optional
@@ -88,18 +88,18 @@ class SoilProfile:
 
     def savefile(self, filepath='pyfao56.sol'):
         """Save pyfao56 soil profile data to a file.
-        
+
         Parameters
         ----------
         filepath : str, optional
             Any valid filepath string (default = 'pyfao56.sol')
-        
+
         Raises
         ------
         FileNotFoundError
             If filepath is not found.
         """
-        
+
         try:
             f = open(filepath, 'w')
         except FileNotFoundError:
@@ -110,18 +110,18 @@ class SoilProfile:
 
     def loadfile(self, filepath='pyfao56.sol'):
         """Load pyfao56 soil profile data from a file.
-        
+
         Parameters
         ----------
         filepath : str, optional
            Any valid filepath string (default = 'pyfao56.sol')
-        
+
         Raises
         ------
         FileNotFoundError
             If filepath is not found.
         """
-        
+
         try:
             f = open(filepath, 'r')
         except FileNotFoundError:
