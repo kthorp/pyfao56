@@ -56,10 +56,12 @@ class Model:
     odata : DataFrame
         Model output data as float
         index - Year and day of year as string ('yyyy-ddd')
-        columns - ['Year','DOY','DOW','Date','ETref','Kcb','h','Kcmax',
-                   'fc','fw','few','De','Kr','Ke','E','DPe','Kc','ETc',
-                   'TAW','Zr','p','RAW','Ks','ETcadj','T','DP','Dr',
-                   'PerDr','Irrig','Rain','Year','DOY','DOW','Date']
+        columns - ['Year','DOY','DOW','Date','ETref','Kcb','h',
+                  'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
+                  'Kc','ETc','TAW','TAWrmax','Zr','p','RAW',
+                  'RAWrmax','Ks','ETcadj','T','DP','Dr','fDr',
+                  'Drmax','fDrmax','Irrig','Rain','Year',
+                  'DOY','DOW','Date']
             Year    - 4-digit year (yyyy)
             DOY     - Day of year (ddd)
             DOW     - Day of week
@@ -106,7 +108,8 @@ class Model:
         Conduct the FAO-56 calculations from start to end
     """
 
-    def __init__(self,start, end, par, wth, irr, sol=None, upd=None):
+    def __init__(self,start, end, par, wth, irr, sol=None, upd=None,
+                 cons_p=False):
         """Initialize the Model class attributes.
 
         Parameters
@@ -127,6 +130,10 @@ class Model:
         upd : pyfao56 Update object, optional
             Provides data and methods for state variable updating
             (default = None)
+        cons_p : boolean setting, optional
+            If set to True, then the depletion fraction (p) remains
+            constant. If set to False, p varies with daily ETc.
+            (default = False)
         """
 
         self.startDate = datetime.datetime.strptime(start, '%Y-%j')
@@ -136,6 +143,7 @@ class Model:
         self.irr = irr
         self.sol = sol
         self.upd = upd
+        self.cons_p = cons_p
         self.cnames = ['Year','DOY','DOW','Date','ETref','Kcb','h',
                        'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
                        'Kc','ETc','TAW','TAWrmax','Zr','p','RAW',
@@ -261,20 +269,21 @@ class Model:
                 #Initial root zone depletion (Dr, mm)
                 if dpthcm <= io.Zrini * 100.: #cm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_th0[lyr_idx])
-                    Dr += (diff * 10.) #mm
+                    io.Dr += (diff * 10.) #mm
                 #Initial depletion for max root depth (Drmax, mm)
                 if dpthcm <= io.Zrmax * 100.: #cm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_th0[lyr_idx])
-                    Drmax += (diff * 10.) #mm
+                    io.Drmax += (diff * 10.) #mm
                 #Total available water for max root depth (TAWrmax, mm)
                 if dpthcm <= io.Zrmax * 100.: #cm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_thWP[lyr_idx])
-                    TAWrmax += (diff * 10.) #mm
+                    io.TAWrmax += (diff * 10.) #mm
         io.h = io.hini
         io.Zr = io.Zrini
         io.fw = 1.0
         io.wndht = self.wth.wndht
         io.rfcrp = self.wth.rfcrp
+        io.cons_p = self.cons_p
         self.odata = pd.DataFrame(columns=self.cnames)
 
         while tcurrent <= self.endDate:
@@ -435,12 +444,15 @@ class Model:
                     io.TAW += (diff * 10.) #mm
 
         #Fraction depleted TAW (p, 0.1-0.8) - FAO-56 p162 and Table 22
-        io.p = sorted([0.1,io.pbase+0.04*(5.0-io.ETc),0.8])[1]
+        if io.cons_p is True:
+            io.p = io.pbase
+        else:
+            io.p = sorted([0.1,io.pbase+0.04*(5.0-io.ETc),0.8])[1]
 
         #Readily available water (RAW, mm) - FAO-56 Equation 83
         io.RAW = io.p * io.TAW
 
-        # Readily available water for max root depth (RAWrmax, mm)
+        #Readily available water for max root depth (RAWrmax, mm)
         io.RAWrmax = io.p * io.TAWrmax
 
         #Transpiration reduction factor (Ks, 0.0-1.0) - FAO-56 Eq. 84
@@ -467,4 +479,4 @@ class Model:
         io.fDr = (1.0-((io.TAW - io.Dr)/io.TAW))
 
         #Soil water depletion fraction at max root depth (fDrmax, mm/mm)
-        io.fDrmax = (1.0-((io.TAWrmax - io.fDr)/io.TAWrmax))
+        io.fDrmax = (1.0-((io.TAWrmax - io.Drmax)/io.TAWrmax))
