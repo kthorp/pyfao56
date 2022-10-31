@@ -81,19 +81,19 @@ class Model:
             Kc      - Crop coefficient, FAO-56 Eq. 69
             ETc     - Non-stressed crop ET (mm), FAO-56 Eq. 69
             TAW     - Total available water (mm), FAO-56 Eq. 82
-            TAWrmax - Total available water (mm) in maximum root zone
+            TAWrmax - Total available water for max root depth (mm)
             Zr      - Root depth (m), FAO-56 page 279
             p       - Fraction depleted TAW, FAO-56 p162 and Table 22
             RAW     - Readily available water (mm), FAO-56 Equation 83
-            RAWrmax - Readily available water (mm) in maximum root zone
+            RAWrmax - Readily available water for max root depth (mm)
             Ks      - Transpiration reduction factor, FAO-56 Eq. 84
             ETcadj  - Adjusted crop ET (mm), FAO-56 Eq. 80
             T       - Adjusted crop transpiration (mm)
             DP      - Deep percolation (mm), FAO-56 Eq. 88
             Dr      - Soil water depletion (mm), FAO-56 Eqs. 85 & 86
-            fDr     - Fractional root zone soil water depletion
-            Drmax   - Soil water depletion (mm) in maximum root zone
-            fDrmax  - Fractional soil water depletion in max root zone
+            fDr     - Fractional root zone soil water depletion (mm/mm)
+            Drmax   - Soil water depletion for max root depth (mm)
+            fDrmax  - Fractional depletion for max root depth (mm/mm)
             Irrig   - Depth of irrigation (mm)
             Rain    - Depth of precipitation (mm)
             Year    - 4-digit year (yyyy)
@@ -130,9 +130,8 @@ class Model:
         upd : pyfao56 Update object, optional
             Provides data and methods for state variable updating
             (default = None)
-        cons_p : boolean setting, optional
-            If set to True, then the depletion fraction (p) remains
-            constant. If set to False, p varies with daily ETc.
+        cons_p : boolean, optional
+            If False, p follows FAO-56; if True, p is constant (=pbase)
             (default = False)
         """
 
@@ -179,10 +178,10 @@ class Model:
              '{:s}\n'
              'Year-DOY  Year  DOY  DOW      Date  ETref   Kcb     h'
              ' Kcmax    fc    fw   few      De    Kr    Ke      E'
-             '     DPe    Kc    ETc     TAW TAWrmax    Zr     p     '
-             'RAW RAWrmax    Ks ETcadj      T      DP      Dr     fDr'
-             '   Drmax  fDrmax   Irrig    Rain  Year  DOY  DOW      '
-             'Date\n'
+             '     DPe    Kc    ETc     TAW TAWrmax    Zr     p'
+             '     RAW RAWrmax    Ks ETcadj      T      DP      Dr'
+             '     fDr   Drmax  fDrmax   Irrig    Rain  Year  DOY  DOW'
+             '      Date\n'
              ).format(ast,ast)
         s += self.odata.to_string(header=False,formatters=fmts)
         return s
