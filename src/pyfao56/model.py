@@ -56,45 +56,50 @@ class Model:
     odata : DataFrame
         Model output data as float
         index - Year and day of year as string ('yyyy-ddd')
-        columns - ['Year','DOY','DOW','Date','ETref','Kcb','h','Kcmax',
-                   'fc','fw','few','De','Kr','Ke','E','DPe','Kc','ETc',
-                   'TAW','Zr','p','RAW','Ks','ETcadj','T','DP','Dr',
-                   'fDr','Irrig','Rain','Year','DOY','DOW','Date']
-            Year   - 4-digit year (yyyy)
-            DOY    - Day of year (ddd)
-            DOW    - Day of week
-            Date   - Month/Day/Year (mm/dd/yy)
-            ETref  - Daily reference evapotranspiration (mm)
-            Kcb    - Basal crop coefficient
-            h      - Plant height (m)
-            Kcmax  - Upper limit crop coefficient, FAO-56 Eq. 72
-            fc     - Canopy cover fraction, FAO-56 Eq. 76
-            fw     - Fraction soil surface wetted, FAO-56 Table 20
-            few    - Exposed & wetted soil fraction, FAO-56 Eq. 75
-            De     - Cumulative depth of evaporation, FAO-56 Eqs. 77&78
-            Kr     - Evaporation reduction coefficient, FAO-56 Eq. 74
-            Ke     - Evaporation coefficient, FAO-56 Eq. 71
-            E      - Soil water evaporation (mm), FAO-56 Eq. 69
-            DPe    - Percolation under exposed soil (mm), FAO-56 Eq. 79
-            Kc     - Crop coefficient, FAO-56 Eq. 69
-            ETc    - Non-stressed crop ET (mm), FAO-56 Eq. 69
-            TAW    - Total available water (mm), FAO-56 Eq. 82
-            Zr     - Root depth (m), FAO-56 page 279
-            p      - Fraction depleted TAW, FAO-56 p162 and Table 22
-            RAW    - Readily available water (mm), FAO-56 Equation 83
-            Ks     - Transpiration reduction factor, FAO-56 Eq. 84
-            ETcadj - Adjusted crop ET (mm), FAO-56 Eq. 80
-            T      - Adjusted crop transpiration (mm)
-            DP     - Deep percolation (mm), FAO-56 Eq. 88
-            Dr     - Soil water depletion (mm), FAO-56 Eqs. 85 & 86
-            fDr    - Root zone soil water depletion fraction (mm/mm)
-            Irrig  - Depth of irrigation (mm)
-            Rain   - Depth of precipitation (mm)
-            Year   - 4-digit year (yyyy)
-            DOY    - Day of year (ddd)
-            DOW    - Day of week
-            Date   - Month/Day/Year (mm/dd/yy)
-
+        columns - ['Year','DOY','DOW','Date','ETref','Kcb','h',
+                  'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
+                  'Kc','ETc','TAW','TAWrmax','Zr','p','RAW',
+                  'RAWrmax','Ks','ETcadj','T','DP','Dr','fDr',
+                  'Drmax','fDrmax','Irrig','Rain','Year',
+                  'DOY','DOW','Date']
+            Year    - 4-digit year (yyyy)
+            DOY     - Day of year (ddd)
+            DOW     - Day of week
+            Date    - Month/Day/Year (mm/dd/yy)
+            ETref   - Daily reference evapotranspiration (mm)
+            Kcb     - Basal crop coefficient
+            h       - Plant height (m)
+            Kcmax   - Upper limit crop coefficient, FAO-56 Eq. 72
+            fc      - Canopy cover fraction, FAO-56 Eq. 76
+            fw      - Fraction soil surface wetted, FAO-56 Table 20
+            few     - Exposed & wetted soil fraction, FAO-56 Eq. 75
+            De      - Cumulative depth of evaporation, FAO-56 Eqs. 77&78
+            Kr      - Evaporation reduction coefficient, FAO-56 Eq. 74
+            Ke      - Evaporation coefficient, FAO-56 Eq. 71
+            E       - Soil water evaporation (mm), FAO-56 Eq. 69
+            DPe     - Percolation under exposed soil (mm), FAO-56 Eq. 79
+            Kc      - Crop coefficient, FAO-56 Eq. 69
+            ETc     - Non-stressed crop ET (mm), FAO-56 Eq. 69
+            TAW     - Total available water (mm), FAO-56 Eq. 82
+            TAWrmax - Total available water (mm) in maximum root zone
+            Zr      - Root depth (m), FAO-56 page 279
+            p       - Fraction depleted TAW, FAO-56 p162 and Table 22
+            RAW     - Readily available water (mm), FAO-56 Equation 83
+            RAWrmax - Readily available water (mm) in maximum root zone
+            Ks      - Transpiration reduction factor, FAO-56 Eq. 84
+            ETcadj  - Adjusted crop ET (mm), FAO-56 Eq. 80
+            T       - Adjusted crop transpiration (mm)
+            DP      - Deep percolation (mm), FAO-56 Eq. 88
+            Dr      - Soil water depletion (mm), FAO-56 Eqs. 85 & 86
+            fDr     - Fractional root zone soil water depletion
+            Drmax   - Soil water depletion (mm) in maximum root zone
+            fDrmax  - Fractional soil water depletion in max root zone
+            Irrig   - Depth of irrigation (mm)
+            Rain    - Depth of precipitation (mm)
+            Year    - 4-digit year (yyyy)
+            DOY     - Day of year (ddd)
+            DOW     - Day of week
+            Date    - Month/Day/Year (mm/dd/yy)
     Methods
     -------
     savefile(filepath='pyfao56.out')
@@ -103,7 +108,8 @@ class Model:
         Conduct the FAO-56 calculations from start to end
     """
 
-    def __init__(self,start, end, par, wth, irr, sol=None, upd=None):
+    def __init__(self,start, end, par, wth, irr, sol=None, upd=None,
+                 cons_p=False):
         """Initialize the Model class attributes.
 
         Parameters
@@ -124,6 +130,10 @@ class Model:
         upd : pyfao56 Update object, optional
             Provides data and methods for state variable updating
             (default = None)
+        cons_p : boolean setting, optional
+            If set to True, then the depletion fraction (p) remains
+            constant. If set to False, p varies with daily ETc.
+            (default = False)
         """
 
         self.startDate = datetime.datetime.strptime(start, '%Y-%j')
@@ -133,10 +143,12 @@ class Model:
         self.irr = irr
         self.sol = sol
         self.upd = upd
+        self.cons_p = cons_p
         self.cnames = ['Year','DOY','DOW','Date','ETref','Kcb','h',
                        'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
-                       'Kc','ETc','TAW','Zr','p','RAW','Ks','ETcadj',
-                       'T','DP','Dr','fDr','Irrig','Rain','Year',
+                       'Kc','ETc','TAW','TAWrmax','Zr','p','RAW',
+                       'RAWrmax','Ks','ETcadj','T','DP','Dr','fDr',
+                       'Drmax','fDrmax','Irrig','Rain','Year',
                        'DOY','DOW','Date']
         self.odata = pd.DataFrame(columns=self.cnames)
 
@@ -152,11 +164,13 @@ class Model:
                 'Kr':'{:5.3f}'.format,'Ke':'{:5.3f}'.format,
                 'E':'{:6.3f}'.format,'DPe':'{:7.3f}'.format,
                 'Kc':'{:5.3f}'.format,'ETc':'{:6.3f}'.format,
-                'TAW':'{:7.3f}'.format,'Zr':'{:5.3f}'.format,
-                'p':'{:5.3f}'.format,'RAW':'{:7.3f}'.format,
+                'TAW':'{:7.3f}'.format,'TAWrmax':'{:7.3f}'.format,
+                'Zr':'{:5.3f}'.format,'p':'{:5.3f}'.format,
+                'RAW':'{:7.3f}'.format,'RAWrmax':'{:7.3f}'.format,
                 'Ks':'{:5.3f}'.format,'ETcadj':'{:6.3f}'.format,
                 'T':'{:6.3f}'.format,'DP':'{:7.3f}'.format,
                 'Dr':'{:7.3f}'.format,'fDr':'{:7.3f}'.format,
+                'Drmax':'{:7.3f}'.format, 'fDrmax':'{:7.3f}'.format,
                 'Irrig':'{:7.3f}'.format,'Rain':'{:7.3f}'.format}
         ast='*'*72
         s = ('{:s}\n'
@@ -165,9 +179,10 @@ class Model:
              '{:s}\n'
              'Year-DOY  Year  DOY  DOW      Date  ETref   Kcb     h'
              ' Kcmax    fc    fw   few      De    Kr    Ke      E'
-             '     DPe    Kc    ETc     TAW    Zr     p     RAW'
-             '    Ks ETcadj      T      DP      Dr     fDr   Irrig'
-             '    Rain  Year  DOY  DOW      Date\n'
+             '     DPe    Kc    ETc     TAW TAWrmax    Zr     p     '
+             'RAW RAWrmax    Ks ETcadj      T      DP      Dr     fDr'
+             '   Drmax  fDrmax   Irrig    Rain  Year  DOY  DOW      '
+             'Date\n'
              ).format(ast,ast)
         s += self.odata.to_string(header=False,formatters=fmts)
         return s
@@ -254,20 +269,21 @@ class Model:
                 #Initial root zone depletion (Dr, mm)
                 if dpthcm <= io.Zrini * 100.: #cm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_th0[lyr_idx])
-                    Dr += (diff * 10.) #mm
+                    io.Dr += (diff * 10.) #mm
                 #Initial depletion for max root depth (Drmax, mm)
                 if dpthcm <= io.Zrmax * 100.: #cm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_th0[lyr_idx])
-                    Drmax += (diff * 10.) #mm
+                    io.Drmax += (diff * 10.) #mm
                 #Total available water for max root depth (TAWrmax, mm)
                 if dpthcm <= io.Zrmax * 100.: #cm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_thWP[lyr_idx])
-                    TAWrmax += (diff * 10.) #mm
+                    io.TAWrmax += (diff * 10.) #mm
         io.h = io.hini
         io.Zr = io.Zrini
         io.fw = 1.0
         io.wndht = self.wth.wndht
         io.rfcrp = self.wth.rfcrp
+        io.cons_p = self.cons_p
         self.odata = pd.DataFrame(columns=self.cnames)
 
         while tcurrent <= self.endDate:
@@ -315,11 +331,12 @@ class Model:
             doy = tcurrent.strftime('%j') #Day of Year
             dow = tcurrent.strftime('%a') #Day of Week
             dat = tcurrent.strftime('%m/%d/%y') #Date mm/dd/yy
-            data = [year,doy,dow,dat,io.ETref,io.Kcb,io.h,io.Kcmax,
-                    io.fc,io.fw,io.few,io.De,io.Kr,io.Ke,io.E,io.DPe,
-                    io.Kc,io.ETc,io.TAW,io.Zr,io.p,io.RAW,io.Ks,
-                    io.ETcadj,io.T,io.DP,io.Dr,io.fDr,io.idep,io.rain,
-                    year,doy,dow,dat]
+            data = [year, doy, dow, dat, io.ETref, io.Kcb, io.h,
+                    io.Kcmax, io.fc, io.fw, io.few, io.De, io.Kr, io.Ke,
+                    io.E, io.DPe, io.Kc, io.ETc, io.TAW, io.TAWrmax,
+                    io.Zr, io.p, io.RAW, io.RAWrmax, io.Ks, io.ETcadj,
+                    io.T, io.DP, io.Dr, io.fDr, io.Drmax, io.fDrmax,
+                    io.idep, io.rain, year, doy, dow, dat]
             self.odata.loc[mykey] = data
 
             tcurrent = tcurrent + tdelta
@@ -427,12 +444,15 @@ class Model:
                     io.TAW += (diff * 10.) #mm
 
         #Fraction depleted TAW (p, 0.1-0.8) - FAO-56 p162 and Table 22
-        io.p = sorted([0.1,io.pbase+0.04*(5.0-io.ETc),0.8])[1]
+        if io.cons_p is True:
+            io.p = io.pbase
+        else:
+            io.p = sorted([0.1,io.pbase+0.04*(5.0-io.ETc),0.8])[1]
 
         #Readily available water (RAW, mm) - FAO-56 Equation 83
         io.RAW = io.p * io.TAW
 
-        # Readily available water for max root depth (RAWrmax, mm)
+        #Readily available water for max root depth (RAWrmax, mm)
         io.RAWrmax = io.p * io.TAWrmax
 
         #Transpiration reduction factor (Ks, 0.0-1.0) - FAO-56 Eq. 84
@@ -459,4 +479,4 @@ class Model:
         io.fDr = (1.0-((io.TAW - io.Dr)/io.TAW))
 
         #Soil water depletion fraction at max root depth (fDrmax, mm/mm)
-        io.fDrmax = (1.0-((io.TAWrmax - io.fDr)/io.TAWrmax))
+        io.fDrmax = (1.0-((io.TAWrmax - io.Drmax)/io.TAWrmax))

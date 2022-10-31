@@ -123,7 +123,8 @@ mdl = Model(start='2022-129',
             par=par,
             wth=wth,
             irr=irr,
-            sol=sol)
+            sol=sol,
+            cons_p=True)
 mdl.run()
 mdl.savefile(filepath=model_output_file)
 
@@ -132,7 +133,8 @@ default_mdl = Model(start='2022-129',
                     end='2022-248',
                     par=par,
                     wth=wth,
-                    irr=irr)
+                    irr=irr,
+                    cons_p=True)
 default_mdl.run()
 default_mdl.savefile(filepath=f'{output_folder}default_model_'
                               f'test_{date}.out')
