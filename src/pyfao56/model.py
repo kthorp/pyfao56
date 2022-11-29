@@ -35,7 +35,7 @@ class Model:
     ----------
     startDate : datetime
         Simulation start date in datetime format
-    end : datetime
+    endDate : datetime
         Simulation end date in datetime format
     par : pyfao56 Parameters class
         Provides the parameter data for simulations
@@ -49,6 +49,9 @@ class Model:
     upd : pyfao56 Update class, optional
         Provides data and methods for state variable updating
         (default = None)
+    cons_p : boolean, optional
+        If False, p follows FAO-56; if True, p is constant (=pbase)
+        (default = False)
     ModelState : class
         Contains parameters and model states for a single timestep
     cnames : list
