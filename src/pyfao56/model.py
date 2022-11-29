@@ -263,6 +263,9 @@ class Model:
             io.Dr = 0.
             io.Drmax = 0.
             io.TAWrmax = 0.
+# # Start: For Kelly's Drmax calculation ****************************************************************************************
+            io.TAWb = 0.
+# # End: For Kelly's Drmax calculation ******************************************************************************************
             #Iterate down the soil profile in 1 cm increments
             for dpthcm in list(range(1, io.lyr_dpths[-1] + 1)):
                 #Find soil layer index that contains dpthcm
@@ -280,6 +283,14 @@ class Model:
                 if dpthcm <= io.Zrmax * 100.: #cm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_thWP[lyr_idx])
                     io.TAWrmax += (diff * 10.) #mm
+# # Start: For Kelly's Drmax calculation ****************************************************************************************
+                #Initial total available water between Zr and Zrmax
+                if io.Zrini * 100 < dpthcm <= io.Zrmax * 100: #cm
+                    diff = (io.lyr_thFC[lyr_idx] - io.lyr_thWP[lyr_idx])
+                    io.TAWb = (diff * 10)  # mm
+            #Initial depletion between Zr and Zrmax
+            io.Db = io.Drmax - io.Dr
+# # End: For Kelly's Drmax calculation ******************************************************************************************
         io.h = io.hini
         io.Zr = io.Zrini
         io.fw = 1.0
@@ -374,10 +385,19 @@ class Model:
         io.h = max([io.hini+(io.hmax-io.hini)*(io.Kcb-io.Kcbini)/
                     (io.Kcbmid-io.Kcbini),0.001,io.h])
         if io.updh > 0: io.h = io.updh
-
+# # Start: For Kendall's Drmax calculation +x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x++x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+
+        #Root depth of previous time step (Zr_prev, m)
+        io.Zr_prev = io.Zr
+# # End: For Kendall's Drmax calculation +x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x++x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+
         #Root depth (Zr, m) - FAO-56 page 279
         io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*(io.Kcb-io.Kcbini)/
                      (io.Kcbmid-io.Kcbini),0.001,io.Zr])
+# # Start: For Kendall's Drmax calculation +x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x++x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+
+        #Change in root depth from previous time step (Zr_delta, m)
+        io.Zr_delta = io.Zr - io.Zr_prev
+        #Depth of soil between root zone and max root zone (Zb, m)
+        io.Zb = io.Zrmax - io.Zr
+# # End: For Kendall's Drmax calculation +x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x++x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+
 
         #Upper limit crop coefficient (Kcmax) - FAO-56 Eq. 72
         u2 = io.wndsp * (4.87/math.log(67.8*io.wndht-5.42))
@@ -444,6 +464,15 @@ class Model:
                 if dpthcm <= io.Zr * 100.: #cm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_thWP[lyr_idx])
                     io.TAW += (diff * 10.) #mm
+# # Start: For Kelly's Drmax calculation ****************************************************************************************
+                #TAWb of previous timestep     (Note: I had to add this if-statement to get things to work, but there might be better ways to do it.)
+                if io.i == 0:
+                    io.TAWb_prev = io.TAWrmax - io.TAW #Seems like this might make the calculation @283-5 redundant?
+                else:
+                    io.TAWb_prev = io.TAWb
+                #Total available water between Zr and Zrmax (TAWb, mm)
+                io.TAWb = io.TAWrmax - io.TAW
+# # End: For Kelly's Drmax calculation ******************************************************************************************
 
         #Fraction depleted TAW (p, 0.1-0.8) - FAO-56 p162 and Table 22
         if io.cons_p is True:
@@ -466,16 +495,56 @@ class Model:
         #Adjusted crop transpiration (T, mm)
         io.T = (io.Ks * io.Kcb) * io.ETref
 
-        #Deep percolation (DP, mm) - FAO-56 Eq. 88
-        io.DP = max([io.rain-runoff+io.idep-io.ETcadj-io.Dr,0.0])
+        if io.slmthd == 'D':
+            #Deep percolation (DP, mm) - FAO-56 Eq. 88
+            io.DP = max([io.rain-runoff+io.idep-io.ETcadj-io.Dr,0.0])
 
-        #Root zone soil water depletion (Dr, mm) - FAO-56 Eqs. 85 & 86
-        Dr = io.Dr - (io.rain - runoff) - io.idep + io.ETcadj + io.DP
-        io.Dr = sorted([0.0, Dr, io.TAW])[1]
+            #Root zone soil water depletion (Dr,mm) - FAO-56 Eqs.85 & 86
+            Dr = io.Dr - (io.rain-runoff) - io.idep + io.ETcadj + io.DP
+            io.Dr = sorted([0.0, Dr, io.TAW])[1]
 
-        #Soil water depletion at max root depth (Drmax, mm)
-        Drmax= io.Drmax - (io.rain-runoff) - io.idep + io.ETcadj + io.DP
-        io.Drmax = sorted([0.0, Drmax, io.TAWrmax])[1]
+            #Depletion at max root depth (Drmax, mm) - not in FAO-56
+            io.Drmax = -999
+
+        elif io.solmthd == 'L':
+            #Deep percolation (DP, mm) - FAO-56 Eq. 88 using Drmax
+            io.DP = max([io.rain - runoff + io.idep - io.ETcadj -
+                         io.Drmax, 0.0])
+# # Start: For Kendall's Drmax calculation +x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x++x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+
+            #Deficit in the change of root zone (D_deltaZr, mm)
+            if round((io.Drmax - io.Dr), 3) > 0: #This is to avoid dividing by zero or thereabouts
+                io.D_deltaZr = (io.Zr_delta * 1000) * (
+                        (io.Drmax - io.Dr) / (io.Zb * 1000))
+            else:
+                io.D_deltaZr = 0.
+
+            #Root zone soil water depletion (Dr, mm)
+            Dr = io.Dr - (io.rain-runoff) - io.idep + io.ETcadj + io.D_deltaZr
+            io.Dr = sorted([0.0, Dr, io.TAW])[1]
+
+            #Soil water depletion at max root depth (Drmax, mm)
+            Drmax = io.Drmax - (io.rain - runoff) - io.idep + io.ETcadj
+            io.Drmax = sorted([0.0, Drmax, io.TAWrmax])[1]
+# # End: For Kendall's Drmax calculation +x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x++x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+
+
+# # Start: For Kelly's Drmax calculation ****************************************************************************************
+            if io.TAWb_prev > 0:
+                io.deltaDb = io.Db - (io.Db * (io.TAWb / io.TAWb_prev))
+            else:
+                io.deltaDb = 0
+
+            #Root zone soil water depletion (Dr, mm)
+            Dr = io.Dr - (io.rain-runoff) - io.idep + io.ETcadj + io.deltaDb
+            io.Dr = sorted([0.0, Dr, io.TAW])[1]
+
+            #Soil water depletion at max root depth (Drmax, mm)
+            Drmax = io.Drmax - (io.rain - runoff) - io.idep + io.ETcadj + io.DP
+            io.Drmax = sorted([0.0, Drmax, io.TAWrmax])[1]
+
+            #Soil water depletion between Zr and Zrmax (Db, mm)
+            Db = io.Drmax - io.Dr
+            io.Db = sorted([0.0, Db, io.TAWb])[1]
+# # End: For Kelly's Drmax calculation ******************************************************************************************
 
         #Root zone soil water depletion fraction (fDr, mm/mm)
         io.fDr = (1.0-((io.TAW - io.Dr)/io.TAW))
