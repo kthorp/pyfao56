@@ -18,6 +18,7 @@ The model.py module contains the following:
 01/07/2016 Initial Python functions developed by Kelly Thorp
 11/04/2021 Finalized updates for inclusion in the pyfao56 Python package
 10/27/2022 Incorporated Fort Collins ARS stratified soil layers approach
+11/30/2022 Incorporated Fort Collins ARS water balance approach
 ########################################################################
 """
 
@@ -59,12 +60,11 @@ class Model:
     odata : DataFrame
         Model output data as float
         index - Year and day of year as string ('yyyy-ddd')
-        columns - ['Year','DOY','DOW','Date','ETref','Kcb','h',
-                  'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
-                  'Kc','ETc','TAW','TAWrmax','Zr','p','RAW',
-                  'RAWrmax','Ks','ETcadj','T','DP','Dr','fDr',
-                  'Drmax','fDrmax','Irrig','Rain','Year',
-                  'DOY','DOW','Date']
+        columns - ['Year','DOY','DOW','Date','ETref','Kcb','h','Kcmax',
+                   'fc','fw','few','De','Kr','Ke','E','DPe','Kc','ETc',
+                   'TAW','TAWrmax','TAWb','Zr','p','RAW','Ks','ETcadj',
+                   'T','DP','Dinc','Dr','fDr','Drmax','fDrmax','Db',
+                   'fDb','Irrig','Rain','Year','DOY','DOW','Date']
             Year    - 4-digit year (yyyy)
             DOY     - Day of year (ddd)
             DOW     - Day of week
@@ -85,33 +85,37 @@ class Model:
             ETc     - Non-stressed crop ET (mm), FAO-56 Eq. 69
             TAW     - Total available water (mm), FAO-56 Eq. 82
             TAWrmax - Total available water for max root depth (mm)
+            TAWb    - Total available water in bottom layer (mm)
             Zr      - Root depth (m), FAO-56 page 279
             p       - Fraction depleted TAW, FAO-56 p162 and Table 22
             RAW     - Readily available water (mm), FAO-56 Equation 83
-            RAWrmax - Readily available water for max root depth (mm)
             Ks      - Transpiration reduction factor, FAO-56 Eq. 84
             ETcadj  - Adjusted crop ET (mm), FAO-56 Eq. 80
             T       - Adjusted crop transpiration (mm)
             DP      - Deep percolation (mm), FAO-56 Eq. 88
+            Dinc    - Depletion increment due to root growth (mm)
             Dr      - Soil water depletion (mm), FAO-56 Eqs. 85 & 86
             fDr     - Fractional root zone soil water depletion (mm/mm)
             Drmax   - Soil water depletion for max root depth (mm)
             fDrmax  - Fractional depletion for max root depth (mm/mm)
+            Db      - Soil water depletion in the bottom layer (mm)
+            fDb     - Fractional depletion in the bottom layer (mm/mm)
             Irrig   - Depth of irrigation (mm)
             Rain    - Depth of precipitation (mm)
             Year    - 4-digit year (yyyy)
             DOY     - Day of year (ddd)
             DOW     - Day of week
             Date    - Month/Day/Year (mm/dd/yy)
+
     Methods
     -------
     savefile(filepath='pyfao56.out')
         Save pyfao56 output data to a file
     run()
-        Conduct the FAO-56 calculations from start to end
+        Conduct the FAO-56 calculations from startDate to endDate
     """
 
-    def __init__(self,start, end, par, wth, irr, sol=None, upd=None,
+    def __init__(self, start, end, par, wth, irr, sol=None, upd=None,
                  cons_p=False):
         """Initialize the Model class attributes.
 
@@ -148,10 +152,10 @@ class Model:
         self.cons_p = cons_p
         self.cnames = ['Year','DOY','DOW','Date','ETref','Kcb','h',
                        'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
-                       'Kc','ETc','TAW','TAWrmax','Zr','p','RAW',
-                       'RAWrmax','Ks','ETcadj','T','DP','Dr','fDr',
-                       'Drmax','fDrmax','Irrig','Rain','Year',
-                       'DOY','DOW','Date']
+                       'Kc','ETc','TAW','TAWrmax','TAWb','Zr','p','RAW',
+                       'Ks','ETcadj','T','DP','Dinc','Dr','fDr','Drmax',
+                       'fDrmax','Db','fDb','Irrig','Rain','Year','DOY',
+                       'DOW','Date']
         self.odata = pd.DataFrame(columns=self.cnames)
 
     def __str__(self):
@@ -167,13 +171,15 @@ class Model:
                 'E':'{:6.3f}'.format,'DPe':'{:7.3f}'.format,
                 'Kc':'{:5.3f}'.format,'ETc':'{:6.3f}'.format,
                 'TAW':'{:7.3f}'.format,'TAWrmax':'{:7.3f}'.format,
-                'Zr':'{:5.3f}'.format,'p':'{:5.3f}'.format,
-                'RAW':'{:7.3f}'.format,'RAWrmax':'{:7.3f}'.format,
+                'TAWb':'{:7.3f}'.format,'Zr':'{:5.3f}'.format,
+                'p':'{:5.3f}'.format,'RAW':'{:7.3f}'.format,
                 'Ks':'{:5.3f}'.format,'ETcadj':'{:6.3f}'.format,
                 'T':'{:6.3f}'.format,'DP':'{:7.3f}'.format,
-                'Dr':'{:7.3f}'.format,'fDr':'{:7.3f}'.format,
-                'Drmax':'{:7.3f}'.format, 'fDrmax':'{:7.3f}'.format,
-                'Irrig':'{:7.3f}'.format,'Rain':'{:7.3f}'.format}
+                'Dinc':'{7.3f}'.format,'Dr':'{:7.3f}'.format,
+                'fDr':'{:7.3f}'.format,'Drmax':'{:7.3f}'.format,
+                'fDrmax':'{:7.3f}'.format,'Db':'{:7.3f}'.format,
+                'fDb':'{:7.3f}'.format,'Irrig':'{:7.3f}'.format,
+                'Rain':'{:7.3f}'.format}
         ast='*'*72
         s = ('{:s}\n'
              'pyfao56: FAO-56 Evapotranspiration in Python\n'
@@ -181,10 +187,10 @@ class Model:
              '{:s}\n'
              'Year-DOY  Year  DOY  DOW      Date  ETref   Kcb     h'
              ' Kcmax    fc    fw   few      De    Kr    Ke      E'
-             '     DPe    Kc    ETc     TAW TAWrmax    Zr     p'
-             '     RAW RAWrmax    Ks ETcadj      T      DP      Dr'
-             '     fDr   Drmax  fDrmax   Irrig    Rain  Year  DOY  DOW'
-             '      Date\n'
+             '     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p'
+             '     RAW    Ks ETcadj      T      DP    Dinc'
+             '      Dr     fDr   Drmax  fDrmax      Db     fDb'
+             '   Irrig    Rain  Year  DOY  DOW      Date\n'
              ).format(ast,ast)
         s += self.odata.to_string(header=False,formatters=fmts)
         return s
@@ -252,8 +258,13 @@ class Model:
             io.Dr = 1000. * (io.thetaFC - io.theta0) * io.Zrini
             #Initial soil depletion for max root depth (Drmax, mm)
             io.Drmax = 1000. * (io.thetaFC - io.theta0) * io.Zrmax
+            #Initial root zone total available water (TAW, mm)
+            io.TAW = 1000. * (io.thetaFC - io.thetaWP) * io.Zrini
             #Total available water for max root depth (TAWrmax, mm)
             io.TAWrmax = 1000. * (io.thetaFC - io.thetaWP) * io.Zrmax
+            #By default, FAO-56 doesn't consider the following variables
+            io.Db = -99.999
+            io.TAWb = -99.999
         else:
             io.solmthd = 'L' #Layered soil profile from SoilProfile
             io.lyr_dpths = list(self.sol.sdata.index)
@@ -262,10 +273,8 @@ class Model:
             io.lyr_th0   = list(self.sol.sdata['theta0'])
             io.Dr = 0.
             io.Drmax = 0.
+            io.TAW = 0.
             io.TAWrmax = 0.
-# # Start: For Kelly's Drmax calculation ****************************************************************************************
-            io.TAWb = 0.
-# # End: For Kelly's Drmax calculation ******************************************************************************************
             #Iterate down the soil profile in 1 cm increments
             for dpthcm in list(range(1, io.lyr_dpths[-1] + 1)):
                 #Find soil layer index that contains dpthcm
@@ -279,18 +288,18 @@ class Model:
                 if dpthcm <= io.Zrmax * 100.: #cm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_th0[lyr_idx])
                     io.Drmax += (diff * 10.) #mm
+                #Initial root zone total available water (TAW, mm)
+                if dpthcm <= io.Zrini * 100.: #cm
+                    diff = (io.lyr_thFC[lyr_idx] - io.lyr_thWP[lyr_idx])
+                    io.TAW += (diff * 10.) #mm
                 #Total available water for max root depth (TAWrmax, mm)
                 if dpthcm <= io.Zrmax * 100.: #cm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_thWP[lyr_idx])
                     io.TAWrmax += (diff * 10.) #mm
-# # Start: For Kelly's Drmax calculation ****************************************************************************************
-                #Initial total available water between Zr and Zrmax
-                if io.Zrini * 100 < dpthcm <= io.Zrmax * 100: #cm
-                    diff = (io.lyr_thFC[lyr_idx] - io.lyr_thWP[lyr_idx])
-                    io.TAWb = (diff * 10)  # mm
-            #Initial depletion between Zr and Zrmax
+            #Initial depletion in the bottom layer (Db, mm)
             io.Db = io.Drmax - io.Dr
-# # End: For Kelly's Drmax calculation ******************************************************************************************
+            #Initial total available water in bottom layer (TAWb, mm)
+            io.TAWb = io.TAWrmax - io.TAW
         io.h = io.hini
         io.Zr = io.Zrini
         io.fw = 1.0
@@ -347,9 +356,10 @@ class Model:
             data = [year, doy, dow, dat, io.ETref, io.Kcb, io.h,
                     io.Kcmax, io.fc, io.fw, io.few, io.De, io.Kr, io.Ke,
                     io.E, io.DPe, io.Kc, io.ETc, io.TAW, io.TAWrmax,
-                    io.Zr, io.p, io.RAW, io.RAWrmax, io.Ks, io.ETcadj,
-                    io.T, io.DP, io.Dr, io.fDr, io.Drmax, io.fDrmax,
-                    io.idep, io.rain, year, doy, dow, dat]
+                    io.TAWb, io.Zr, io.p, io.RAW, io.Ks, io.ETcadj,
+                    io.T, io.DP, io.Dinc, io.Dr, io.fDr, io.Drmax,
+                    io.fDrmax, io.Db, io.fDb, io.idep, io.rain, year,
+                    doy, dow, dat]
             self.odata.loc[mykey] = data
 
             tcurrent = tcurrent + tdelta
@@ -385,19 +395,10 @@ class Model:
         io.h = max([io.hini+(io.hmax-io.hini)*(io.Kcb-io.Kcbini)/
                     (io.Kcbmid-io.Kcbini),0.001,io.h])
         if io.updh > 0: io.h = io.updh
-# # Start: For Kendall's Drmax calculation +x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x++x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+
-        #Root depth of previous time step (Zr_prev, m)
-        io.Zr_prev = io.Zr
-# # End: For Kendall's Drmax calculation +x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x++x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+
+
         #Root depth (Zr, m) - FAO-56 page 279
         io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*(io.Kcb-io.Kcbini)/
                      (io.Kcbmid-io.Kcbini),0.001,io.Zr])
-# # Start: For Kendall's Drmax calculation +x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x++x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+
-        #Change in root depth from previous time step (Zr_delta, m)
-        io.Zr_delta = io.Zr - io.Zr_prev
-        #Depth of soil between root zone and max root zone (Zb, m)
-        io.Zb = io.Zrmax - io.Zr
-# # End: For Kendall's Drmax calculation +x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x++x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+
 
         #Upper limit crop coefficient (Kcmax) - FAO-56 Eq. 72
         u2 = io.wndsp * (4.87/math.log(67.8*io.wndht-5.42))
@@ -464,15 +465,9 @@ class Model:
                 if dpthcm <= io.Zr * 100.: #cm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_thWP[lyr_idx])
                     io.TAW += (diff * 10.) #mm
-# # Start: For Kelly's Drmax calculation ****************************************************************************************
-                #TAWb of previous timestep     (Note: I had to add this if-statement to get things to work, but there might be better ways to do it.)
-                if io.i == 0:
-                    io.TAWb_prev = io.TAWrmax - io.TAW #Seems like this might make the calculation @283-5 redundant?
-                else:
-                    io.TAWb_prev = io.TAWb
-                #Total available water between Zr and Zrmax (TAWb, mm)
-                io.TAWb = io.TAWrmax - io.TAW
-# # End: For Kelly's Drmax calculation ******************************************************************************************
+            #Total available water in the bottom layer (TAWb, mm)
+            io.TAWb_prev = io.TAWb
+            io.TAWb = io.TAWrmax - io.TAW
 
         #Fraction depleted TAW (p, 0.1-0.8) - FAO-56 p162 and Table 22
         if io.cons_p is True:
@@ -483,9 +478,6 @@ class Model:
         #Readily available water (RAW, mm) - FAO-56 Equation 83
         io.RAW = io.p * io.TAW
 
-        #Readily available water for max root depth (RAWrmax, mm)
-        io.RAWrmax = io.p * io.TAWrmax
-
         #Transpiration reduction factor (Ks, 0.0-1.0) - FAO-56 Eq. 84
         io.Ks = sorted([0.0, (io.TAW-io.Dr)/(io.TAW-io.RAW), 1.0])[1]
 
@@ -495,59 +487,55 @@ class Model:
         #Adjusted crop transpiration (T, mm)
         io.T = (io.Ks * io.Kcb) * io.ETref
 
-        if io.slmthd == 'D':
+        #Water balance methods
+        if io.solmthd == 'D':
             #Deep percolation (DP, mm) - FAO-56 Eq. 88
+            #Boundary layer is considered at the root zone depth (Zr)
             io.DP = max([io.rain-runoff+io.idep-io.ETcadj-io.Dr,0.0])
 
             #Root zone soil water depletion (Dr,mm) - FAO-56 Eqs.85 & 86
             Dr = io.Dr - (io.rain-runoff) - io.idep + io.ETcadj + io.DP
             io.Dr = sorted([0.0, Dr, io.TAW])[1]
 
-            #Depletion at max root depth (Drmax, mm) - not in FAO-56
-            io.Drmax = -999
+            #Root zone soil water depletion fraction (fDr, mm/mm)
+            io.fDr = 1.0 - ((io.TAW - io.Dr) / io.TAW)
+
+            #By default, FAO-56 doesn't consider the following variables:
+            io.Dinc = -99.999
+            io.Drmax = -99.999
+            io.fDrmax = -99.999
+            io.Db = -99.999
+            io.fDb = -99.999
 
         elif io.solmthd == 'L':
-            #Deep percolation (DP, mm) - FAO-56 Eq. 88 using Drmax
-            io.DP = max([io.rain - runoff + io.idep - io.ETcadj -
-                         io.Drmax, 0.0])
-# # Start: For Kendall's Drmax calculation +x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x++x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+
-            #Deficit in the change of root zone (D_deltaZr, mm)
-            if round((io.Drmax - io.Dr), 3) > 0: #This is to avoid dividing by zero or thereabouts
-                io.D_deltaZr = (io.Zr_delta * 1000) * (
-                        (io.Drmax - io.Dr) / (io.Zb * 1000))
-            else:
-                io.D_deltaZr = 0.
+            #Deep percolation (DP, mm)
+            #Boundary layer is at the max root depth (Zrmax)
+            io.DP = max([io.rain-runoff+io.idep-io.ETcadj-io.Drmax,0.0])
+
+            #Depletion increment due to root growth (Dinc, mm)
+            #Computed from Db based on the incremental change in TAWb
+            if io.TAWb_prev > 0.0:
+                io.Dinc = io.Db * (1.0 - (io.TAWb / io.TAWb_prev))
+            else: #handle zero divide issue
+                io.Dinc = 0.0
 
             #Root zone soil water depletion (Dr, mm)
-            Dr = io.Dr - (io.rain-runoff) - io.idep + io.ETcadj + io.D_deltaZr
+            Dr = io.Dr - (io.rain-runoff)-io.idep+io.ETcadj+io.Dinc
             io.Dr = sorted([0.0, Dr, io.TAW])[1]
 
-            #Soil water depletion at max root depth (Drmax, mm)
-            Drmax = io.Drmax - (io.rain - runoff) - io.idep + io.ETcadj
-            io.Drmax = sorted([0.0, Drmax, io.TAWrmax])[1]
-# # End: For Kendall's Drmax calculation +x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x++x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+x+
-
-# # Start: For Kelly's Drmax calculation ****************************************************************************************
-            if io.TAWb_prev > 0:
-                io.deltaDb = io.Db - (io.Db * (io.TAWb / io.TAWb_prev))
-            else:
-                io.deltaDb = 0
-
-            #Root zone soil water depletion (Dr, mm)
-            Dr = io.Dr - (io.rain-runoff) - io.idep + io.ETcadj + io.deltaDb
-            io.Dr = sorted([0.0, Dr, io.TAW])[1]
+            #Root zone soil water depletion fraction (fDr, mm/mm)
+            io.fDr = 1.0 - ((io.TAW - io.Dr) / io.TAW)
 
             #Soil water depletion at max root depth (Drmax, mm)
-            Drmax = io.Drmax - (io.rain - runoff) - io.idep + io.ETcadj + io.DP
+            Drmax = io.Drmax - (io.rain-runoff)-io.idep+io.ETcadj+io.DP
             io.Drmax = sorted([0.0, Drmax, io.TAWrmax])[1]
 
-            #Soil water depletion between Zr and Zrmax (Db, mm)
+            #Soil water depletion fraction at Zrmax (fDrmax, mm/mm)
+            io.fDrmax = 1.0 - ((io.TAWrmax - io.Drmax) / io.TAWrmax)
+
+            #Soil water depletion in the bottom layer (Db, mm)
             Db = io.Drmax - io.Dr
             io.Db = sorted([0.0, Db, io.TAWb])[1]
-# # End: For Kelly's Drmax calculation ******************************************************************************************
 
-        #Root zone soil water depletion fraction (fDr, mm/mm)
-        io.fDr = (1.0-((io.TAW - io.Dr)/io.TAW))
-
-        #Soil water depletion fraction at max root depth (fDrmax, mm/mm)
-        io.fDrmax = (1.0-((io.TAWrmax - io.Drmax)/io.TAWrmax))
+            #Bottom layer soil water depletion fraction (fDb, mm/mm)
+            io.fDb = 1.0 - ((io.TAWb - io.Db) / io.TAWb)
