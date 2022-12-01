@@ -175,7 +175,7 @@ class Model:
                 'p':'{:5.3f}'.format,'RAW':'{:7.3f}'.format,
                 'Ks':'{:5.3f}'.format,'ETcadj':'{:6.3f}'.format,
                 'T':'{:6.3f}'.format,'DP':'{:7.3f}'.format,
-                'Dinc':'{7.3f}'.format,'Dr':'{:7.3f}'.format,
+                'Dinc':'{:7.3f}'.format,'Dr':'{:7.3f}'.format,
                 'fDr':'{:7.3f}'.format,'Drmax':'{:7.3f}'.format,
                 'fDrmax':'{:7.3f}'.format,'Db':'{:7.3f}'.format,
                 'fDb':'{:7.3f}'.format,'Irrig':'{:7.3f}'.format,
@@ -306,7 +306,7 @@ class Model:
         io.wndht = self.wth.wndht
         io.rfcrp = self.wth.rfcrp
         io.cons_p = self.cons_p
-        self.odata = pd.DataFrame(columns=self.cnames)
+        # self.odata = pd.DataFrame(columns=self.cnames) ----- this is already done in class initialization see line 159
 
         while tcurrent <= self.endDate:
             mykey = tcurrent.strftime('%Y-%j')

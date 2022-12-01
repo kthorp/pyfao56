@@ -8,9 +8,13 @@ The custom subpackage contains the following modules:
         station in Maricopa, Arizona.
     forecast.py - Obtains weather forecast data from the National
         Digital Forecast Database (NDFD)
+    example_soil.py - provides I/O functionality for creating a
+        SoilProfile sdata class object from four ordered lists.
 
 11/04/2021 Module created by Kelly Thorp
+11/30/2022 example_soil.py created by Josh Brekel
 ########################################################################
 """
 from .azmet_maricopa import AzmetMaricopa
 from .forecast import Forecast
+from .example_soil import ExampleSoil
