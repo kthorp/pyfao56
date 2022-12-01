@@ -44,6 +44,7 @@ class ExampleSoil(SoilProfile):
 
     def customload(self, bottom_depths, fc, wp, ini):
         """Loads soil profile information from four ordered lists.
+
         Parameters
         ----------
         bottom_depths : list
@@ -63,9 +64,9 @@ class ExampleSoil(SoilProfile):
             measurements of assumed soil layers. Order the list from the
             shallowest layer to the deepest layer.
 
-        ***Note on parameters: all lists should created such that data
-        is ordered from the top (shallow part) of the soil profile to
-        the bottom (deep part) of the soil profile. For example, the
+        ***Note on parameters: all lists should be created such that
+        data is ordered from the top (shallow part) of the soil profile
+        to the bottom (deep part) of the soil profile. For example, the
         FieldCapacity of the third layer down should be the third entry
         in the fc list.
         """

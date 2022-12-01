@@ -260,9 +260,8 @@ class Model:
             io.Drmax = 1000. * (io.thetaFC - io.theta0) * io.Zrmax
             #Initial root zone total available water (TAW, mm)
             io.TAW = 1000. * (io.thetaFC - io.thetaWP) * io.Zrini
-            #Total available water for max root depth (TAWrmax, mm)
-            io.TAWrmax = 1000. * (io.thetaFC - io.thetaWP) * io.Zrmax
             #By default, FAO-56 doesn't consider the following variables
+            io.TAWrmax = -99.999
             io.Db = -99.999
             io.TAWb = -99.999
         else:
@@ -275,27 +274,27 @@ class Model:
             io.Drmax = 0.
             io.TAW = 0.
             io.TAWrmax = 0.
-            #Iterate down the soil profile in 1 cm increments
-            for dpthcm in list(range(1, io.lyr_dpths[-1] + 1)):
-                #Find soil layer index that contains dpthcm
+            #Iterate down the soil profile in 1 mm increments
+            for dpthmm in list(range(1, (io.lyr_dpths[-1] * 10 + 1))):
+                #Find soil layer index that contains dpthmm
                 lyr_idx = [idx for (idx, dpth) in
-                           enumerate(io.lyr_dpths) if dpthcm <= dpth][0]
+                          enumerate(io.lyr_dpths) if dpthmm<=dpth*10][0]
                 #Initial root zone depletion (Dr, mm)
-                if dpthcm <= io.Zrini * 100.: #cm
+                if dpthmm <= io.Zrini * 1000.: #mm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_th0[lyr_idx])
-                    io.Dr += (diff * 10.) #mm
+                    io.Dr += diff #mm
                 #Initial depletion for max root depth (Drmax, mm)
-                if dpthcm <= io.Zrmax * 100.: #cm
+                if dpthmm <= io.Zrmax * 1000.: #mm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_th0[lyr_idx])
-                    io.Drmax += (diff * 10.) #mm
+                    io.Drmax += diff #mm
                 #Initial root zone total available water (TAW, mm)
-                if dpthcm <= io.Zrini * 100.: #cm
+                if dpthmm <= io.Zrini * 1000.: #mm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_thWP[lyr_idx])
-                    io.TAW += (diff * 10.) #mm
+                    io.TAW += diff #mm
                 #Total available water for max root depth (TAWrmax, mm)
-                if dpthcm <= io.Zrmax * 100.: #cm
+                if dpthmm <= io.Zrmax * 1000.: #mm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_thWP[lyr_idx])
-                    io.TAWrmax += (diff * 10.) #mm
+                    io.TAWrmax += diff #mm
             #Initial depletion in the bottom layer (Db, mm)
             io.Db = io.Drmax - io.Dr
             #Initial total available water in bottom layer (TAWb, mm)
@@ -306,7 +305,7 @@ class Model:
         io.wndht = self.wth.wndht
         io.rfcrp = self.wth.rfcrp
         io.cons_p = self.cons_p
-        # self.odata = pd.DataFrame(columns=self.cnames) ----- this is already done in class initialization see line 159
+        self.odata = pd.DataFrame(columns=self.cnames)
 
         while tcurrent <= self.endDate:
             mykey = tcurrent.strftime('%Y-%j')
@@ -456,15 +455,15 @@ class Model:
             io.TAW = 1000.0 * (io.thetaFC - io.thetaWP) * io.Zr
         elif io.solmthd == 'L':
             io.TAW = 0.
-            #Iterate down the soil profile in 1 cm increments
-            for dpthcm in list(range(1, io.lyr_dpths[-1] + 1)):
-                #Find soil layer index that contains dpthcm
+            #Iterate down the soil profile in 1 mm increments
+            for dpthmm in list(range(1, (io.lyr_dpths[-1] * 10 + 1))):
+                #Find soil layer index that contains dpthmm
                 lyr_idx = [idx for (idx, dpth) in
-                           enumerate(io.lyr_dpths) if dpthcm <= dpth][0]
+                          enumerate(io.lyr_dpths) if dpthmm<=dpth*10][0]
                 #Total available water (TAW, mm)
-                if dpthcm <= io.Zr * 100.: #cm
+                if dpthmm <= io.Zr * 1000.: #mm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_thWP[lyr_idx])
-                    io.TAW += (diff * 10.) #mm
+                    io.TAW += diff #mm
             #Total available water in the bottom layer (TAWb, mm)
             io.TAWb_prev = io.TAWb
             io.TAWb = io.TAWrmax - io.TAW
@@ -500,7 +499,7 @@ class Model:
             #Root zone soil water depletion fraction (fDr, mm/mm)
             io.fDr = 1.0 - ((io.TAW - io.Dr) / io.TAW)
 
-            #By default, FAO-56 doesn't consider the following variables:
+            #By default, FAO-56 doesn't consider the following variables
             io.Dinc = -99.999
             io.Drmax = -99.999
             io.fDrmax = -99.999
@@ -538,4 +537,7 @@ class Model:
             io.Db = sorted([0.0, Db, io.TAWb])[1]
 
             #Bottom layer soil water depletion fraction (fDb, mm/mm)
-            io.fDb = 1.0 - ((io.TAWb - io.Db) / io.TAWb)
+            if io.TAWb > 0.0:
+                io.fDb = 1.0 - ((io.TAWb - io.Db) / io.TAWb)
+            else:
+                io.fDb = 0.0

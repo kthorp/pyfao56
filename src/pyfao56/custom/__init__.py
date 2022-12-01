@@ -1,7 +1,7 @@
 """
 ########################################################################
 The custom subpackage within the pyfao56 Python package facilitates
-user customizations, particularly for loading weather data.
+user customizations, particularly for loading weather and soil data.
 
 The custom subpackage contains the following modules:
     azmet_maricopa.py - Prepares weather data from the AZMET weather
