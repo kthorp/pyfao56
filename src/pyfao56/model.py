@@ -379,15 +379,21 @@ class Model:
         s3 = s2 + io.Lmid
         s4 = s3 + io.Lend
         if 0<=io.i<=s1:
+            io.tabKcb=io.Kcbini
             io.Kcb=io.Kcbini
         elif s1<io.i<=s2:
+            io.tabKcb+= (io.Kcbmid-io.Kcbini)/(s2-s1)
             io.Kcb+=(io.Kcbmid-io.Kcbini)/(s2-s1)
         elif s2<io.i<=s3:
+            io.tabKcb=io.Kcbmid
             io.Kcb=io.Kcbmid
         elif s3<io.i<=s4:
+            io.tabKcb += (io.Kcbmid-io.Kcbend)/(s3-s4)
             io.Kcb += (io.Kcbmid-io.Kcbend)/(s3-s4)
         elif s4<io.i:
+            io.tabKcb=io.Kcbend
             io.Kcb=io.Kcbend
+        #Obtain updated Kcb values if available
         if io.updKcb > 0: io.Kcb = io.updKcb
 
         #Plant height (h, m)
@@ -396,8 +402,9 @@ class Model:
         if io.updh > 0: io.h = io.updh
 
         #Root depth (Zr, m) - FAO-56 page 279
-        io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*(io.Kcb-io.Kcbini)/
-                     (io.Kcbmid-io.Kcbini),0.001,io.Zr])
+        io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*
+                     (io.tabKcb-io.Kcbini)/(io.Kcbmid-io.Kcbini),
+                     0.001,io.Zr])
 
         #Upper limit crop coefficient (Kcmax) - FAO-56 Eq. 72
         u2 = io.wndsp * (4.87/math.log(67.8*io.wndht-5.42))
