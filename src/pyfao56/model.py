@@ -60,17 +60,19 @@ class Model:
     odata : DataFrame
         Model output data as float
         index - Year and day of year as string ('yyyy-ddd')
-        columns - ['Year','DOY','DOW','Date','ETref','Kcb','h','Kcmax',
-                   'fc','fw','few','De','Kr','Ke','E','DPe','Kc','ETc',
-                   'TAW','TAWrmax','TAWb','Zr','p','RAW','Ks','ETcadj',
-                   'T','DP','Dinc','Dr','fDr','Drmax','fDrmax','Db',
-                   'fDb','Irrig','Rain','Year','DOY','DOW','Date']
+        columns - ['Year','DOY','DOW','Date','ETref','tKcb','Kcb','h',
+                   'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
+                   'Kc','ETc','TAW','TAWrmax','TAWb','Zr','p','RAW',
+                   'Ks','ETcadj','T','DP','Dinc','Dr','fDr','Drmax',
+                   'fDrmax','Db','fDb','Irrig','Rain','Year','DOY',
+                   'DOW','Date']
             Year    - 4-digit year (yyyy)
             DOY     - Day of year (ddd)
             DOW     - Day of week
             Date    - Month/Day/Year (mm/dd/yy)
             ETref   - Daily reference evapotranspiration (mm)
-            Kcb     - Basal crop coefficient
+            tKcb    - Basal crop coefficient, trapezoidal from FAO-56
+            Kcb     - Basal crop coefficient, considering updates
             h       - Plant height (m)
             Kcmax   - Upper limit crop coefficient, FAO-56 Eq. 72
             fc      - Canopy cover fraction, FAO-56 Eq. 76
@@ -150,12 +152,12 @@ class Model:
         self.sol = sol
         self.upd = upd
         self.cons_p = cons_p
-        self.cnames = ['Year','DOY','DOW','Date','ETref','Kcb','h',
-                       'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
-                       'Kc','ETc','TAW','TAWrmax','TAWb','Zr','p','RAW',
-                       'Ks','ETcadj','T','DP','Dinc','Dr','fDr','Drmax',
-                       'fDrmax','Db','fDb','Irrig','Rain','Year','DOY',
-                       'DOW','Date']
+        self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
+                       'h','Kcmax','fc','fw','few','De','Kr','Ke','E',
+                       'DPe','Kc','ETc','TAW','TAWrmax','TAWb','Zr','p',
+                       'RAW','Ks','ETcadj','T','DP','Dinc','Dr','fDr',
+                       'Drmax','fDrmax','Db','fDb','Irrig','Rain',
+                       'Year','DOY','DOW','Date']
         self.odata = pd.DataFrame(columns=self.cnames)
 
     def __str__(self):
@@ -163,30 +165,30 @@ class Model:
 
         fmts = {'Year':'{:4s}'.format,'DOY':'{:3s}'.format,
                 'DOW':'{:3s}'.format,'Date':'{:8s}'.format,
-                'ETref':'{:6.3f}'.format,'Kcb':'{:5.3f}'.format,
-                'h':'{:5.3f}'.format,'Kcmax':'{:5.3f}'.format,
-                'fc':'{:5.3f}'.format,'fw':'{:5.3f}'.format,
-                'few':'{:5.3f}'.format,'De':'{:7.3f}'.format,
-                'Kr':'{:5.3f}'.format,'Ke':'{:5.3f}'.format,
-                'E':'{:6.3f}'.format,'DPe':'{:7.3f}'.format,
-                'Kc':'{:5.3f}'.format,'ETc':'{:6.3f}'.format,
-                'TAW':'{:7.3f}'.format,'TAWrmax':'{:7.3f}'.format,
-                'TAWb':'{:7.3f}'.format,'Zr':'{:5.3f}'.format,
-                'p':'{:5.3f}'.format,'RAW':'{:7.3f}'.format,
-                'Ks':'{:5.3f}'.format,'ETcadj':'{:6.3f}'.format,
-                'T':'{:6.3f}'.format,'DP':'{:7.3f}'.format,
-                'Dinc':'{:7.3f}'.format,'Dr':'{:7.3f}'.format,
-                'fDr':'{:7.3f}'.format,'Drmax':'{:7.3f}'.format,
-                'fDrmax':'{:7.3f}'.format,'Db':'{:7.3f}'.format,
-                'fDb':'{:7.3f}'.format,'Irrig':'{:7.3f}'.format,
-                'Rain':'{:7.3f}'.format}
+                'ETref':'{:6.3f}'.format,'tKcb':'{:5.3f}'.format,
+                'Kcb':'{:5.3f}'.format,'h':'{:5.3f}'.format,
+                'Kcmax':'{:5.3f}'.format,'fc':'{:5.3f}'.format,
+                'fw':'{:5.3f}'.format,'few':'{:5.3f}'.format,
+                'De':'{:7.3f}'.format,'Kr':'{:5.3f}'.format,
+                'Ke':'{:5.3f}'.format,'E':'{:6.3f}'.format,
+                'DPe':'{:7.3f}'.format,'Kc':'{:5.3f}'.format,
+                'ETc':'{:6.3f}'.format,'TAW':'{:7.3f}'.format,
+                'TAWrmax':'{:7.3f}'.format,'TAWb':'{:7.3f}'.format,
+                'Zr':'{:5.3f}'.format,'p':'{:5.3f}'.format,
+                'RAW':'{:7.3f}'.format,'Ks':'{:5.3f}'.format,
+                'ETcadj':'{:6.3f}'.format,'T':'{:6.3f}'.format,
+                'DP':'{:7.3f}'.format,'Dinc':'{:7.3f}'.format,
+                'Dr':'{:7.3f}'.format,'fDr':'{:7.3f}'.format,
+                'Drmax':'{:7.3f}'.format,'fDrmax':'{:7.3f}'.format,
+                'Db':'{:7.3f}'.format,'fDb':'{:7.3f}'.format,
+                'Irrig':'{:7.3f}'.format,'Rain':'{:7.3f}'.format}
         ast='*'*72
         s = ('{:s}\n'
              'pyfao56: FAO-56 Evapotranspiration in Python\n'
              'Output Data\n'
              '{:s}\n'
-             'Year-DOY  Year  DOY  DOW      Date  ETref   Kcb     h'
-             ' Kcmax    fc    fw   few      De    Kr    Ke      E'
+             'Year-DOY  Year  DOY  DOW      Date  ETref  tKcb   Kcb'
+             '     h Kcmax    fc    fw   few      De    Kr    Ke      E'
              '     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p'
              '     RAW    Ks ETcadj      T      DP    Dinc'
              '      Dr     fDr   Drmax  fDrmax      Db     fDb'
@@ -352,13 +354,13 @@ class Model:
             doy = tcurrent.strftime('%j') #Day of Year
             dow = tcurrent.strftime('%a') #Day of Week
             dat = tcurrent.strftime('%m/%d/%y') #Date mm/dd/yy
-            data = [year, doy, dow, dat, io.ETref, io.Kcb, io.h,
-                    io.Kcmax, io.fc, io.fw, io.few, io.De, io.Kr, io.Ke,
-                    io.E, io.DPe, io.Kc, io.ETc, io.TAW, io.TAWrmax,
-                    io.TAWb, io.Zr, io.p, io.RAW, io.Ks, io.ETcadj,
-                    io.T, io.DP, io.Dinc, io.Dr, io.fDr, io.Drmax,
-                    io.fDrmax, io.Db, io.fDb, io.idep, io.rain, year,
-                    doy, dow, dat]
+            data = [year, doy, dow, dat, io.ETref, io.tKcb, io.Kcb,
+                    io.h, io.Kcmax, io.fc, io.fw, io.few, io.De, io.Kr,
+                    io.Ke, io.E, io.DPe, io.Kc, io.ETc, io.TAW,
+                    io.TAWrmax, io.TAWb, io.Zr, io.p, io.RAW, io.Ks,
+                    io.ETcadj, io.T, io.DP, io.Dinc, io.Dr, io.fDr,
+                    io.Drmax, io.fDrmax, io.Db, io.fDb, io.idep,
+                    io.rain, year, doy, dow, dat]
             self.odata.loc[mykey] = data
 
             tcurrent = tcurrent + tdelta
@@ -379,22 +381,27 @@ class Model:
         s3 = s2 + io.Lmid
         s4 = s3 + io.Lend
         if 0<=io.i<=s1:
-            io.Kcb=io.Kcbini
+            io.tKcb = io.Kcbini
+            io.Kcb = io.Kcbini
         elif s1<io.i<=s2:
-            io.Kcb+=(io.Kcbmid-io.Kcbini)/(s2-s1)
+            io.tKcb += (io.Kcbmid-io.Kcbini)/(s2-s1)
+            io.Kcb += (io.Kcbmid-io.Kcbini)/(s2-s1)
         elif s2<io.i<=s3:
-            io.Kcb=io.Kcbmid
+            io.tKcb = io.Kcbmid
+            io.Kcb = io.Kcbmid
         elif s3<io.i<=s4:
+            io.tKcb += (io.Kcbmid-io.Kcbend)/(s3-s4)
             io.Kcb += (io.Kcbmid-io.Kcbend)/(s3-s4)
         elif s4<io.i:
-            io.Kcb=io.Kcbend
-        io.tKcb = io.Kcb
-        #Obtain updated Kcb values if available
+            io.tKcb = io.Kcbend
+            io.Kcb = io.Kcbend
+        #Overwrite Kcb if updates are available
         if io.updKcb > 0: io.Kcb = io.updKcb
 
         #Plant height (h, m)
         io.h = max([io.hini+(io.hmax-io.hini)*(io.Kcb-io.Kcbini)/
                     (io.Kcbmid-io.Kcbini),0.001,io.h])
+        #Overwrite h if updates are available
         if io.updh > 0: io.h = io.updh
 
         #Root depth (Zr, m) - FAO-56 page 279
@@ -414,6 +421,7 @@ class Model:
         #Canopy cover fraction (fc, 0.0-0.99) - FAO-56 Eq. 76
         io.fc = sorted([0.0,((io.Kcb-io.Kcbini)/(io.Kcmax-io.Kcbini))**
                         (1.0+0.5*io.h),0.99])[1]
+        #Overwrite fc if updates are available
         if io.updfc > 0: io.fc = io.updfc
 
         #Fraction soil surface wetted (fw) - FAO-56 Table 20, page 149
