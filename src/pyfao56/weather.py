@@ -92,10 +92,10 @@ class Weather:
                 'Vapr':'{:6.2f}'.format,'RHmax':'{:6.2f}'.format,
                 'RHmin':'{:6.2f}'.format,'Wndsp':'{:6.2f}'.format,
                 'Rain':'{:6.2f}'.format,'ETref':'{:6.2f}'.format,
-                'MorP':'{:>5s}'.format }
+                'MorP':'{:>5s}'.format}
         ast='*'*72
         s = ('{:s}\n'
-             'pyfao56: FAO-56 in Python\n'
+             'pyfao56: FAO-56 Evapotranspiration in Python\n'
              'Weather Data\n'
              '{:s}\n'
              '{:>12s} Reference crop - Short (\'S\') or Tall (\'T\')\n'
@@ -129,7 +129,7 @@ class Weather:
         try:
             f = open(filepath, 'w')
         except FileNotFoundError:
-            print("The filepath for weather data is not found.")
+            print('The filepath for weather data is not found.')
         else:
             f.write(self.__str__())
             f.close()
@@ -151,7 +151,7 @@ class Weather:
         try:
             f = open(filepath, 'r')
         except FileNotFoundError:
-            print("The filepath for weather data is not found.")
+            print('The filepath for weather data is not found.')
         else:
             lines = f.readlines()
             f.close()

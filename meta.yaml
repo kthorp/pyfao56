@@ -1,5 +1,5 @@
 {% set name = "pyfao56" %}
-{% set version = "1.0.11" %}
+{% set version = "1.1.0" %}
 
 
 package:
@@ -36,7 +36,7 @@ test:
 
 about:
   home: http://github.com/kthorp/pyfao56
-  summary: FAO-56 in Python
+  summary: FAO-56 Evapotranspiration in Python
   dev_url: http://github.com/kthorp/pyfao56
   license: Unlicense
   license_file: LICENSE.md

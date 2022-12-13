@@ -97,7 +97,7 @@ def run():
     upd.loadfile(os.path.join(module_dir,'cotton2019.upd'))
 
     #Run the model
-    mdl = fao.Model('2019-108','2019-274', par, wth, irr, upd)
+    mdl = fao.Model('2019-108','2019-274', par, wth, irr, upd=upd)
     mdl.run()
     print(mdl)
     mdl.savefile(os.path.join(module_dir,'cotton2019.out'))

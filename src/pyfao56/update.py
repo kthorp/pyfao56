@@ -63,7 +63,7 @@ class Update:
         pd.options.display.float_format = '{:6.4f}'.format
         ast='*'*72
         s=('{:s}\n'
-           'pyfao56: FAO-56 in Python\n'
+           'pyfao56: FAO-56 Evapotranspiration in Python\n'
            'Update Data\n'
            '{:s}\n'
            'Year-DOY    Kcb      h     fc\n'
@@ -88,7 +88,7 @@ class Update:
         try:
             f = open(filepath, 'w')
         except FileNotFoundError:
-            print("The filepath for update data is not found.")
+            print('The filepath for update data is not found.')
         else:
             f.write(self.__str__())
             f.close()
@@ -110,7 +110,7 @@ class Update:
         try:
             f = open(filepath, 'r')
         except FileNotFoundError:
-            print("The filepath for update data is not found.")
+            print('The filepath for update data is not found.')
         else:
             lines = f.readlines()
             f.close()

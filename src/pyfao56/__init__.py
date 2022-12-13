@@ -47,7 +47,6 @@ The pyfao56 package contains the following modules:
 from .irrigation import Irrigation
 from .model import Model
 from .parameters import Parameters
+from .soil_profile import SoilProfile
 from .update import Update
 from .weather import Weather
-
-
