@@ -155,8 +155,8 @@ class Model:
         self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
                        'h','Kcmax','fc','fw','few','De','Kr','Ke','E',
                        'DPe','Kc','ETc','TAW','TAWrmax','TAWb','Zr','p',
-                       'RAW','Ks','ETcadj','T','DP','Dinc','Dr','fDr',
-                       'Drmax','fDrmax','Db','fDb','Irrig','Rain',
+                       'RAW','Ks','Kcadj','ETcadj','T','DP','Dinc','Dr',
+                       'fDr','Drmax','fDrmax','Db','fDb','Irrig','Rain',
                        'Year','DOY','DOW','Date']
         self.odata = pd.DataFrame(columns=self.cnames)
 
@@ -176,12 +176,13 @@ class Model:
                 'TAWrmax':'{:7.3f}'.format,'TAWb':'{:7.3f}'.format,
                 'Zr':'{:5.3f}'.format,'p':'{:5.3f}'.format,
                 'RAW':'{:7.3f}'.format,'Ks':'{:5.3f}'.format,
-                'ETcadj':'{:6.3f}'.format,'T':'{:6.3f}'.format,
-                'DP':'{:7.3f}'.format,'Dinc':'{:7.3f}'.format,
-                'Dr':'{:7.3f}'.format,'fDr':'{:7.3f}'.format,
-                'Drmax':'{:7.3f}'.format,'fDrmax':'{:7.3f}'.format,
-                'Db':'{:7.3f}'.format,'fDb':'{:7.3f}'.format,
-                'Irrig':'{:7.3f}'.format,'Rain':'{:7.3f}'.format}
+                'Kcadj':'{:5.3f}'.format,'ETcadj':'{:6.3f}'.format,
+                'T':'{:6.3f}'.format,'DP':'{:7.3f}'.format,
+                'Dinc':'{:7.3f}'.format,'Dr':'{:7.3f}'.format,
+                'fDr':'{:7.3f}'.format,'Drmax':'{:7.3f}'.format,
+                'fDrmax':'{:7.3f}'.format,'Db':'{:7.3f}'.format,
+                'fDb':'{:7.3f}'.format,'Irrig':'{:7.3f}'.format,
+                'Rain':'{:7.3f}'.format}
         ast='*'*72
         s = ('{:s}\n'
              'pyfao56: FAO-56 Evapotranspiration in Python\n'
@@ -190,7 +191,7 @@ class Model:
              'Year-DOY  Year  DOY  DOW      Date  ETref  tKcb   Kcb'
              '     h Kcmax    fc    fw   few      De    Kr    Ke      E'
              '     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p'
-             '     RAW    Ks ETcadj      T      DP    Dinc'
+             '     RAW    Ks kcadj ETcadj      T      DP    Dinc'
              '      Dr     fDr   Drmax  fDrmax      Db     fDb'
              '   Irrig    Rain  Year  DOY  DOW      Date\n'
              ).format(ast,ast)
@@ -358,8 +359,8 @@ class Model:
                     io.h, io.Kcmax, io.fc, io.fw, io.few, io.De, io.Kr,
                     io.Ke, io.E, io.DPe, io.Kc, io.ETc, io.TAW,
                     io.TAWrmax, io.TAWb, io.Zr, io.p, io.RAW, io.Ks,
-                    io.ETcadj, io.T, io.DP, io.Dinc, io.Dr, io.fDr,
-                    io.Drmax, io.fDrmax, io.Db, io.fDb, io.idep,
+                    io.Kcadj, io.ETcadj, io.T, io.DP, io.Dinc, io.Dr,
+                    io.fDr, io.Drmax, io.fDrmax, io.Db, io.fDb, io.idep,
                     io.rain, year, doy, dow, dat]
             self.odata.loc[mykey] = data
 
@@ -490,8 +491,11 @@ class Model:
         #Transpiration reduction factor (Ks, 0.0-1.0) - FAO-56 Eq. 84
         io.Ks = sorted([0.0, (io.TAW-io.Dr)/(io.TAW-io.RAW), 1.0])[1]
 
+        #Adjusted crop coefficient (Kcadj) - FAO-56 Eq. 80
+        io.Kcadj = io.Ks * io.Kcb + io.Ke
+
         #Adjusted crop evapotranspiration (ETcadj, mm) - FAO-56 Eq. 80
-        io.ETcadj = (io.Ks * io.Kcb + io.Ke) * io.ETref
+        io.ETcadj = io.Kcadj * io.ETref
 
         #Adjusted crop transpiration (T, mm)
         io.T = (io.Ks * io.Kcb) * io.ETref
