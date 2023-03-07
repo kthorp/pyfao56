@@ -46,10 +46,10 @@ class SoilWater:
 
     Methods
     -------
-    savefile(swc_path='tools_pyfao56.swc',swd_path='tools_pyfao56.swd',
+    savefile(swc_path='tools_pyfao56.smc',swd_path='tools_pyfao56.swd',
              swrz_path='tools_pyfao56.swrz')
         Save SoilWater attribute(s) to file(s)
-    loadfile(swc_path='tools_pyfao56.swc',swd_path='tools_pyfao56.swd',
+    loadfile(swc_path='tools_pyfao56.smc',swd_path='tools_pyfao56.swd',
              swrz_path='tools_pyfao56.swrz')
         Load SoilWater attribute(s) from file(s)
     customload()
@@ -78,7 +78,7 @@ class SoilWater:
             Default is None.
         *args : str
             A variable number of file paths that the user wants to load.
-            The supported file extensions are 'swc', 'swd', and 'swrz'.
+            The supported file extensions are 'smc', 'swd', and 'swrz'.
 
         Raises
         ------
@@ -87,8 +87,8 @@ class SoilWater:
 
         Notes
         -----
-        If only 'swc' file is passed, then SWD and SWrz are computed.
-        If only 'swc' and 'swd' files are passed, then the root zone
+        If only 'smc' file is passed, then SWD and SWrz are computed.
+        If only 'smc' and 'swd' files are passed, then the root zone
         soil water values are calculated.
 
         If the user does not load from a file, then they can use the
@@ -97,13 +97,13 @@ class SoilWater:
         # Initialize two main class attributes as None types:
         self.swcdata = None
         self.swddata = None
-        # Initialize rzdata column names and empty rzdataframe
+        self.rzdata  = None
+        # Initialize rzdata column names
         self.rz_cnames = ['Year', 'DOY', 'Zr', 'SWDr',
                           'SWDrmax', 'SWCr', 'SWCrmax', 'ObsKs']
-        self.rzdata = pd.DataFrame(columns=self.rz_cnames)
 
         # Create list of acceptable file extensions
-        accepted_extensions = ['swc', 'swd', 'swrz']
+        accepted_extensions = ['smc', 'swd', 'swrz']
         # Set class model object (if one is passed at instantiation)
         if mdl is not None:
             self.mdl = mdl
@@ -115,28 +115,30 @@ class SoilWater:
                 if extension not in accepted_extensions:
                     raise ValueError(f'{filepath} does not have an '
                                      f'accepted file extension.')
-                elif extension == 'swc':
-                    self.loadfile(swc_filepath=filepath)
+                elif extension == 'smc':
+                    self.loadfile(swc_path=filepath)
                 elif extension == 'swd':
-                    self.loadfile(swd_filepath=filepath)
+                    self.loadfile(swd_path=filepath)
                 elif extension == 'swrz':
-                    self.loadfile(swrz_filepath=filepath)
-            # If only a swc file is given, then compute SWD and SWrz
+                    self.loadfile(swrz_path=filepath)
+            # If only a smc file is given, then compute SWD and SWrz
             if self.swddata is None and self.rzdata is None:
                 self.compute_swd_from_swc()
                 self.compute_root_zone_sw()
-            # If only swc and swd files are given, then compute SWrz
+            # If only smc and swd files are given, then compute SWrz
             elif self.rzdata is None:
                 self.compute_root_zone_sw()
         # If not loading from file, then use customload to populate swc
         else:
             self.swcdata = pd.DataFrame()
+            self.swddata = pd.DataFrame()
+            self.rzdata  = pd.DataFrame(columns=self.rz_cnames)
 
     def __str__(self, method='all'):
         """Represent the SoilWater class as a string"""
 
         method = method.lower()
-        accepted_methods = ['all', 'swc', 'swd', 'swrz']
+        accepted_methods = ['all', 'smc', 'swd', 'swrz']
         title = 'pyfao56: FAO-56 Evapotranspiration in Python'
         ast = '*' * 72
         if method not in accepted_methods:
@@ -144,18 +146,28 @@ class SoilWater:
                              f'The acceptable formats are: '
                              f'{accepted_methods}')
         elif method == 'all':
-            swc = self.__str__(method='swc')
+            swc = self.__str__(method='smc')
             swd = self.__str__(method='swd')
             swrz = self.__str__(method='swrz')
-            s = swc + f'\n{ast}\n' + swd + f'\n{ast}\n' + swrz
+            if (swc is not None)&(swd is not None)&(swrz is not None):
+                s = swc + f'\n{ast}\n' + swd + f'\n{ast}\n' + swrz
+            elif (swc is not None)&(swd is not None)&(swrz is None):
+                s = swc + f'\n{ast}\n' + swd
+            elif (swc is not None)&(swd is None)&(swrz is None):
+                s = swc
+            elif (swc is None) & (swd is None) & (swrz is None):
+                s = 'Pyfao56 Tools SoilWater class is empty.'
             return s
-        elif method == 'swc':
+        elif method == 'smc':
+            if self.swcdata is None:
+                print('swcdata Class attribute is empty.')
+                return
             fmts = {'__index__': '{:5d}'.format}
             for date_col in list(self.swcdata):
                 fmts[date_col] = '{:8.3f}'.format
             s = ('{:s}\n'
                  '{:s}\n'
-                 'Tools: Fractional Soil Water Content Data by Layer\n'
+                 'Tools: Soil Water Content (cm^3/cm^3) Data by Layer\n'
                  '{:s}\n'
                  'Depth').format(ast, title, ast)
             for cname in list(self.swcdata):
@@ -166,12 +178,15 @@ class SoilWater:
                                         formatters=fmts)
             return s
         elif method == 'swd':
+            if self.swddata is None:
+                print('SoilWater swddata class attribute is empty.\n')
+                return
             fmts = {'__index__': '{:5d}'.format}
             for date_col in list(self.swddata):
                 fmts[date_col] = '{:8.3f}'.format
             s = ('{:s}\n'
                  '{:s}\n'
-                 'Tools: Fractional Soil Water Deficit Data by Layer\n'
+                 'Tools: Soil Water Deficit (cm^3/cm^3) Data by Layer\n'
                  '{:s}\n'
                  'Depth').format(ast, title, ast)
             for cname in list(self.swddata):
@@ -182,6 +197,9 @@ class SoilWater:
                                         formatters=fmts)
             return s
         elif method == 'swrz':
+            if self.rzdata is None:
+                print('SoilWater rzdata class attribute is empty.\n')
+                return
             fmts = {'Year': '{:4s}'.format, 'DOY': '{:3s}'.format,
                     'Zr': '{:5.3f}'.format, 'SWDr': '{:7.3f}'.format,
                     'SWDrmax': '{:7.3f}'.format,
@@ -190,11 +208,11 @@ class SoilWater:
                     'ObsKs': '{:5.3f}'.format}
             s = ('{:s}\n'
                  '{:s}\n'
-                 'Tools: Root Zone Soil Water Values (mm)\n'
+                 'Tools: Root Zone (m) Soil Water (mm) Data\n'
                  '{:s}\n'
-                 'Year DOY    Zr    SWDr SWDrmax SWDr SWDrmax ObsKs\n'
+                 'Year DOY    Zr    SWDr SWDrmax    SWCr SWCrmax ObsKs\n'
                  ).format(ast, title, ast)
-            s += self.swrzdata.to_string(header=False,
+            s += self.rzdata.to_string(header=False,
                                        index=False,
                                        formatters=fmts)
             return s
@@ -223,7 +241,7 @@ class SoilWater:
                 print('The filepath for soil water content data is not '
                       'found.')
             else:
-                f.write(self.__str__(method='swc'))
+                f.write(self.__str__(method='smc'))
                 f.close()
         if swd_path is not None:
             try:
@@ -336,13 +354,21 @@ class SoilWater:
         """
         # Making a base dataframe out of swcdata
         swddata = self.swcdata.copy()
-        # Copying soil data from the model class
-        sol = self.mdl.sol.sdata
-        # Copying field capacity info over to swddata
+        # Checking if soil class attribute exists
+        try:
+            sol = self.mdl.sol
+        except AttributeError:
+            print('To compute soil water deficit, please provide a '
+                  'pyfao56 model object. \n')
+            return
         if sol is None:
+            # Copying field capacity info over to swddata
             thetaFC = self.mdl.par.thetaFC
             swddata['thetaFC'] = [thetaFC] * swddata.shape[0]
         else:
+            # Copying soil data from the model class
+            sol = self.mdl.sol.sdata
+            # Copying field capacity info over to swddata
             swddata['thetaFC'] = sol['thetaFC'].copy()
         # Creating a list of the column names in the swddata dataframe
         cnames = list(swddata.columns)
@@ -366,9 +392,19 @@ class SoilWater:
 
         # ********************* Setting things up **********************
         # Make swddata into a dictionary to easily store/access values
-        swd_dict = self.swddata.to_dict()
+        try:
+            swd_dict = self.swddata.to_dict()
+        except AttributeError:
+            print('To compute root zone soil water values, please first'
+                  ' populate the swddata class attribute. \n')
+            return
         # Make swcdata into a dictionary to easily store/access values
-        swc_dict = self.swcdata.to_dict()
+        try:
+            swc_dict = self.swcdata.to_dict()
+        except AttributeError:
+            print('To compute root zone soil water values, please first'
+                  'populate the swcdata class attribute.')
+            return
         # List of swddata column names (which are measurement dates)
         dates = list(swd_dict.keys())
         # Get lists of years and days of measurements from dates list
