@@ -1,68 +1,68 @@
 """
 ########################################################################
 The soil_water.py module contains the SoilWater class, which provides
-I/O tools for using observed volumetric soil water content data in the
-pyfao56 environment. The SoilWater class is capable of storing observed
-volumetric soil water content (cm^3/cm^3) data, observed fractional soil
-water deficit (cm^3/cm^3) data, computing observed soil water deficit
-based on data, and computing root zone soil water deficit (mm) data.
+I/O tools for using measured volumetric soil water content data in the
+pyfao56 environment. The SoilWater class is capable of storing measured
+volumetric soil water content (cm^3/cm^3) data, measured fractional soil
+water deficit (cm^3/cm^3) data, and computing root zone soil water
+deficit (mm) data.
 
 The soil_water.py module contains the following:
-    SoilWater - A class for managing observed soil water data
+    SoilWater - A class for managing measured soil water data
 
 10/17/2022 SWC Python functions developed by Josh Brekel, USDA-ARS
 11/07/2022 SWD Python functions developed by Josh Brekel, USDA-ARS
-03/07/2023 SoilWater Class functions developed by Josh Brekel, USDA-ARS
+03/07/2023 SoilWater  functions developed by Josh Brekel, USDA-ARS
 ########################################################################
 """
 
 import pandas as pd
 
 class SoilWater:
-    """A class for managing observed soil water data in pyfao56.
+    """A class for managing measured soil water data in pyfao56.
 
     Attributes
     ----------
     swcdata : DataFrame
         Volumetric soil water content (cm^3/cm^3) data as float
-        index - Bottom depth of soil profile layer as integer (cm)
+        index   - Bottom depth of soil profile layer as integer (cm)
         columns - measurement date in string 'YYYY-DOY' format
     swddata : DataFrame
         Fractional soil water deficit data as float
-        index - Bottom depth of soil profile layer as integer (cm)
+        index   - Bottom depth of soil profile layer as integer (cm)
         columns - string measurement date in 'YYYY-DOY' format
     rzdata : DataFrame
         Soil water deficit (mm) data as float
-        index - string measurement date in 'YYYY-DOY' format
+        index   - string measurement date in 'YYYY-DOY' format
         columns - ['Year', 'DOY', 'Zr', 'SWDr', 'SWDrmax']
             Year    - 4-digit year (yyyy)
             DOY     - Day of year  (ddd)
-            Zr      - Root depth (m), FAO-56 page 279
-            SWDr    - Observed soil water deficit(mm) for root depth
-            SWDrmax - Observed soil water deficit(mm) for max root depth
-            SWCr    - Observed soil water deficit(mm) for root depth
-            SWCrmax - Observed soil water deficit(mm) for max root depth
-            ObsKs   - Observed Ks based on SWDr and pyfao56 Model class
+            Zr      - Simulated root depth (m), FAO-56 page 279
+            SWDr    - Measured soil water deficit(mm) for root depth
+            SWDrmax - Measured soil water deficit(mm) for max root depth
+            SWCr    - Measured soil water deficit(mm) for root depth
+            SWCrmax - Measured soil water deficit(mm) for max root depth
+            MeasKs  - Measured Ks based on SWDr and pyfao56 Model class
 
     Methods
     -------
-    savefile(swc_path='tools_pyfao56.smc',swd_path='tools_pyfao56.swd',
-             swrz_path='tools_pyfao56.swrz')
+    savefile(swc_path='tools_pyfao56.vswc',swd_path=
+             'tools_pyfao56.vswd', rzsw_path='tools_pyfao56.rzsw')
         Save SoilWater attribute(s) to file(s)
-    loadfile(swc_path='tools_pyfao56.smc',swd_path='tools_pyfao56.swd',
-             swrz_path='tools_pyfao56.swrz')
+    loadfile(swc_path='tools_pyfao56.vswc',swd_path=
+             'tools_pyfao56.vswd', rzsw_path='tools_pyfao56.rzsw')
         Load SoilWater attribute(s) from file(s)
     customload()
-        Override this function to customize loading observed
+        Override this function to customize loading measured
         volumetric soil water content data.
     compute_swd_from_swc()
-        Compute observed soil water deficit (for each soil layer)
+        Compute measured soil water deficit (for each soil layer)
         from swcdata class atrribute. Populates swddata class attribute.
     compute_root_zone_sw()
-        Compute observed soil water deficit (mm) and observed volumetric
+        Compute measured soil water deficit (mm) and measured volumetric
         soil water content (mm) in the active root zone and in the
         maximum root zone, based on pyfao56 Model root depth estimates.
-        Also computes Ks based on observed SWD and pyfao56 Model class
+        Also computes Ks based on measured SWD and pyfao56 Model class
         object. Populates rzdata class attribute.
     """
 
@@ -78,7 +78,7 @@ class SoilWater:
             Default is None.
         *args : str
             A variable number of file paths that the user wants to load.
-            The supported file extensions are 'smc', 'swd', and 'swrz'.
+            The supported file extensions are 'vswc', 'vswd', and 'rzsw'.
 
         Raises
         ------
@@ -87,8 +87,8 @@ class SoilWater:
 
         Notes
         -----
-        If only 'smc' file is passed, then SWD and SWrz are computed.
-        If only 'smc' and 'swd' files are passed, then the root zone
+        If only 'vswc' file is passed, then SWD and SWrz are computed.
+        If only 'vswc' and 'vswd' files are passed, then the root zone
         soil water values are calculated.
 
         If the user does not load from a file, then they can use the
@@ -100,10 +100,10 @@ class SoilWater:
         self.rzdata  = None
         # Initialize rzdata column names
         self.rz_cnames = ['Year', 'DOY', 'Zr', 'SWDr',
-                          'SWDrmax', 'SWCr', 'SWCrmax', 'ObsKs']
+                          'SWDrmax', 'SWCr', 'SWCrmax', 'MeasKs']
 
         # Create list of acceptable file extensions
-        accepted_extensions = ['smc', 'swd', 'swrz']
+        accepted_extensions = ['vswc', 'vswd', 'rzsw']
         # Set class model object (if one is passed at instantiation)
         if mdl is not None:
             self.mdl = mdl
@@ -115,17 +115,17 @@ class SoilWater:
                 if extension not in accepted_extensions:
                     raise ValueError(f'{filepath} does not have an '
                                      f'accepted file extension.')
-                elif extension == 'smc':
+                elif extension == 'vswc':
                     self.loadfile(swc_path=filepath)
-                elif extension == 'swd':
+                elif extension == 'vswd':
                     self.loadfile(swd_path=filepath)
-                elif extension == 'swrz':
-                    self.loadfile(swrz_path=filepath)
-            # If only a smc file is given, then compute SWD and SWrz
+                elif extension == 'rzsw':
+                    self.loadfile(rzsw_path=filepath)
+            # If only a vswc file is given, then compute SWD and SWrz
             if self.swddata is None and self.rzdata is None:
                 self.compute_swd_from_swc()
                 self.compute_root_zone_sw()
-            # If only smc and swd files are given, then compute SWrz
+            # If only vswc and vswd files are given, then compute SWrz
             elif self.rzdata is None:
                 self.compute_root_zone_sw()
         # If not loading from file, then use customload to populate swc
@@ -138,7 +138,7 @@ class SoilWater:
         """Represent the SoilWater class as a string"""
 
         method = method.lower()
-        accepted_methods = ['all', 'smc', 'swd', 'swrz']
+        accepted_methods = ['all', 'vswc', 'vswd', 'rzsw']
         title = 'pyfao56: FAO-56 Evapotranspiration in Python'
         ast = '*' * 72
         if method not in accepted_methods:
@@ -146,19 +146,19 @@ class SoilWater:
                              f'The acceptable formats are: '
                              f'{accepted_methods}')
         elif method == 'all':
-            swc = self.__str__(method='smc')
-            swd = self.__str__(method='swd')
-            swrz = self.__str__(method='swrz')
-            if (swc is not None)&(swd is not None)&(swrz is not None):
-                s = swc + f'\n{ast}\n' + swd + f'\n{ast}\n' + swrz
-            elif (swc is not None)&(swd is not None)&(swrz is None):
+            swc = self.__str__(method='vswc')
+            swd = self.__str__(method='vswd')
+            rzsw = self.__str__(method='rzsw')
+            if (swc is not None)&(swd is not None)&(rzsw is not None):
+                s = swc + f'\n{ast}\n' + swd + f'\n{ast}\n' + rzsw
+            elif (swc is not None)&(swd is not None)&(rzsw is None):
                 s = swc + f'\n{ast}\n' + swd
-            elif (swc is not None)&(swd is None)&(swrz is None):
+            elif (swc is not None)&(swd is None)&(rzsw is None):
                 s = swc
-            elif (swc is None) & (swd is None) & (swrz is None):
+            elif (swc is None) & (swd is None) & (rzsw is None):
                 s = 'Pyfao56 Tools SoilWater class is empty.'
             return s
-        elif method == 'smc':
+        elif method == 'vswc':
             if self.swcdata is None:
                 print('swcdata Class attribute is empty.')
                 return
@@ -167,7 +167,8 @@ class SoilWater:
                 fmts[date_col] = '{:8.3f}'.format
             s = ('{:s}\n'
                  '{:s}\n'
-                 'Tools: Soil Water Content (cm^3/cm^3) Data by Layer\n'
+                 'Tools: Measured Soil Water Content (cm^3/cm^3) Data '
+                 'by Layer\n'
                  '{:s}\n'
                  'Depth').format(ast, title, ast)
             for cname in list(self.swcdata):
@@ -177,7 +178,7 @@ class SoilWater:
                                         na_rep='    NaN',
                                         formatters=fmts)
             return s
-        elif method == 'swd':
+        elif method == 'vswd':
             if self.swddata is None:
                 print('SoilWater swddata class attribute is empty.\n')
                 return
@@ -186,7 +187,8 @@ class SoilWater:
                 fmts[date_col] = '{:8.3f}'.format
             s = ('{:s}\n'
                  '{:s}\n'
-                 'Tools: Soil Water Deficit (cm^3/cm^3) Data by Layer\n'
+                 'Tools: Measured Soil Water Deficit (cm^3/cm^3) Data '
+                 'by Layer\n'
                  '{:s}\n'
                  'Depth').format(ast, title, ast)
             for cname in list(self.swddata):
@@ -196,7 +198,7 @@ class SoilWater:
                                         na_rep='    NaN',
                                         formatters=fmts)
             return s
-        elif method == 'swrz':
+        elif method == 'rzsw':
             if self.rzdata is None:
                 print('SoilWater rzdata class attribute is empty.\n')
                 return
@@ -205,20 +207,21 @@ class SoilWater:
                     'SWDrmax': '{:7.3f}'.format,
                     'SWCr': '{:7.3f}'.format,
                     'SWCrmax': '{:7.3f}'.format,
-                    'ObsKs': '{:5.3f}'.format}
+                    'MeasKs': '{:6.3f}'.format}
             s = ('{:s}\n'
                  '{:s}\n'
-                 'Tools: Root Zone (m) Soil Water (mm) Data\n'
+                 'Tools: Simulated Root Zone (m) & Measured Soil '
+                 'Water (mm) Data\n'
                  '{:s}\n'
-                 'Year DOY    Zr    SWDr SWDrmax    SWCr SWCrmax ObsKs\n'
+                 'Year DOY    Zr    SWDr SWDrmax    SWCr SWCrmax MeasKs\n'
                  ).format(ast, title, ast)
             s += self.rzdata.to_string(header=False,
                                        index=False,
                                        formatters=fmts)
             return s
 
-    def savefile(self, swc_path=None, swd_path=None, swrz_path=None):
-        """Save observed soil water data to a file.
+    def savefile(self, swc_path=None, swd_path=None, rzsw_path=None):
+        """Save measured soil water data to a file.
 
         Parameters
         ----------
@@ -226,7 +229,7 @@ class SoilWater:
             Any valid filepath string (default = None)
         swd_path  : str, optional
             Any valid filepath string (default = None)
-        swrz_path : str, optional
+        rzsw_path : str, optional
             Any valid filepath string (default = None)
 
         Raises
@@ -241,7 +244,7 @@ class SoilWater:
                 print('The filepath for soil water content data is not '
                       'found.')
             else:
-                f.write(self.__str__(method='smc'))
+                f.write(self.__str__(method='vswc'))
                 f.close()
         if swd_path is not None:
             try:
@@ -250,21 +253,21 @@ class SoilWater:
                 print('The filepath for soil water deficit data is not '
                       'found.')
             else:
-                f.write(self.__str__(method='swd'))
+                f.write(self.__str__(method='vswd'))
                 f.close()
-        if swrz_path is not None:
+        if rzsw_path is not None:
             try:
-                f = open(swrz_path, 'w')
+                f = open(rzsw_path, 'w')
             except FileNotFoundError:
                 print('The filepath for root zone soil water  data is '
                       'not found.')
             else:
-                f.write(self.__str__(method='swrz'))
+                f.write(self.__str__(method='rzsw'))
                 f.close()
-        if (swc_path is None)&(swd_path is None)&(swrz_path is None):
+        if (swc_path is None)&(swd_path is None)&(rzsw_path is None):
             print('Please specify a filepath for data to be saved.')
 
-    def loadfile(self, swc_path=None, swd_path=None, swrz_path=None):
+    def loadfile(self, swc_path=None, swd_path=None, rzsw_path=None):
         """Load pyfao56 soil profile data from a file.
 
         Parameters
@@ -273,7 +276,7 @@ class SoilWater:
             Any valid filepath string (default = None)
         swd_path  : str, optional
             Any valid filepath string (default = None)
-        swrz_path : str, optional
+        rzsw_path : str, optional
             Any valid filepath string (default = None)
 
         Raises
@@ -317,9 +320,9 @@ class SoilWater:
                     for i in list(range(1, len(cols) + 1)):
                         data.append(float(line[i]))
                     self.swddata.loc[depth] = data
-        if swrz_path is not None:
+        if rzsw_path is not None:
             try:
-                f = open(swrz_path, 'r')
+                f = open(rzsw_path, 'r')
             except FileNotFoundError:
                 print('The filepath for root zone soil water data is '
                       'not found.')
@@ -327,7 +330,7 @@ class SoilWater:
                 lines = f.readlines()
                 f.close()
                 cnames = ['Zr', 'SWDr', 'SWDrmax', 'SWCr',
-                          'SWCrmax', 'ObsKs']
+                          'SWCrmax', 'MeasKs']
                 self.rzdata = pd.DataFrame(columns=cnames)
                 for line in lines[5:]:
                     line = line.strip().split()
@@ -338,18 +341,18 @@ class SoilWater:
                     for i in list(range(2, 8)):
                         data.append(float(line[i]))
                     self.rzdata.loc[key] = data
-        if (swc_path is None)&(swd_path is None)&(swrz_path is None):
+        if (swc_path is None)&(swd_path is None)&(rzsw_path is None):
             print('Please specify a filepath for data to be loaded.')
 
     def customload(self):
-        """Override this function to customize loading observed
+        """Override this function to customize loading measured
         volumetric soil water content data for the swcdata attribute.
         """
 
         pass
 
     def compute_swd_from_swc(self):
-        """Compute observed soil water deficit (for each soil layer)
+        """Compute measured soil water deficit (for each soil layer)
         from swcdata class atrribute. Populates swddata class attribute.
         """
         # Making a base dataframe out of swcdata
@@ -384,10 +387,10 @@ class SoilWater:
         self.swddata = swddata
 
     def compute_root_zone_sw(self):
-        """Compute observed soil water deficit (mm) and observed
+        """Compute measured soil water deficit (mm) and measured
         volumetric soil water content (mm) in the active root zone and
         in the maximum root zone, based on pyfao56 Model root depth
-        estimates. Also computes Ks based on observed SWD and pyfao56
+        estimates. Also computes Ks based on measured SWD and pyfao56
         Model class object. Populates rzdata class attribute."""
 
         # ********************* Setting things up **********************
@@ -465,7 +468,7 @@ class SoilWater:
         rzdata['SWCr']    = pd.Series(SWCr)
         rzdata['SWCrmax'] = pd.Series(SWCrmax)
 
-        # ****************** Calculating Observed Ks *******************
+        # ****************** Calculating Measured Ks *******************
         Ks = {}
         for mykey, value in rzdata.iterrows():
             taw = self.mdl.odata.loc[mykey, 'TAW']
@@ -473,7 +476,7 @@ class SoilWater:
             dr = rzdata.loc[mykey, 'SWDr']
             Ks[mykey] = sorted([0.0, (taw - dr) / (taw - raw), 1.0])[1]
 
-        rzdata['ObsKs'] = pd.Series(Ks)
+        rzdata['MeasKs'] = pd.Series(Ks)
 
         # Populate rzdata class attribute
         self.rzdata = rzdata

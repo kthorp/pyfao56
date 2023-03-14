@@ -54,20 +54,20 @@ def run():
     mdl_sol.savefile(os.path.join(module_dir,'E12FF2022_Soil.out'))
 
     print('Testing SoilWater class initialization...\n')
-    # Use soil moisture content file to initialize SoilWater class
-    smc_file = os.path.join(module_dir, 'E12FF2022.smc')
+    # Use soil water content file to initialize SoilWater class
+    swc_file = os.path.join(module_dir, 'E12FF2022.vswc')
     # Initialize without a model
     print('Testing initialization with smc file but no model...\n')
-    wtr0 = SoilWater(None, smc_file)
+    wtr0 = SoilWater(None, swc_file)
     print(wtr0, '\n')
     # Initialize with default model
     print('Testing initialization with smc file & default model...\n')
-    wtr1 = SoilWater(mdl, smc_file)
+    wtr1 = SoilWater(mdl, swc_file)
     print(wtr1, '\n')
     # Initialize with stratified soil model
     print('Testing initialization with smc file & stratified soil '
           'model...\n')
-    wtr2 = SoilWater(mdl_sol, smc_file)
+    wtr2 = SoilWater(mdl_sol, swc_file)
     print(wtr2, '\n')
     # Initialize empty class
     print('Testing empty class initialization...\n')
@@ -75,23 +75,23 @@ def run():
     print(wtr3, '\n')
 
     # Test the savefile function
-    smc_file2 = os.path.join(module_dir, 'E12FF2022_NEW.smc')
-    swd_file  = os.path.join(module_dir, 'E12FF2022_NEW.swd')
-    swrz_file = os.path.join(module_dir, 'E12FF2022_NEW.swrz')
+    swc_file2 = os.path.join(module_dir, 'E12FF2022_NEW.vswc')
+    swd_file  = os.path.join(module_dir, 'E12FF2022.vswd')
+    rzsw_file = os.path.join(module_dir, 'E12FF2022.rzsw')
     print('Testing savefile function...\n')
-    wtr2.savefile(swc_path=smc_file2, swd_path=swd_file,
-                  swrz_path=swrz_file)
-    if os.path.exists(smc_file2):
-        print(f"The {smc_file2} was successfully saved.\n")
+    wtr2.savefile(swc_path=swc_file2, swd_path=swd_file,
+                  rzsw_path=rzsw_file)
+    if os.path.exists(swc_file2):
+        print(f"The {swc_file2} was successfully saved.\n")
     else:
-        print(f"The {smc_file2} was not saved. \n")
+        print(f"The {swc_file2} was not saved. \n")
     print('Testing savefile function error message...\n')
     wtr2.savefile()
 
     # Test the loadfile function
     # Testing using the swc method
     print('Loading soil water content file...\n')
-    wtr3.loadfile(swc_path=smc_file2)
+    wtr3.loadfile(swc_path=swc_file2)
     print(wtr3, '\n')
     # Testing using the swd method
     print('Loading soil water deficit file...\n')
@@ -101,13 +101,13 @@ def run():
     # Testing using the swrz method
     print('Loading soil water root zone file...\n')
     wtr3 = SoilWater()
-    wtr3.loadfile(swrz_path=swrz_file)
+    wtr3.loadfile(rzsw_path=rzsw_file)
     print(wtr3, '\n')
     # Testing using all three methods
     print('Loading soil water data...\n')
     wtr3 = SoilWater()
-    wtr3.loadfile(swc_path=smc_file2, swd_path=swd_file,
-                  swrz_path=swrz_file)
+    wtr3.loadfile(swc_path=swc_file2, swd_path=swd_file,
+                  rzsw_path=rzsw_file)
     print(wtr3, '\n')
 
     # I have an example customload function, but it depends on openpyxl,
@@ -117,7 +117,7 @@ def run():
     # Testing compute functions
     print('Testing the compute_swd_from_swc function...\n')
     wtr = SoilWater(mdl=mdl_sol)
-    wtr.loadfile(smc_file2)
+    wtr.loadfile(swc_file2)
     wtr.compute_swd_from_swc()
     print(wtr, '\n')
     print('Testing the compute_root_zone_sw function...\n')
