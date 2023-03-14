@@ -124,9 +124,9 @@ The pyfao56 Model class provides an argument to optionally set the TAW depletion
 ## Further information
 The pyfao56 package is further described in the following article:
 
-Thorp, K. R., pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 19, 101208. [doi:10.1016/softx.2022.101208](https://doi.org/10.1016/j.softx.2022.101208).
+Thorp, K. R., 2022. pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 19, 101208. [doi:10.1016/softx.2022.101208](https://doi.org/10.1016/j.softx.2022.101208).
 
-Thorp, K. R., Version 1.1.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 22, 101336. [doi.10.1016/j.softx.2023.101336](https://doi.org/10.1016/j.softx.2023.101336).
+Brekel, J., Thorp, K. R., DeJonge, K. C., Trout, T. J., 2023. Version 1.1.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 22, 101336. [doi.10.1016/j.softx.2023.101336](https://doi.org/10.1016/j.softx.2023.101336).
 
 
 Also, the pyfao56 package was used to conduct the following research:

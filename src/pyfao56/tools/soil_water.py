@@ -1,14 +1,14 @@
 """
 ########################################################################
 The soil_water.py module contains the SoilWater class, which provides
-I/O tools for using observed volumetric soil water content data in the
-pyfao56 environment. The SoilWater class is capable of storing observed
-volumetric soil water content (cm^3/cm^3) data, observed fractional soil
-water deficit (cm^3/cm^3) data, computing observed soil water deficit
-based on data, and computing root zone soil water deficit (mm) data.
+I/O tools for using measured volumetric soil water content data in the
+pyfao56 environment. The SoilWater class is capable of storing measured
+volumetric soil water content (cm^3/cm^3) data, computing and storing
+measured fractional soil water deficit (cm^3/cm^3), and computing root
+zone soil water deficit (mm).
 
 The soil_water.py module contains the following:
-    SoilWater - A class for managing observed soil water data
+    SoilWater - A class for managing measured soil water data
 
 10/17/2022 SWC Python functions developed by Josh Brekel, USDA-ARS
 11/07/2022 SWD Python functions developed by Josh Brekel, USDA-ARS
@@ -19,7 +19,7 @@ The soil_water.py module contains the following:
 import pandas as pd
 
 class SoilWater:
-    """A class for managing observed soil water data in pyfao56.
+    """A class for managing measured soil water data in pyfao56.
 
     Attributes
     ----------
@@ -38,11 +38,11 @@ class SoilWater:
             Year    - 4-digit year (yyyy)
             DOY     - Day of year  (ddd)
             Zr      - Root depth (m), FAO-56 page 279
-            SWDr    - Observed soil water deficit(mm) for root depth
-            SWDrmax - Observed soil water deficit(mm) for max root depth
-            SWCr    - Observed soil water deficit(mm) for root depth
-            SWCrmax - Observed soil water deficit(mm) for max root depth
-            ObsKs   - Observed Ks based on SWDr and pyfao56 Model class
+            SWDr    - Measured soil water deficit(mm) for root depth
+            SWDrmax - Measured soil water deficit(mm) for max root depth
+            SWCr    - Measured soil water deficit(mm) for root depth
+            SWCrmax - Measured soil water deficit(mm) for max root depth
+            ObsKs   - Measured Ks based on SWDr and pyfao56 Model class
 
     Methods
     -------

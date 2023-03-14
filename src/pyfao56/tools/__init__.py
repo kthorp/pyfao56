@@ -1,10 +1,11 @@
 """
 ########################################################################
-The tools subpackage within the pyfao56 Python package facilitates
-the use of observed data and evaluations of the pyfao56 model.
+The tools subpackage within the pyfao56 Python package provides tools
+for implementing the pyfao56 model, including functionality for
+incorporation of measured soil water content data for model evaluation.
 
 The tools subpackage contains the following modules:
-    soil_water.py  - provides I/O tools for observed volumetric soil
+    soil_water.py  - provides I/O tools for measured volumetric soil
                      water content data
 
 10/17/2022 Subpackage created by Josh Brekel
