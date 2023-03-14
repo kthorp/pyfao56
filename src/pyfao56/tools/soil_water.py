@@ -391,32 +391,23 @@ class SoilWater:
         Model class object. Populates rzdata class attribute."""
 
         # ********************* Setting things up **********************
-        # Make swddata into a dictionary to easily store/access values
+        # Get lists of measurement dates SWD
         try:
-            swd_dict = self.swddata.to_dict()
+            swd_dates = list(self.swddata.columns)
         except AttributeError:
             print('To compute root zone soil water values, please first'
                   ' populate the swddata class attribute. \n')
             return
-        # Make swcdata into a dictionary to easily store/access values
-        try:
-            swc_dict = self.swcdata.to_dict()
-        except AttributeError:
-            print('To compute root zone soil water values, please first'
-                  'populate the swcdata class attribute.')
-            return
-        # List of swddata column names (which are measurement dates)
-        dates = list(swd_dict.keys())
         # Get lists of years and days of measurements from dates list
         years = []
         days = []
-        for i in dates:
+        for i in swd_dates:
             deconstructed_date = i.split('-')
             years += [deconstructed_date[0]]
             days += [deconstructed_date[1]]
 
         # Make initial dataframe out of the measurement date info
-        rzdata = pd.DataFrame({'Year-DOY': dates,
+        rzdata = pd.DataFrame({'Year-DOY': swd_dates,
                                'Year': years,
                                'DOY': days})
         # Set row index to be the same as pyfao56 Model output dataframe
@@ -430,50 +421,43 @@ class SoilWater:
         rmax = self.mdl.par.Zrmax * 100000 #10^-5 meters
 
         # ****************** Computing Root Zone SW ********************
-        # Loop through swd_dict to compute SWD and SWC values
+        # Loop through measurement dates to compute SWD and SWC values
         SWDr    = {}
         SWDrmax = {}
         SWCr    = {}
         SWCrmax = {}
-        for mykey, swdByLyr in swd_dict.items():
-            # Hint:
-            #          mykey is a column name of swddata ('YYYY-DOY')
-            #          swdByLyr is a dictionary:
-            #               -Keys: layer depths
-            #               -Values: fractional SWD measured on mykey
+        for mykey in swd_dates:
+            lyr_dpths = list(self.swddata[mykey].index)
             # Finding root depth(10^-5 m) on measurement days
             try:
-                Zr = rzdata.loc[mykey, 'Zr'] * 100000  # 10^-5 meters
+                Zr = rzdata.loc[mykey, 'Zr'] * 100000  #10^-5 meters
             except KeyError:
-                # Ignoring mismatches in observed/modeled data
+                # Ignoring mismatches in measured/modeled data
                 pass
-            # Access the soil water content values for the mykey day
-            swcByLyr = swc_dict[mykey]
             # Setting temp variables for SWDr and SWDrmax on meas. days
-            Dr = 0.
-            Drmax = 0.
+            Dr      = 0.
+            Drmax   = 0.
             # Setting temp variables for SWCr and SWCrmax on meas. days
-            vH2O = 0.
-            vH2Omax = 0.
+            H2Or    = 0.
+            H2Ormax = 0.
             # Iterate down to max root depth in 10^-5 meters increments
             for inc in list(range(1, int(rmax + 1))):
                 # Find soil layer that contains the increment
-                lyr = [dpth for (idx, dpth)
-                       in enumerate(list(swdByLyr.keys()))
-                       if inc <= dpth * 1000][0]  # 10^-5 meters
+                lyr = [dpth for (idx, dpth) in enumerate(lyr_dpths)
+                       if inc <= dpth * 1000][0]  #10^-5 meters
                 # Compute SWD(mm) & SWC(mm) in active root depth for day
                 if inc <= Zr:
-                    Dr   += swdByLyr[lyr] / 100  #mm
-                    vH2O += swcByLyr[lyr] / 100  #mm
+                    Dr   += self.swddata.loc[lyr, mykey] / 100  #mm
+                    H2Or += self.swcdata.loc[lyr, mykey] / 100  #mm
                 # Compute measured SWD(mm) & SWC(mm) in max root depth
-                Drmax   += swdByLyr[lyr] / 100  #mm
-                vH2Omax += swcByLyr[lyr] / 100  #mm
+                Drmax   += self.swddata.loc[lyr, mykey] / 100  #mm
+                H2Ormax += self.swcdata.loc[lyr, mykey] / 100  #mm
             # Add SWD values to dictionaries with measurement day as key
             SWDr[mykey] = Dr
             SWDrmax[mykey] = Drmax
             # Add SWC values to dictionaries with measurement day as key
-            SWCr[mykey] = vH2O
-            SWCrmax[mykey] = vH2Omax
+            SWCr[mykey] = H2Or
+            SWCrmax[mykey] = H2Ormax
 
         # Add SWD and SWC dictionaries to rzdata as columns
         rzdata['SWDr']    = pd.Series(SWDr)
