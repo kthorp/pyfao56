@@ -54,75 +54,70 @@ def run():
     mdl_sol.savefile(os.path.join(module_dir,'E12FF2022_Soil.out'))
 
     print('Testing SoilWater class initialization...\n')
-    # Use soil water content file to initialize SoilWater class
+    # Initialize with a model only
+    print('Testing initialization with just a model...\n')
+    wtr = SoilWater(mdl=mdl)
+    print(wtr)
+
+    # Test the loadfile function
     swc_file = os.path.join(module_dir, 'E12FF2022.vswc')
+    rzsw_file = os.path.join(module_dir, 'E12FF2022.rzsw')
+    # Testing using the swc method
+    print('\nLoading soil water content file...\n')
+    wtr.loadfile(swc_path=swc_file)
+    print(wtr, '\n')
+    # Testing using the rzsw method
+    print('Loading soil water root zone file...\n')
+    wtr.loadfile(rzsw_path=rzsw_file)
+    print(wtr, '\n')
+
     # Initialize without a model
-    print('Testing initialization with smc file but no model...\n')
-    wtr0 = SoilWater(None, swc_file)
+    print('Testing initialization with swc file but no model...\n')
+    wtr0 = SoilWater(swc_path=swc_file)
     print(wtr0, '\n')
+
     # Initialize with default model
-    print('Testing initialization with smc file & default model...\n')
-    wtr1 = SoilWater(mdl, swc_file)
+    print('Testing initialization with swc file & default model...\n')
+    wtr1 = SoilWater(mdl=mdl, swc_path=swc_file)
+    wtr1.compute_root_zone_sw()
     print(wtr1, '\n')
     # Initialize with stratified soil model
-    print('Testing initialization with smc file & stratified soil '
+    print('Testing initialization with swc file & stratified soil '
           'model...\n')
-    wtr2 = SoilWater(mdl_sol, swc_file)
+    wtr2 = SoilWater(mdl=mdl_sol, swc_path=swc_file)
+    wtr2.compute_root_zone_sw()
     print(wtr2, '\n')
-    # Initialize empty class
-    print('Testing empty class initialization...\n')
-    wtr3 = SoilWater()
-    print(wtr3, '\n')
 
     # Test the savefile function
     swc_file2 = os.path.join(module_dir, 'E12FF2022_NEW.vswc')
-    swd_file  = os.path.join(module_dir, 'E12FF2022.vswd')
-    rzsw_file = os.path.join(module_dir, 'E12FF2022.rzsw')
+    rzsw_file = os.path.join(module_dir, 'E12FF2022_NEW.rzsw')
     print('Testing savefile function...\n')
-    wtr2.savefile(swc_path=swc_file2, swd_path=swd_file,
-                  rzsw_path=rzsw_file)
-    if os.path.exists(swc_file2):
-        print(f"The {swc_file2} was successfully saved.\n")
+    wtr2.savefile(swc_path=swc_file2, rzsw_path=rzsw_file)
+    if os.path.exists(swc_file2) & os.path.exists(rzsw_file):
+        print(f"{swc_file2} and {rzsw_file} were successfully saved.\n")
     else:
-        print(f"The {swc_file2} was not saved. \n")
+        print(f"{swc_file2} and {rzsw_file} were NOT SAVED. \n")
     print('Testing savefile function error message...\n')
     wtr2.savefile()
 
-    # Test the loadfile function
-    # Testing using the swc method
-    print('Loading soil water content file...\n')
+    # Initialize empty class
+    print('Testing empty class initialization...\n')
+    wtr3 = SoilWater()
+    wtr3.compute_root_zone_sw()
+    print(wtr3, '\n')
+    # Testing compute root zone method
+    print('Computing root zone soil water from swc file...\n')
     wtr3.loadfile(swc_path=swc_file2)
-    print(wtr3, '\n')
-    # Testing using the swd method
-    print('Loading soil water deficit file...\n')
-    wtr3 = SoilWater()
-    wtr3.loadfile(swd_path=swd_file)
-    print(wtr3, '\n')
-    # Testing using the swrz method
-    print('Loading soil water root zone file...\n')
-    wtr3 = SoilWater()
-    wtr3.loadfile(rzsw_path=rzsw_file)
-    print(wtr3, '\n')
-    # Testing using all three methods
-    print('Loading soil water data...\n')
-    wtr3 = SoilWater()
-    wtr3.loadfile(swc_path=swc_file2, swd_path=swd_file,
-                  rzsw_path=rzsw_file)
+    wtr3.compute_root_zone_sw()
+    # Previous line results in an error message due to lack of a model
+    print('Loading model & retrying now')
+    wtr3.mdl = mdl_sol
+    wtr3.compute_root_zone_sw()
     print(wtr3, '\n')
 
     # I have an example customload function, but it depends on openpyxl,
     # and I don't want to have to make that a pyfao56 dependency. So I
     # am skipping testing the customload function
-
-    # Testing compute functions
-    print('Testing the compute_swd_from_swc function...\n')
-    wtr = SoilWater(mdl=mdl_sol)
-    wtr.loadfile(swc_file2)
-    wtr.compute_swd_from_swc()
-    print(wtr, '\n')
-    print('Testing the compute_root_zone_sw function...\n')
-    wtr.compute_root_zone_sw()
-    print(wtr, '\n')
 
 if __name__ == '__main__':
     run()
