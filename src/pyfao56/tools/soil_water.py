@@ -1,8 +1,3 @@
-#ToDo: replace model I/O with par and sol
-# add root simulation calculations to rzsw function
-# Make a new method for computing measured Ks
-# rework all docstrings
-
 """
 ########################################################################
 The soil_water.py module contains the SoilWater class, which provides
@@ -16,12 +11,12 @@ The soil_water.py module contains the following:
     SoilWater - A class for managing measured soil water data
 
 10/17/2022 SWC Python functions developed by Josh Brekel, USDA-ARS
-11/07/2022 SWD Python functions developed by Josh Brekel, USDA-ARS
 03/07/2023 SoilWater  functions developed by Josh Brekel, USDA-ARS
 ########################################################################
 """
 
 import pandas as pd
+import datetime
 
 class SoilWater:
     """A class for managing measured soil water data in pyfao56.
@@ -34,9 +29,9 @@ class SoilWater:
         columns - measurement date in string 'YYYY-DOY' format
     rzdata : DataFrame
         Soil water deficit (mm) data as float
-        index   - string measurement date in 'YYYY-DOY' format
+        index   - Year and day of year as string ('yyyy-ddd')
         columns - ['Year', 'DOY', 'Zr', 'SWDr', 'SWDrmax', 'SWCr',
-                   'SWCrmax', 'MeasKs']
+                   'SWCrmax']
             Year    - 4-digit year (yyyy)
             DOY     - Day of year  (ddd)
             Zr      - Simulated root depth (m), FAO-56 page 279
@@ -44,55 +39,55 @@ class SoilWater:
             SWDrmax - Measured soil water deficit(mm) for max root depth
             SWCr    - Measured soil water deficit(mm) for root depth
             SWCrmax - Measured soil water deficit(mm) for max root depth
-            MeasKs  - Measured Ks based on SWDr and pyfao56 Model class
 
     Methods
     -------
-    savefile(swc_path='tools_pyfao56.vswc',
-             rzsw_path='tools_pyfao56.rzsw')
+    savefile(swc_path='pyfao56tools.vswc',rzsw_path='pyfao56tools.rzsw')
         Save SoilWater attribute(s) to file(s)
-    loadfile(swc_path='tools_pyfao56.vswc',
-             rzsw_path='tools_pyfao56.rzsw')
+    loadfile(swc_path='pyfao56tools.vswc',rzsw_path='pyfao56tools.rzsw')
         Load SoilWater attribute(s) from file(s)
     customload()
-        Override this function to customize loading measured
-        volumetric soil water content data.
-    compute_root_zone_sw()
+        Override this function to customize loading measured volumetric
+        soil water content data.
+    compute_root_zone_sw(start, end)
         Compute measured soil water deficit (mm) and measured volumetric
-        soil water content (mm) in the active root zone and in the
-        maximum root zone, based on pyfao56 Model root depth estimates.
-        Also computes Ks based on measured SWD and pyfao56 Model class
-        object. Populates rzdata class attribute.
+        soil water content (mm) in the (simulated) active root zone and
+        in the maximum root zone. Populates rzdata class attribute.
     """
 
-    def __init__(self, mdl=None, swc_path=None, rzsw_path=None):
+    def __init__(self, par=None,sol=None, swc_path=None,rzsw_path=None):
         """
         Initialize the SoilWater class object.
 
         Parameters
         ----------
-        mdl : pyfao56 Model class object, optional
-            pyfao56 Model class that can be used for calculating soil
-            water deficit and/or root zone soil water values.
+        par : pyfao56 Parameters class, optional
+            pyfao56 Parameters class can be used for calculating soil
+            water deficit and is necessary to simulate rooting depth
             (default = None)
+        sol : pyfao56 SoilProfile class, optional
+            pyfao56 SoilProfile class can be used for calculating soil
+            water deficit (default = None)
         swc_path : str, optional
-            Any valid filepath  for loading a soil water content file.
+            Any valid filepath for loading a soil water content file
             (default = None)
         rzsw_path : str, optional
-            Any valid filepath for loading a root zone soil water file.
+            Any valid filepath for loading a root zone soil water file
             (default = None)
 
         Notes
         -----
         If the user does not load from a file, then they can use the
-        customload method to populate the SoilWater class attributes.
+        customload and compute_root_zone_sw methods to populate the
+        SoilWater class attributes.
         """
         # Initialize rzdata column names
         self.rz_cnames = ['Year', 'DOY', 'Zr', 'SWDr', 'SWDrmax',
-                          'SWCr', 'SWCrmax', 'MeasKs']
-        # Set Parameters object (if one is passed at instantiation)
-        if mdl is not None:
-            self.mdl = mdl
+                          'SWCr', 'SWCrmax']
+        # Set Parameters object
+        self.par = par
+        # Set SoilProfile object
+        self.sol = sol
         # Load the SWC class attribute
         if swc_path is not None:
             self.loadfile(swc_path=swc_path)
@@ -142,15 +137,13 @@ class SoilWater:
                     'Zr': '{:5.3f}'.format, 'SWDr': '{:7.3f}'.format,
                     'SWDrmax': '{:7.3f}'.format,
                     'SWCr': '{:7.3f}'.format,
-                    'SWCrmax': '{:7.3f}'.format,
-                    'MeasKs': '{:6.3f}'.format}
+                    'SWCrmax': '{:7.3f}'.format}
             s = ('{:s}\n'
                  '{:s}\n'
                  'Tools: Simulated Root Zone (m) & Measured Soil '
                  'Water (mm) Data\n'
                  '{:s}\n'
-                 'Year DOY    Zr    SWDr SWDrmax    SWCr SWCrmax '
-                 'MeasKs\n'
+                 'Year DOY    Zr    SWDr SWDrmax    SWCr SWCrmax\n'
                  ).format(ast, title, ast)
             s += self.rzdata.to_string(header=False,
                                        index=False,
@@ -185,7 +178,7 @@ class SoilWater:
             try:
                 f = open(rzsw_path, 'w')
             except FileNotFoundError:
-                print('The filepath for root zone soil water  data is '
+                print('The filepath for root zone soil water data is '
                       'not found.')
             else:
                 f.write(self.__str__(method='rzsw'))
@@ -242,7 +235,7 @@ class SoilWater:
                     doy = line[1]
                     key = '{:04d}-{:03d}'.format(int(year), int(doy))
                     data = [year, doy]
-                    for i in list(range(2, 8)):
+                    for i in list(range(2, 7)):
                         data.append(float(line[i]))
                     self.rzdata.loc[key] = data
         if (swc_path is None) & (rzsw_path is None):
@@ -255,31 +248,41 @@ class SoilWater:
 
         pass
 
-    def compute_root_zone_sw(self):
+    def compute_root_zone_sw(self, start, end):
         """Compute measured soil water deficit (mm) and measured
-        volumetric soil water content (mm) in the active root zone and
-        in the maximum root zone, based on pyfao56 Model root depth
-        estimates. Also computes Ks based on measured SWD and pyfao56
-        Model class object. Populates rzdata class attribute."""
+        volumetric soil water content (mm) in the (simulated) active
+        root zone and in the maximum root zone. Populates rzdata class
+        attribute.
+
+        Parameters
+        ----------
+        start  : str
+            Root depth simulation start year and doy ('yyyy-ddd')
+        end : str
+            Root depth simulation end year and doy ('yyyy-ddd')
+
+        Notes
+        -----
+        This method simulates rooting depth. To simulate rooting depth,
+        the SoilWater class must contain a pyfao56 Parameters class.
+        """
+
+        # ********************** Error Checking ************************
+        if self.par is None:
+            print('Please supply a pyfao56 Parameters class, which is '
+                  'needed to simulate rooting depth.')
+            return
 
         # ****************** Computing SWD by Layer ********************
-        # Making a base dataframe out of swcdata
+        # Making a measured soil water deficit dataframe out of swcdata
         swddata = self.swcdata.copy()
-        try:
-            sol = self.mdl.sol
-        except AttributeError:
-            print('To compute soil water deficit, please provide a '
-                  'pyfao56 model object. \n')
-            return
-        if sol is None:
-            # Copying field capacity info over to swddata
-            thetaFC = self.mdl.par.thetaFC
-            swddata['thetaFC'] = [thetaFC] * swddata.shape[0]
+        # Determining field capacity based on info given to the class
+        if self.sol is None:
+            # Copying field capacity info from par over to swddata
+            swddata['thetaFC'] = [self.par.thetaFC] * swddata.shape[0]
         else:
-            # Copying soil data from the model class
-            sol = self.mdl.sol.sdata
-            # Copying field capacity info over to swddata
-            swddata['thetaFC'] = sol['thetaFC'].copy()
+            # Copying field capacity info over to swddata from sol
+            swddata['thetaFC'] = self.sol.sdata['thetaFC'].copy()
         # Creating a list of the column names in the swddata dataframe
         cnames = list(swddata.columns)
         swd_dates = []
@@ -290,9 +293,9 @@ class SoilWater:
                 swd_dates += [cname]
                 # "Clip" sets negative SWD values to zero
                 swddata[cname] = (swddata['thetaFC'] -
-                                       swddata[cname]).clip(lower=0)
+                                  swddata[cname]).clip(lower=0)
 
-        # ******************** Setting things up ***********************
+        # ****************** Root Depth Simulation *********************
         # Get lists of years and days of measurements from dates list
         years = []
         days = []
@@ -305,30 +308,54 @@ class SoilWater:
         rzdata = pd.DataFrame({'Year-DOY': swd_dates,
                                'Year': years,
                                'DOY': days})
-        # Set row index to be the same as pyfao56 Model output dataframe
         rzdata = rzdata.set_index('Year-DOY')
 
-        # Merging Zr column to the initial dataframe on measurement days
-        rzdata = rzdata.merge(self.mdl.odata[['Zr']], left_index=True,
-                              right_index=True)
+        # Running simulation to compute rooting depth for measurements
+        startDate = datetime.datetime.strptime(start, '%Y-%j')
+        endDate   = datetime.datetime.strptime(end, '%Y-%j')
+        # Initialize rooting depth simulation state
+        io           = self.RootState()
+        io.i         = 0
+        io.Zrini     = self.par.Zrini
+        io.Zrmax     = self.par.Zrmax
+        io.Zr        = io.Zrini
+        io.Kcbini    = self.par.Kcbini
+        io.Kcbmid    = self.par.Kcbmid
+        io.Kcbend    = self.par.Kcbend
+        io.Lini      = self.par.Lini
+        io.Ldev      = self.par.Ldev
+        io.Lmid      = self.par.Lmid
+        io.Lend      = self.par.Lend
+        tcurrent     = startDate
+        tdelta       = datetime.timedelta(days=1)
 
-        # Setting variable for max root zone in #10^-5 meters
-        rmax = self.mdl.par.Zrmax * 100000 #10^-5 meters
+        while tcurrent <= endDate:
+            mykey = tcurrent.strftime('%Y-%j')
+            # Advance root depth simulation
+            self._advance(io)
+            # Record Zr for measurement dates
+            if mykey in swd_dates:
+                rzdata.loc[mykey, 'Zr'] = io.Zr
+            # Update state variables
+            tcurrent += tdelta
+            io.i     += 1
 
         # ****************** Computing Root Zone SW ********************
+        # Setting variable for max root zone in #10^-5 meters
+        rmax = self.par.Zrmax * 100000  # 10^-5 meters
+
         # Loop through measurement dates to compute SWD and SWC values
         SWDr    = {}
         SWDrmax = {}
         SWCr    = {}
         SWCrmax = {}
         for mykey in swd_dates:
+            date = datetime.datetime.strptime(mykey, '%Y-%j')
+            print(f"Computing soil water values for",
+                  date.strftime("%m-%d-%Y"))
             lyr_dpths = list(swddata[mykey].index)
-            # Finding root depth(10^-5 m) on measurement days
-            try:
-                Zr = rzdata.loc[mykey, 'Zr'] * 100000  #10^-5 meters
-            except KeyError:
-                # Ignoring mismatches in measured/modeled data
-                pass
+            # Finding root depth in 10^-5m on measurement days
+            Zr = rzdata.loc[mykey, 'Zr'] * 100000  #10^-5 meters
             # Setting temp variables for SWDr and SWDrmax on meas. days
             Dr      = 0.
             Drmax   = 0.
@@ -360,15 +387,38 @@ class SoilWater:
         rzdata['SWCr']    = pd.Series(SWCr)
         rzdata['SWCrmax'] = pd.Series(SWCrmax)
 
-        # ****************** Calculating Measured Ks *******************
-        Ks = {}
-        for mykey, value in rzdata.iterrows():
-            taw = self.mdl.odata.loc[mykey, 'TAW']
-            raw = self.mdl.odata.loc[mykey, 'RAW']
-            dr = rzdata.loc[mykey, 'SWDr']
-            Ks[mykey] = sorted([0.0, (taw - dr) / (taw - raw), 1.0])[1]
-
-        rzdata['MeasKs'] = pd.Series(Ks)
-
         # Populate rzdata class attribute
         self.rzdata = rzdata
+
+    class RootState:
+        """Contain parameters and states for a single timestep."""
+
+        pass
+
+    def _advance(self, io):
+        """Advance the root simulation by one daily timestep.
+
+        Parameters
+        ----------
+        io : RootState object
+        """
+        # Basal crop coefficient (Kcb)
+        # From FAO-56 Tables 11 and 17
+        s1 = io.Lini
+        s2 = s1 + io.Ldev
+        s3 = s2 + io.Lmid
+        s4 = s3 + io.Lend
+        if   0  <= io.i <= s1:
+            io.Kcb = io.Kcbini
+        elif s1 <  io.i <= s2:
+            io.Kcb += (io.Kcbmid-io.Kcbini)/(s2-s1)
+        elif s2 <  io.i <= s3:
+            io.Kcb = io.Kcbmid
+        elif s3 <  io.i <= s4:
+            io.Kcb += (io.Kcbmid-io.Kcbend)/(s3-s4)
+        elif s4 <  io.i:
+            io.Kcb = io.Kcbend
+
+        # Root depth (Zr, m) - FAO-56 page 279
+        io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*(io.Kcb-io.Kcbini) /
+                     (io.Kcbmid - io.Kcbini),0.001,io.Zr])
