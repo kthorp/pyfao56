@@ -31,12 +31,12 @@ class SoilProfile:
         Soil profile data as float
         index = Bottom depth of the layer as integer (cm)
         columns = ['thetaFC', 'thetaWP', 'theta0']
-            thetaFC - Volumetric Soil Water Content, Field Capacity 
-                      (cm^3/cm^3)
+            thetaFC - Volumetric Soil Water Content, Field Capacity
+                      (cm3/cm3)
             thetaWP - Volumetric Soil Water Content, Wilting Point
-                      (cm^3/cm^3)
+                      (cm3/cm3)
             theta0  - Volumetric Soil Water Content, Initial
-                      (cm^3/cm^3)
+                      (cm3/cm3)
 
     Methods
     -------

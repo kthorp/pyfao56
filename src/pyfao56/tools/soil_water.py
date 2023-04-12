@@ -3,15 +3,14 @@
 The soil_water.py module contains the SoilWater class, which provides
 I/O tools for using measured volumetric soil water content data in the
 pyfao56 environment. The SoilWater class is capable of storing measured
-volumetric soil water content (cm^3/cm^3) data, measured fractional soil
-water deficit (cm^3/cm^3) data, and computing root zone soil water
-deficit (mm) data.
+volumetric soil water content (SWC, cm3/cm3) data and computing and
+storing root zone soil water deficit (SWDr, mm) data.
 
 The soil_water.py module contains the following:
     SoilWater - A class for managing measured soil water data
 
 10/17/2022 SWC Python functions developed by Josh Brekel, USDA-ARS
-03/07/2023 SoilWater  functions developed by Josh Brekel, USDA-ARS
+03/07/2023 SoilWater functions developed by Josh Brekel, USDA-ARS
 ########################################################################
 """
 
@@ -19,26 +18,27 @@ import pandas as pd
 import datetime
 
 class SoilWater:
-    """A class for managing measured soil water data in pyfao56.
+    """A class for managing measured soil water content data in pyfao56.
 
     Attributes
     ----------
     swcdata : DataFrame
-        Volumetric soil water content (cm^3/cm^3) data as float
+        Volumetric soil water content data as float (cm3/cm3)
         index   - Bottom depth of soil profile layer as integer (cm)
-        columns - measurement date in string 'YYYY-DOY' format
+        columns - SWC measurement dates as string ('yyyy-ddd')
+#The variable name does not indicate anything about soil water deficit.
     rzdata : DataFrame
-        Soil water deficit (mm) data as float
+        Soil water deficit data as float (mm)
         index   - Year and day of year as string ('yyyy-ddd')
         columns - ['Year', 'DOY', 'Zr', 'SWDr', 'SWDrmax', 'SWCr',
                    'SWCrmax']
             Year    - 4-digit year (yyyy)
             DOY     - Day of year  (ddd)
             Zr      - Simulated root depth (m), FAO-56 page 279
-            SWDr    - Measured soil water deficit(mm) for root depth
-            SWDrmax - Measured soil water deficit(mm) for max root depth
-            SWCr    - Measured soil water deficit(mm) for root depth
-            SWCrmax - Measured soil water deficit(mm) for max root depth
+            SWDr    - Measured SWD for root depth (mm)
+            SWDrmax - Measured SWD for max root depth (mm)
+            SWCr    - Measured SWC for root depth (cm3/cm3)
+            SWCrmax - Measured SWC for max root depth (cm3/cm3)
 
     Methods
     -------
@@ -57,17 +57,15 @@ class SoilWater:
 
     def __init__(self, par=None,sol=None, swc_path=None,rzsw_path=None):
         """
-        Initialize the SoilWater class object.
+        Initialize the SoilWater class attributes.
 
         Parameters
         ----------
-        par : pyfao56 Parameters class, optional
-            pyfao56 Parameters class can be used for calculating soil
-            water deficit and is necessary to simulate rooting depth
-            (default = None)
-        sol : pyfao56 SoilProfile class, optional
-            pyfao56 SoilProfile class can be used for calculating soil
-            water deficit (default = None)
+        par : pyfao56 Parameters object, optional
+            Used for calculating soil water deficit and for simulating
+            rooting depth (default = None)
+        sol : pyfao56 SoilProfile object, optional
+            Used for calculating soil water deficit (default = None)
         swc_path : str, optional
             Any valid filepath for loading a soil water content file
             (default = None)
@@ -111,24 +109,31 @@ class SoilWater:
                              f'The acceptable formats are: '
                              f'{accepted_methods}')
         elif method == 'all':
+#It seems kinda weird to call a function within itself, but apparently
+#this works in Python. Could it be made easier to read by first
+#creating a string variable for swc, then another for rzsw, then
+#put the if statement at the end to print one, the other, or both?
             swc = self.__str__(method='vswc')
             rzsw = self.__str__(method='rzsw')
             s = swc + f'\n{ast}\n' + rzsw
             return s
         elif method == 'vswc':
+#I don't understand what __index__ is.  I've not used it before.
             fmts = {'__index__': '{:5d}'.format}
-            for date_col in list(self.swcdata):
+            for date_col in list(self.swcdata.columns.values):
                 fmts[date_col] = '{:8.3f}'.format
             s = ('{:s}\n'
                  '{:s}\n'
-                 'Tools: Measured Soil Water Content (cm^3/cm^3) Data '
+                 'Tools: Measured Soil Water Content (cm^3/cm^3) '
                  'by Layer\n'
                  '{:s}\n'
                  'Depth').format(ast, title, ast)
-            for cname in list(self.swcdata):
+            for cname in list(self.swcdata.columns.values):
                 s += '{:>9s}'.format(cname)
             s += '\n'
             s += self.swcdata.to_string(header=False,
+#The NaN string is only 7 characters while the formats are 8.
+#Have you checked that this NaN string works as intended?
                                         na_rep='    NaN',
                                         formatters=fmts)
             return s
@@ -140,7 +145,10 @@ class SoilWater:
                     'SWCrmax': '{:7.3f}'.format}
             s = ('{:s}\n'
                  '{:s}\n'
-                 'Tools: Simulated Root Zone (m) & Measured Soil '
+                 'Tools: Simulated Root Zone Depth (m) & Measured Soil '
+
+#I'm still confused by the difference between SWD and SWC.
+#Is this printing both soil water deficit and soil water content in mm?
                  'Water (mm) Data\n'
                  '{:s}\n'
                  'Year DOY    Zr    SWDr SWDrmax    SWCr SWCrmax\n'
@@ -150,6 +158,7 @@ class SoilWater:
                                        formatters=fmts)
             return s
 
+#Why not provide default filenames like the other modules do?
     def savefile(self, swc_path=None, rzsw_path=None):
         """Save measured soil water data to a file.
 
@@ -186,6 +195,7 @@ class SoilWater:
         if (swc_path is None) & (rzsw_path is None):
             print('Please specify a filepath for data to be saved.')
 
+#Same question as before regarding providing a default filename.
     def loadfile(self, swc_path=None, rzsw_path=None):
         """Load measured soil water data from a file.
 
@@ -248,6 +258,21 @@ class SoilWater:
 
         pass
 
+##I think this function should be made simpler, and likely more flexible and useful.
+##It could likely be broken into multiple methods.
+##Giving the user flexibility to define their own root zone depth for calculations
+##would make the tool more flexible.
+##Consider adding a "rzdep" (root zone depth) dictionary as a class attribute.
+##The keys for the dictionary are the same as the date strings in swcdata.
+##There could be multiple options in how the root depth is defined.
+##A separate function could quantify the root depth
+##(using the model) for each date and assign the value to rzdep.
+##Another function could allow users to directly specify the depth for evalution
+##for a given date. I think the tool should be built around this flexibility for the
+##user to provide the root depth for evaluation.
+##In my experience, defining the root depth is the value of greatest uncertainty
+##in evaluating depletion using FAO-56 methods.  The tool should not restrict
+##the users to only the modeled estimate of root depth.
     def compute_root_zone_sw(self, start, end):
         """Compute measured soil water deficit (mm) and measured
         volumetric soil water content (mm) in the (simulated) active
@@ -274,9 +299,9 @@ class SoilWater:
             return
 
         # ****************** Computing SWD by Layer ********************
-        # Making a measured soil water deficit dataframe out of swcdata
+        # Make a DataFrame for measured soil water deficit from swcdata
         swddata = self.swcdata.copy()
-        # Determining field capacity based on info given to the class
+        # Determine field capacity based on info given to the class
         if self.sol is None:
             # Copying field capacity info from par over to swddata
             swddata['thetaFC'] = [self.par.thetaFC] * swddata.shape[0]
@@ -284,9 +309,9 @@ class SoilWater:
             # Copying field capacity info over to swddata from sol
             swddata['thetaFC'] = self.sol.sdata['thetaFC'].copy()
         # Creating a list of the column names in the swddata dataframe
-        cnames = list(swddata.columns)
+        cnames = list(swddata.columns.values)
         swd_dates = []
-        # Looping through column names; calculating SWD on date columns
+        # Loop through column names and calculate SWD on date columns
         for cname in cnames:
             if cname != 'thetaFC':
                 # Create list of measurement dates
@@ -309,7 +334,10 @@ class SoilWater:
                                'Year': years,
                                'DOY': days})
         rzdata = rzdata.set_index('Year-DOY')
-
+        
+##This is kinda overkill.
+##I envision a separate method that calculates the root depths for each 
+##of the observation dates.
         # Running simulation to compute rooting depth for measurements
         startDate = datetime.datetime.strptime(start, '%Y-%j')
         endDate   = datetime.datetime.strptime(end, '%Y-%j')
@@ -339,6 +367,11 @@ class SoilWater:
             # Update state variables
             tcurrent += tdelta
             io.i     += 1
+
+##This should probably be pulled out as a unique method.
+##It should be easier for a user to read the code and understand how the values
+##are computed.  Maybe the method should should work on a single measurement date.
+##Then the looping and iterations are done elsewhere.
 
         # ****************** Computing Root Zone SW ********************
         # Setting variable for max root zone in #10^-5 meters
@@ -390,10 +423,20 @@ class SoilWater:
         # Populate rzdata class attribute
         self.rzdata = rzdata
 
+##This RootState class is probably not necessary. 
+##Just have a root depth calculation function that maybe creates a dictionary
+##with dates as keys and root depth as the values.
+
+
     class RootState:
         """Contain parameters and states for a single timestep."""
 
         pass
+
+##It may be better to just write a new function that computes root depth
+##directly and bypasses the calculation of Kcb.
+##I think the equations would be same as below, but just substitude Zrmax
+##for Kcbmin and substitute Zrini for Kcbini.
 
     def _advance(self, io):
         """Advance the root simulation by one daily timestep.
