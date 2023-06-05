@@ -324,12 +324,22 @@ class Model:
                 io.wndsp = 2.0
             io.rhmin = self.wth.wdata.loc[mykey,'RHmin']
             if math.isnan(io.rhmin):
+                #Estimate RHmin from Tmax and Tdew
                 tmax = self.wth.wdata.loc[mykey,'Tmax']
+                #******Kelly Double Check -- should below be tdew? tmin?
                 tdew = self.wth.wdata.loc[mykey,'Tmin']
                 emax = 0.6108*math.exp((17.27*tmax)/
                                        (tmax+237.3))
+                #Campbell & Norman, "An Introduction to Environmental
+                #Biophysics (2nd ed)", pg 44 says, "The saturation vapor
+                #pressure at dew point temperature is equal to the
+                #ambient vapor pressure: Es(Td) = ea". That seems to
+                #support using Tdew in the equation below.
+                #I can't find anything on assuming Tdew = Tmin, but I am
+                #probably just missing it.
                 ea   = 0.6108*math.exp((17.27*tdew)/
                                        (tdew+237.3))
+                #Derived from #ASCE (2005) Eq. 13, page 16
                 io.rhmin = ea/emax*100.
             if math.isnan(io.rhmin):
                 io.rhmin = 45.
