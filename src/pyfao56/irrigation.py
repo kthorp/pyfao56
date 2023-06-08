@@ -14,12 +14,16 @@ The irrigation.py module contains the following:
 """
 
 import pandas as pd
+import datetime
 
 class Irrigation:
     """A class for managing irrigation data for FAO-56 calculations
 
     Attributes
     ----------
+    label : str, optional
+        Provide a string to customize plot/unit information and
+        other metadata for output file (default = None).
     idata : DataFrame
         Irrigation data as float
         index - Year and day of year as string ('yyyy-ddd')
@@ -37,7 +41,7 @@ class Irrigation:
         Add an irrigation event to self.idata
     """
 
-    def __init__(self,filepath=None):
+    def __init__(self,filepath=None,label=None):
         """Initialize the Irrigation class attributes.
 
         If filepath is provided, irrigation data is loaded from the file
@@ -46,8 +50,20 @@ class Irrigation:
         ----------
         filepath : str, optional
             Any valid filepath string (default = None)
+        label : str, optional
+            Provide a string to customize plot/unit information and
+            other metadata for output file (default = None).
         """
 
+        self.timestamp = datetime.datetime.now().strftime('"%Y-%m-%d '
+                                                          '%H:%M:%S"')
+        if label is None:
+            self.label = 'File Creation Timestamp: ' + self.timestamp
+            self.customlabel = False
+        else:
+            self.label = 'File Creation Timestamp: ' + self.timestamp \
+                         + '\n' + label
+            self.customlabel = True
         self.idata = pd.DataFrame(columns=['Depth','fw'])
 
         if filepath is not None:
@@ -62,8 +78,9 @@ class Irrigation:
            'pyfao56: FAO-56 Evapotranspiration in Python\n'
            'Irrigation Data\n'
            '{:s}\n'
+           '{:s}\n'
            'Year-DOY  Depth     fw\n'
-          ).format(ast,ast)
+          ).format(ast,self.label,ast)
         s += self.idata.to_string(header=False)
         return s
 
@@ -110,8 +127,37 @@ class Irrigation:
         else:
             lines = f.readlines()
             f.close()
+            ast = '*' * 72
+            start_line = None
+            end_line = None
+            for i, line in enumerate(lines):
+                if line.strip() == ast:
+                    if start_line is None:
+                        start_line = i
+                    elif end_line is None:
+                        end_line = i
+                    else:
+                        raise ValueError('Invalid file format. Too many'
+                                         ' asterisk identifier lines '
+                                         'found.')
+            if start_line is None or end_line is None:
+                raise ValueError("Invalid file format. Asterisk "
+                                 "identifiers not found.")
+            if not end_line == 3:
+                self.timestamp = str(lines[start_line + 3][26:45])
+                if start_line + 4 == end_line:
+                    if not self.customlabel:
+                        self.label = 'File Creation Timestamp: "' \
+                                     + self.timestamp + '"'
+                else:
+                    label = lines[start_line + 4:end_line]
+                    label[-1] = label[-1].rstrip()
+                    self.label = 'File Creation Timestamp: "' \
+                                 + self.timestamp + '"' + '\n' + \
+                                 ''.join(label)
+
             self.idata = pd.DataFrame(columns=['Depth','fw'])
-            for line in lines[5:]:
+            for line in lines[end_line+2:]:
                 line = line.strip().split()
                 year = line[0][:4]
                 doy = line[0][-3:]

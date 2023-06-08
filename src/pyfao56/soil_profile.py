@@ -19,6 +19,7 @@ The soil_profile.py module contains the following:
 """
 
 import pandas as pd
+import datetime
 
 class SoilProfile:
     """A class for managing layered soil profile data in pyfao56.
@@ -27,6 +28,9 @@ class SoilProfile:
     ----------
     cnames : list
         Column names for sdata
+    label : str, optional
+        Provide a string to customize plot/unit information and
+        other metadata for output file (default = None).
     sdata : DataFrame
         Soil profile data as float
         index = Bottom depth of the layer as integer (cm)
@@ -48,7 +52,7 @@ class SoilProfile:
         Override this function to customize loading soil data.
     """
 
-    def __init__(self, filepath=None):
+    def __init__(self, filepath=None, label=None):
         """Initialize the SoilProfile class attributes.
 
         If filepath is provided, soil data is loaded from the file.
@@ -57,8 +61,20 @@ class SoilProfile:
         ----------
         filepath : str, optional
             Any valid filepath string (default = None).
+        label : str, optional
+            Provide a string to customize plot/unit information and
+            other metadata for output file (default = None).
         """
 
+        self.timestamp = datetime.datetime.now().strftime('"%Y-%m-%d '
+                                                          '%H:%M:%S"')
+        if label is None:
+            self.label = 'File Creation Timestamp: ' + self.timestamp
+            self.customlabel = False
+        else:
+            self.label = 'File Creation Timestamp: ' + self.timestamp \
+                         + '\n' + label
+            self.customlabel = True
         self.cnames = ['thetaFC', 'thetaWP', 'theta0']
         self.sdata = pd.DataFrame(columns=self.cnames)
 
@@ -77,7 +93,8 @@ class SoilProfile:
              'pyfao56: FAO-56 Evapotranspiration in Python\n'
              'Soil Profile Data\n'
              '{:s}\n'
-             'Depth').format(ast,ast)
+             '{:s}\n'
+             'Depth').format(ast,self.label,ast)
         for cname in self.cnames:
             s += '{:>8s}'.format(cname)
         s += '\n'
@@ -129,7 +146,36 @@ class SoilProfile:
         else:
             lines = f.readlines()
             f.close()
-            for line in lines[5:]:
+            ast = '*' * 72
+            start_line = None
+            end_line = None
+            for i, line in enumerate(lines):
+                if line.strip() == ast:
+                    if start_line is None:
+                        start_line = i
+                    elif end_line is None:
+                        end_line = i
+                    else:
+                        raise ValueError('Invalid file format. Too many'
+                                         ' asterisk identifier lines '
+                                         'found.')
+            if start_line is None or end_line is None:
+                raise ValueError("Invalid file format. Asterisk "
+                                 "identifiers not found.")
+            if not end_line == 3:
+                self.timestamp = str(lines[start_line + 3][26:45])
+                if start_line + 4 == end_line:
+                    if not self.customlabel:
+                        self.label = 'File Creation Timestamp: "' \
+                                     + self.timestamp + '"'
+                else:
+                    label = lines[start_line + 4:end_line]
+                    label[-1] = label[-1].rstrip()
+                    self.label = 'File Creation Timestamp: "' \
+                                 + self.timestamp + '"' + '\n' + \
+                                 ''.join(label)
+
+            for line in lines[end_line+2:]:
                 line = line.strip().split()
                 depth = int(line[0])
                 data = list()

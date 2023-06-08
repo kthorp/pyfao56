@@ -91,9 +91,11 @@ class Weather:
                                                          '%H:%M:%S"')
         if label is None:
             self.label = 'File Creation Timestamp: ' + self.timestamp
+            self.customlabel = False
         else:
             self.label = 'File Creation Timestamp: ' + self.timestamp \
                          + '\n' + label
+            self.customlabel = True
         if filepath is not None:
             self.loadfile(filepath)
 
@@ -242,17 +244,19 @@ class Weather:
                 raise ValueError("Invalid file format. Asterisk "
                                  "identifiers not found.")
 # 4.
-            self.timestamp = str(lines[start_line+3][26:45])
+            if not end_line == 3: #added later to preserve v1.1 file formats
+                self.timestamp = str(lines[start_line+3][26:45])
 # 5.
-            if start_line+4 == end_line:
-                self.label = 'File Creation Timestamp: "'\
-                             + self.timestamp + '"'
-            else:
-                label = lines[start_line+4:end_line]
-                label[-1] = label[-1].rstrip()
-                self.label = 'File Creation Timestamp: "'\
-                             + self.timestamp + '"' + '\n' + \
-                             ''.join(label)
+                if start_line+4 == end_line:
+                    if not self.customlabel:
+                        self.label = 'File Creation Timestamp: "'\
+                                     + self.timestamp + '"'
+                else:
+                    label = lines[start_line+4:end_line]
+                    label[-1] = label[-1].rstrip()
+                    self.label = 'File Creation Timestamp: "'\
+                                 + self.timestamp + '"' + '\n' + \
+                                 ''.join(label)
 # 6.
             self.rfcrp = lines[end_line+1][:12].strip()
             self.z = float(lines[end_line+2][:12])
