@@ -64,6 +64,11 @@ class Irrigation:
            '{:s}\n'
            'Year-DOY  Depth     fw\n'
           ).format(ast,ast)
+
+        if self.idata.empty:
+            empty_row = [-99.99] * len(self.idata.columns)
+            self.idata.loc["-999-999"] = empty_row
+
         s += self.idata.to_string(header=False)
         return s
 
