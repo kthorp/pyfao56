@@ -192,20 +192,39 @@ class Parameters:
         else:
             lines = f.readlines()
             f.close()
-            self.Kcbini  = float(lines[ 4][:9])
-            self.Kcbmid  = float(lines[ 5][:9])
-            self.Kcbend  = float(lines[ 6][:9])
-            self.Lini    =   int(lines[ 7][:9])
-            self.Ldev    =   int(lines[ 8][:9])
-            self.Lmid    =   int(lines[ 9][:9])
-            self.Lend    =   int(lines[10][:9])
-            self.hini    = float(lines[11][:9])
-            self.hmax    = float(lines[12][:9])
-            self.thetaFC = float(lines[13][:9])
-            self.thetaWP = float(lines[14][:9])
-            self.theta0  = float(lines[15][:9])
-            self.Zrini   = float(lines[16][:9])
-            self.Zrmax   = float(lines[17][:9])
-            self.pbase   = float(lines[18][:9])
-            self.Ze      = float(lines[19][:9])
-            self.REW     = float(lines[20][:9])
+            for line in lines[4:]: # Change this line when metadata is merged. Make it go from endline+1 to end of file
+                line = line.strip().split()
+                if line[1].lower() == 'kcbini':
+                    self.Kcbini = float(line[0])
+                elif line[1].lower() == 'kcbmid':
+                    self.Kcbmid = float(line[0])
+                elif line[1].lower() == 'kcbend':
+                    self.Kcbend = float(line[0])
+                elif line[1].lower() == 'lini':
+                    self.Lini = int(line[0])
+                elif line[1].lower() == 'ldev':
+                    self.Ldev = int(line[0])
+                elif line[1].lower() == 'lmid':
+                    self.Lmid = int(line[0])
+                elif line[1].lower() == 'lend':
+                    self.Lend = int(line[0])
+                elif line[1].lower() == 'hini':
+                    self.hini = float(line[0])
+                elif line[1].lower() == 'hmax':
+                    self.hmax = float(line[0])
+                elif line[1].lower() == 'thetafc':
+                    self.thetaFC = float(line[0])
+                elif line[1].lower() == 'thetawp':
+                    self.thetaWP = float(line[0])
+                elif line[1].lower() == 'theta0':
+                    self.theta0 = float(line[0])
+                elif line[1].lower() == 'zrini':
+                    self.Zrini = float(line[0])
+                elif line[1].lower() == 'zrmax':
+                    self.Zrmax = float(line[0])
+                elif line[1].lower() == 'pbase':
+                    self.pbase = float(line[0])
+                elif line[1].lower() == 'ze':
+                    self.Ze = float(line[0])
+                elif line[1].lower() == 'rew':
+                    self.REW = float(line[0])
