@@ -324,11 +324,11 @@ class Model:
                 io.wndsp = 2.0
             io.rhmin = self.wth.wdata.loc[mykey,'RHmin']
             if math.isnan(io.rhmin):
-                #Estimate RHmin from Tmax and Tdew
+                #Estimate RHmin from Tmax and Tdew - FAO-56 Eq. 63
                 tmax = self.wth.wdata.loc[mykey,'Tmax']
                 tdew = self.wth.wdata.loc[mykey,'Tdew']
                 tmin = self.wth.wdata.loc[mykey,'Tmin']
-                #If tdew is missing, replace it with tmin.
+                #If tdew is missing, replace with tmin - FAO-56 Eq. 64
                 if math.isnan(tdew):
                     tdew = tmin
                 emax = 0.6108*math.exp((17.27*tmax)/
