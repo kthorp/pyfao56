@@ -35,6 +35,8 @@ class Irrigation:
         Load irrigation data from a file
     addevent(year,doy,depth,fw)
         Add an irrigation event to self.idata
+    customload()
+        Override this function to customize loading soil data.
     """
 
     def __init__(self,filepath=None):
@@ -135,3 +137,9 @@ class Irrigation:
 
         key = '{:04d}-{:03d}'.format(year,doy)
         self.idata.loc[key] = [depth,fw]
+
+    def customload(self):
+        """Override this function to customize loading irrigation
+        data."""
+
+        pass
