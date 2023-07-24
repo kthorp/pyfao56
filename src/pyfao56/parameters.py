@@ -192,8 +192,22 @@ class Parameters:
         else:
             lines = f.readlines()
             f.close()
-            for line in lines[4:]: # Change this line when metadata is merged. Make it go from endline+1 to end of file
+            # Change below line if/when metadata branch is merged.
+            # Make it go from endline+1 to end of file. The "endline"
+            # variable from the metadata allows the number of lines in
+            # the header to change based on the user's custom label.
+            for line in lines[4:]:
                 line = line.strip().split()
+                # Remove the comma from the end of line[1]
+                line[1] = line[1].replace(',', '')
+                # By checking whether line[1] == "parameter_name", we
+                # can allow the user to change the order of the
+                # parameters in the parameters file. This change should
+                # also make it easier to change the number of parameters
+                # allowed in the parameters file in the future.
+                # Hopefully this makes it easier to change the basic
+                # structure of .par files while maintaining backwards
+                # compatibility.
                 if line[1].lower() == 'kcbini':
                     self.Kcbini = float(line[0])
                 elif line[1].lower() == 'kcbmid':

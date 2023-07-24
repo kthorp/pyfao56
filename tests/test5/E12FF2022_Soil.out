@@ -2,7 +2,7 @@
 pyfao56: FAO-56 Evapotranspiration in Python
 Output Data
 ************************************************************************
-Year-DOY  Year  DOY  DOW      Date  ETref  tKcb   Kcb     h Kcmax    fc    fw   few      De    Kr    Ke      E     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p     RAW    Ks kcadj ETcadj      T      DP    Dinc      Dr     fDr   Drmax  fDrmax      Db     fDb   Irrig    Rain  Year  DOY  DOW      Date
+Year-DOY  Year  DOY  DOW      Date  ETref  tKcb   Kcb     h Kcmax    fc    fw   few      De    Kr    Ke      E     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p     RAW    Ks Kcadj ETcadj      T      DP    Dinc      Dr     fDr   Drmax  fDrmax      Db     fDb   Irrig    Rain  Year  DOY  DOW      Date
 2022-129  2022  129  Mon  05/09/22  8.830 0.150 0.150 0.050 1.000 0.000 1.000 1.000  12.001 0.000 0.000  0.000   0.000 0.150  1.325  27.750 108.750  81.000 0.200 0.500  13.875 1.000 0.150  1.325  1.325   0.000   0.000   6.824   0.246  14.824   0.136   8.000   0.099   0.000   0.000  2022  129  Mon  05/09/22
 2022-130  2022  130  Tue  05/10/22  7.420 0.150 0.150 0.050 1.000 0.000 1.000 1.000  12.001 0.000 0.000  0.000   0.000 0.150  1.113  27.750 108.750  81.000 0.200 0.500  13.875 1.000 0.150  1.113  1.113   0.000   0.000   7.937   0.286  15.937   0.147   8.000   0.099   0.000   0.000  2022  130  Tue  05/10/22
 2022-131  2022  131  Wed  05/11/22  8.090 0.150 0.150 0.050 1.000 0.000 1.000 1.000  12.001 0.000 0.000  0.000   0.000 0.150  1.214  27.750 108.750  81.000 0.200 0.500  13.875 1.000 0.150  1.214  1.214   0.000   0.000   9.151   0.330  17.151   0.158   8.000   0.099   0.000   0.000  2022  131  Wed  05/11/22
