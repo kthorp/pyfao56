@@ -30,6 +30,8 @@ def run():
     par.Ldev = 50
     par.Lmid = 46
     par.Lend = 39
+    par.hini = 0.05
+    par.hmax = 1.20
     par.thetaFC = 0.2125
     par.thetaWP = 0.1019
     par.theta0  = 0.1850
