@@ -68,11 +68,6 @@ class Update:
            '{:s}\n'
            'Year-DOY    Kcb      h     fc\n'
           ).format(ast,ast)
-
-        if self.udata.empty:
-            empty_row = ['   NaN'] * len(self.udata.columns)
-            self.udata.loc["-999-999"] = empty_row
-
         s += self.udata.to_string(header=False, na_rep='  NaN')
         return s
 
