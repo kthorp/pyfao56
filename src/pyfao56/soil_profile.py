@@ -81,9 +81,10 @@ class SoilProfile:
         for cname in self.cnames:
             s += '{:>8s}'.format(cname)
         s += '\n'
-        s += self.sdata.to_string(header=False,
-                                  na_rep='    NaN',
-                                  formatters=fmts)
+        if not self.sdata.empty:
+            s += self.sdata.to_string(header=False,
+                                      na_rep='    NaN',
+                                      formatters=fmts)
         return s
 
     def savefile(self, filepath='pyfao56.sol'):

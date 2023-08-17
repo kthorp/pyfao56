@@ -64,7 +64,8 @@ class Irrigation:
            '{:s}\n'
            'Year-DOY  Depth     fw\n'
           ).format(ast,ast)
-        s += self.idata.to_string(header=False)
+        if not self.idata.empty:
+            s += self.idata.to_string(header=False)
         return s
 
     def savefile(self,filepath='pyfao56.irr'):

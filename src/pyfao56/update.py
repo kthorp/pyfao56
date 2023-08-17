@@ -68,7 +68,8 @@ class Update:
            '{:s}\n'
            'Year-DOY    Kcb      h     fc\n'
           ).format(ast,ast)
-        s += self.udata.to_string(header=False, na_rep='  NaN')
+        if not self.udata.empty:
+            s += self.udata.to_string(header=False, na_rep='  NaN')
         return s
 
     def savefile(self,filepath='pyfao56.upd'):
