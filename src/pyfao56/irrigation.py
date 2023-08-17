@@ -36,7 +36,7 @@ class Irrigation:
     addevent(year,doy,depth,fw)
         Add an irrigation event to self.idata
     customload()
-        Override this function to customize loading soil data.
+        Users can override for custom loading of irrigation data.
     """
 
     def __init__(self,filepath=None):

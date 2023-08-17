@@ -45,7 +45,7 @@ class SoilProfile:
     loadfile(filepath='pyfao56.sol')
         Load soil profile data from a file
     customload()
-        Override this function to customize loading soil data.
+        Users can override for custom loading of soil data.
     """
 
     def __init__(self, filepath=None):
