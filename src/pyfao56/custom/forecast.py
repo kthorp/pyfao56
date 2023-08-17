@@ -15,6 +15,7 @@ obtained.
 
 #https://graphical.weather.gov/xml/rest.php
 #https://graphical.weather.gov/xml/docs/elementInputNames.php
+#https://digital.weather.gov/staticpages/definitions.php
 
 xx/xx/2019 Initial Python functions developed by Kelly Thorp
 11/04/2021 Finalized updates for inclusion in the pyfao56 Python package
