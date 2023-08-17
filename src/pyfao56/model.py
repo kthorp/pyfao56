@@ -43,7 +43,7 @@ class Model:
         Provides the parameter data for simulations
     wth : pyfao56 Weather class
         Provides the weather data for simulations
-    irr : pyfao56 Irrigation object, optional
+    irr : pyfao56 Irrigation class, optional
         Provides the irrigation data for simulations
         (default = None)
     sol : pyfao56 SoilProfile class, optional
@@ -120,8 +120,8 @@ class Model:
         Conduct the FAO-56 calculations from startDate to endDate
     """
 
-    def __init__(self, start, end, par, wth, irr=None, sol=None, upd=None,
-                 cons_p=False):
+    def __init__(self, start, end, par, wth, irr=None, sol=None,
+                 upd=None, cons_p=False):
         """Initialize the Model class attributes.
 
         Parameters
@@ -340,14 +340,11 @@ class Model:
                 io.rhmin = ea/emax*100.
             if math.isnan(io.rhmin):
                 io.rhmin = 45.
+            io.idep = 0.0
             if self.irr is not None:
                 if mykey in self.irr.idata.index:
                     io.idep = self.irr.idata.loc[mykey,'Depth']
                     io.fw = self.irr.idata.loc[mykey,'fw']
-                else:
-                    io.idep = 0.0
-            else:
-                io.idep = 0.0
 
             #Obtain updates for Kcb, h, and fc, if available
             io.updKcb = float('NaN')
