@@ -63,9 +63,9 @@ class Model:
         columns - ['Year','DOY','DOW','Date','ETref','tKcb','Kcb','h',
                    'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
                    'Kc','ETc','TAW','TAWrmax','TAWb','Zr','p','RAW',
-                   'Ks','ETcadj','T','DP','Dinc','Dr','fDr','Drmax',
-                   'fDrmax','Db','fDb','Irrig','Rain','Year','DOY',
-                   'DOW','Date']
+                   'Ks','Kcadj','ETcadj','T','DP','Dinc','Dr','fDr',
+                   'Drmax','fDrmax','Db','fDb','Irrig','Rain','Year',
+                   'DOY','DOW','Date']
             Year    - 4-digit year (yyyy)
             DOY     - Day of year (ddd)
             DOW     - Day of week
@@ -92,6 +92,7 @@ class Model:
             p       - Fraction depleted TAW, FAO-56 p162 and Table 22
             RAW     - Readily available water (mm), FAO-56 Equation 83
             Ks      - Transpiration reduction factor, FAO-56 Eq. 84
+            Kcadj   - Adjusted crop coefficient, FA0-56 Eq. 80
             ETcadj  - Adjusted crop ET (mm), FAO-56 Eq. 80
             T       - Adjusted crop transpiration (mm)
             DP      - Deep percolation (mm), FAO-56 Eq. 88
@@ -323,12 +324,18 @@ class Model:
                 io.wndsp = 2.0
             io.rhmin = self.wth.wdata.loc[mykey,'RHmin']
             if math.isnan(io.rhmin):
+                #Estimate RHmin from Tmax and Tdew - FAO-56 Eq. 63
                 tmax = self.wth.wdata.loc[mykey,'Tmax']
-                tdew = self.wth.wdata.loc[mykey,'Tmin']
-                emax = 0.6108*math.exp((17.27*io.tmax)/
-                                       (io.tmax+237.3))
-                ea   = 0.6108*math.exp((17.27*io.tdew)/
-                                       (io.tdew+237.3))
+                tdew = self.wth.wdata.loc[mykey,'Tdew']
+                tmin = self.wth.wdata.loc[mykey,'Tmin']
+                #If tdew is missing, replace with tmin - FAO-56 Eq. 64
+                if math.isnan(tdew):
+                    tdew = tmin
+                emax = 0.6108*math.exp((17.27*tmax)/
+                                       (tmax+237.3))
+                ea   = 0.6108*math.exp((17.27*tdew)/
+                                       (tdew+237.3))
+                #Derived from #ASCE (2005) Eq. 13, page 16
                 io.rhmin = ea/emax*100.
             if math.isnan(io.rhmin):
                 io.rhmin = 45.
