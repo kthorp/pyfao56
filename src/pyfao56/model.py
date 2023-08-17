@@ -43,8 +43,9 @@ class Model:
         Provides the parameter data for simulations
     wth : pyfao56 Weather class
         Provides the weather data for simulations
-    irr : pyfao56 Irrigation class
+    irr : pyfao56 Irrigation object, optional
         Provides the irrigation data for simulations
+        (default = None)
     sol : pyfao56 SoilProfile class, optional
         Provides data for modeling with stratified soil layers
         (default = None)
@@ -119,7 +120,7 @@ class Model:
         Conduct the FAO-56 calculations from startDate to endDate
     """
 
-    def __init__(self, start, end, par, wth, irr, sol=None, upd=None,
+    def __init__(self, start, end, par, wth, irr=None, sol=None, upd=None,
                  cons_p=False):
         """Initialize the Model class attributes.
 
@@ -133,8 +134,9 @@ class Model:
             Provides the parameter data for simulations
         wth : pyfao56 Weather object
             Provides the weather data for simulations
-        irr : pyfao56 Irrigation object
+        irr : pyfao56 Irrigation object, optional
             Provides the irrigation data for simulations
+            (default = None)
         sol : pyfao56 SoilProfile object, optional
             Provides data for modeling with stratified soil layers
             (default = None)
@@ -338,9 +340,12 @@ class Model:
                 io.rhmin = ea/emax*100.
             if math.isnan(io.rhmin):
                 io.rhmin = 45.
-            if mykey in self.irr.idata.index:
-                io.idep = self.irr.idata.loc[mykey,'Depth']
-                io.fw = self.irr.idata.loc[mykey,'fw']
+            if self.irr is not None:
+                if mykey in self.irr.idata.index:
+                    io.idep = self.irr.idata.loc[mykey,'Depth']
+                    io.fw = self.irr.idata.loc[mykey,'fw']
+                else:
+                    io.idep = 0.0
             else:
                 io.idep = 0.0
 
