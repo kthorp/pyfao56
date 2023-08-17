@@ -19,6 +19,7 @@ The model.py module contains the following:
 11/04/2021 Finalized updates for inclusion in the pyfao56 Python package
 10/27/2022 Incorporated Fort Collins ARS stratified soil layers approach
 11/30/2022 Incorporated Fort Collins ARS water balance approach
+08/17/2023 Improved logic for case of missing rhmin data
 ########################################################################
 """
 
@@ -324,18 +325,16 @@ class Model:
                 io.wndsp = 2.0
             io.rhmin = self.wth.wdata.loc[mykey,'RHmin']
             if math.isnan(io.rhmin):
-                #Estimate RHmin from Tmax and Tdew - FAO-56 Eq. 63
                 tmax = self.wth.wdata.loc[mykey,'Tmax']
-                tdew = self.wth.wdata.loc[mykey,'Tdew']
                 tmin = self.wth.wdata.loc[mykey,'Tmin']
-                #If tdew is missing, replace with tmin - FAO-56 Eq. 64
+                tdew = self.wth.wdata.loc[mykey,'Tdew']
                 if math.isnan(tdew):
                     tdew = tmin
+                #ASCE (2005) Eqs. 7 and 8
                 emax = 0.6108*math.exp((17.27*tmax)/
                                        (tmax+237.3))
                 ea   = 0.6108*math.exp((17.27*tdew)/
                                        (tdew+237.3))
-                #Derived from #ASCE (2005) Eq. 13, page 16
                 io.rhmin = ea/emax*100.
             if math.isnan(io.rhmin):
                 io.rhmin = 45.
