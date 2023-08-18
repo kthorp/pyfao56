@@ -202,27 +202,53 @@ class Parameters:
         else:
             lines = f.readlines()
             f.close()
-            ast = '*' * 72
-            a = [i for i,line in enumerate(lines) if line.strip()==ast]
-            endast = a[-1] 
-            if endast <= 4:
-                self.label = None
-            else:
-                self.label = ''.join(lines[4:endast])
-            self.Kcbini  = float(lines[endast + 1][:9])
-            self.Kcbmid  = float(lines[endast + 2][:9])
-            self.Kcbend  = float(lines[endast + 3][:9])
-            self.Lini    =   int(lines[endast + 4][:9])
-            self.Ldev    =   int(lines[endast + 5][:9])
-            self.Lmid    =   int(lines[endast + 6][:9])
-            self.Lend    =   int(lines[endast + 7][:9])
-            self.hini    = float(lines[endast + 8][:9])
-            self.hmax    = float(lines[endast + 9][:9])
-            self.thetaFC = float(lines[endast +10][:9])
-            self.thetaWP = float(lines[endast +11][:9])
-            self.theta0  = float(lines[endast +12][:9])
-            self.Zrini   = float(lines[endast +13][:9])
-            self.Zrmax   = float(lines[endast +14][:9])
-            self.pbase   = float(lines[endast +15][:9])
-            self.Ze      = float(lines[endast +16][:9])
-            self.REW     = float(lines[endast +17][:9])
+            # Change below line if/when metadata branch is merged.
+            # Make it go from endline+1 to end of file. The "endline"
+            # variable from the metadata allows the number of lines in
+            # the header to change based on the user's custom label.
+            for line in lines[4:]:
+                line = line.strip().split()
+                # Remove the comma from the end of line[1]
+                line[1] = line[1].replace(',', '')
+                # By checking whether line[1] == "parameter_name", we
+                # can allow the user to change the order of the
+                # parameters in the parameters file. This change should
+                # also make it easier to change the number of parameters
+                # allowed in the parameters file in the future.
+                # Hopefully this makes it easier to change the basic
+                # structure of .par files while maintaining backwards
+                # compatibility.
+                if line[1].lower() == 'kcbini':
+                    self.Kcbini = float(line[0])
+                elif line[1].lower() == 'kcbmid':
+                    self.Kcbmid = float(line[0])
+                elif line[1].lower() == 'kcbend':
+                    self.Kcbend = float(line[0])
+                elif line[1].lower() == 'lini':
+                    self.Lini = int(line[0])
+                elif line[1].lower() == 'ldev':
+                    self.Ldev = int(line[0])
+                elif line[1].lower() == 'lmid':
+                    self.Lmid = int(line[0])
+                elif line[1].lower() == 'lend':
+                    self.Lend = int(line[0])
+                elif line[1].lower() == 'hini':
+                    self.hini = float(line[0])
+                elif line[1].lower() == 'hmax':
+                    self.hmax = float(line[0])
+                elif line[1].lower() == 'thetafc':
+                    self.thetaFC = float(line[0])
+                elif line[1].lower() == 'thetawp':
+                    self.thetaWP = float(line[0])
+                elif line[1].lower() == 'theta0':
+                    self.theta0 = float(line[0])
+                elif line[1].lower() == 'zrini':
+                    self.Zrini = float(line[0])
+                elif line[1].lower() == 'zrmax':
+                    self.Zrmax = float(line[0])
+                elif line[1].lower() == 'pbase':
+                    self.pbase = float(line[0])
+                elif line[1].lower() == 'ze':
+                    self.Ze = float(line[0])
+                elif line[1].lower() == 'rew':
+                    self.REW = float(line[0])
