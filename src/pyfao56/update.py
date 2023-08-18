@@ -23,8 +23,7 @@ class Update:
     Attributes
     ----------
     label : str, optional
-        Provide a string to customize plot/unit information and
-        other metadata for output file (default = None).
+        User-defined file descriptions or metadata (default = None)
     udata : DataFrame
         Update data as float
         index - Year and day of year as string ('yyyy-ddd')
@@ -55,19 +54,10 @@ class Update:
         filepath : str, optional
             Any valid filepath string (default = None)
         label : str, optional
-            Provide a string to customize plot/unit information and
-            other metadata for output file (default = None).
+            User-defined file descriptions or metadata (default = None)
         """
 
-        self.timestamp = datetime.datetime.now().strftime('"%Y-%m-%d '
-                                                          '%H:%M:%S"')
-        if label is None:
-            self.label = 'File Creation Timestamp: ' + self.timestamp
-            self.customlabel = False
-        else:
-            self.label = 'File Creation Timestamp: ' + self.timestamp \
-                         + '\n' + label
-            self.customlabel = True
+        self.label = label
         self.udata = pd.DataFrame(columns=['Kcb','h','fc'])
 
         if filepath is not None:
@@ -76,15 +66,17 @@ class Update:
     def __str__(self):
         """Represent the Update class variables as a string."""
 
+        tmstamp = datetime.datetime.now().strftime('%m/%d/%Y %H:%M:%S')
         pd.options.display.float_format = '{:6.4f}'.format
         ast='*'*72
         s=('{:s}\n'
            'pyfao56: FAO-56 Evapotranspiration in Python\n'
            'Update Data\n'
+           'Timestamp: {:s}\n'
            '{:s}\n'
            '{:s}\n'
            'Year-DOY    Kcb      h     fc\n'
-          ).format(ast,self.label,ast)
+          ).format(ast,tmstamp,self.label,ast)
         if not self.udata.empty:
             s += self.udata.to_string(header=False, na_rep='   NaN')
         return s
@@ -133,36 +125,14 @@ class Update:
             lines = f.readlines()
             f.close()
             ast = '*' * 72
-            start_line = None
-            end_line = None
-            for i, line in enumerate(lines):
-                if line.strip() == ast:
-                    if start_line is None:
-                        start_line = i
-                    elif end_line is None:
-                        end_line = i
-                    else:
-                        raise ValueError('Invalid file format. Too many'
-                                         ' asterisk identifier lines '
-                                         'found.')
-            if start_line is None or end_line is None:
-                raise ValueError("Invalid file format. Asterisk "
-                                 "identifiers not found.")
-            if not end_line == 3:
-                self.timestamp = str(lines[start_line + 3][26:45])
-                if start_line + 4 == end_line:
-                    if not self.customlabel:
-                        self.label = 'File Creation Timestamp: "' \
-                                     + self.timestamp + '"'
-                else:
-                    label = lines[start_line + 4:end_line]
-                    label[-1] = label[-1].rstrip()
-                    self.label = 'File Creation Timestamp: "' \
-                                 + self.timestamp + '"' + '\n' + \
-                                 ''.join(label)
-
+            a = [i for i,line in enumerate(lines) if line.strip()==ast]
+            endast = a[-1] 
+            if endast <= 4:
+                self.label = None
+            else:
+                self.label = ''.join(lines[4:endast])
             self.udata = pd.DataFrame(columns=['Kcb','h','fc'])
-            for line in lines[end_line+2:]:
+            for line in lines[endast+2:]:
                 line = line.strip().split()
                 year = line[0][:4]
                 doy = line[0][-3:]

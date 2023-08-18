@@ -55,8 +55,7 @@ class Parameters:
     REW : float
         Total depth Stage 1 evaporation (mm) (FAO-56 Table 19)
     label : str, optional
-        Provide a string to customize plot/unit information and
-        other metadata for output file (default = None).
+        User-defined file descriptions or metadata (default = None)
 
     Methods
     -------
@@ -78,9 +77,6 @@ class Parameters:
 
         Parameters
         ----------
-        label : str, optional
-            Provide a string to customize plot/unit information and
-            other metadata for output file (default = None).
         See Parameters class docstring for parameter definitions.
         Kcbini  : float, default = 0.15
         Kcbmid  : float, default = 1.10
@@ -99,6 +95,7 @@ class Parameters:
         pbase   : float, default = 0.50
         Ze      : float, default = 0.10
         REW     : float, default = 8.0
+        label   : str  , optional, default = None
         """
 
         self.Kcbini  = Kcbini
@@ -118,24 +115,17 @@ class Parameters:
         self.pbase   = pbase
         self.Ze      = Ze
         self.REW     = REW
-
-        self.timestamp = datetime.datetime.now().strftime('"%Y-%m-%d '
-                                                          '%H:%M:%S"')
-        if label is None:
-            self.label = 'File Creation Timestamp: ' + self.timestamp
-            self.customlabel = False
-        else:
-            self.label = 'File Creation Timestamp: ' + self.timestamp \
-                         + '\n' + label
-            self.customlabel = True
+        self.label   = label
 
     def __str__(self):
         """Represent the Parameter class variables as a string."""
 
+        tmstamp = datetime.datetime.now().strftime('%m/%d/%Y %H:%M:%S')
         ast='*'*72
         s=('{:s}\n'
            'pyfao56: FAO-56 Evapotranspiration in Python\n'
            'Parameter Data\n'
+           'Timestamp: {:s}\n'
            '{:s}\n'
            '{:s}\n'
            '{:9.4f} Kcbini, Kcb Initial (FAO-56 Table 17)\n'
@@ -162,7 +152,7 @@ class Parameters:
            '(FAO-56 Table 19 and Page 144)\n'
            '{:9.4f} REW, Total depth Stage 1 evaporation (mm) '
            '(FAO-56 Table 19)\n'
-          ).format(ast,self.label,ast,self.Kcbini,self.Kcbmid,
+          ).format(ast,tmstamp,self.label,ast,self.Kcbini,self.Kcbmid,
                    self.Kcbend,self.Lini,self.Ldev,self.Lmid,self.Lend,
                    self.hini,self.hmax,self.thetaFC,self.thetaWP,
                    self.theta0,self.Zrini,self.Zrmax,self.pbase,self.Ze,
@@ -213,48 +203,26 @@ class Parameters:
             lines = f.readlines()
             f.close()
             ast = '*' * 72
-            start_line = None
-            end_line = None
-            for i, line in enumerate(lines):
-                if line.strip() == ast:
-                    if start_line is None:
-                        start_line = i
-                    elif end_line is None:
-                        end_line = i
-                    else:
-                        raise ValueError('Invalid file format. Too many'
-                                         ' asterisk identifier lines '
-                                         'found.')
-            if start_line is None or end_line is None:
-                raise ValueError("Invalid file format. Asterisk "
-                                 "identifiers not found.")
-            if not end_line == 3:
-                self.timestamp = str(lines[start_line + 3][26:45])
-                if start_line + 4 == end_line:
-                    if not self.customlabel:
-                        self.label = 'File Creation Timestamp: "' \
-                                     + self.timestamp + '"'
-                else:
-                    label = lines[start_line + 4:end_line]
-                    label[-1] = label[-1].rstrip()
-                    self.label = 'File Creation Timestamp: "' \
-                                 + self.timestamp + '"' + '\n' + \
-                                 ''.join(label)
-
-            self.Kcbini  = float(lines[end_line + 1][:9])
-            self.Kcbmid  = float(lines[end_line + 2][:9])
-            self.Kcbend  = float(lines[end_line + 3][:9])
-            self.Lini    =   int(lines[end_line + 4][:9])
-            self.Ldev    =   int(lines[end_line + 5][:9])
-            self.Lmid    =   int(lines[end_line + 6][:9])
-            self.Lend    =   int(lines[end_line + 7][:9])
-            self.hini    = float(lines[end_line + 8][:9])
-            self.hmax    = float(lines[end_line + 9][:9])
-            self.thetaFC = float(lines[end_line +10][:9])
-            self.thetaWP = float(lines[end_line +11][:9])
-            self.theta0  = float(lines[end_line +12][:9])
-            self.Zrini   = float(lines[end_line +13][:9])
-            self.Zrmax   = float(lines[end_line +14][:9])
-            self.pbase   = float(lines[end_line +15][:9])
-            self.Ze      = float(lines[end_line +16][:9])
-            self.REW     = float(lines[end_line +17][:9])
+            a = [i for i,line in enumerate(lines) if line.strip()==ast]
+            endast = a[-1] 
+            if endast <= 4:
+                self.label = None
+            else:
+                self.label = ''.join(lines[4:endast])
+            self.Kcbini  = float(lines[endast + 1][:9])
+            self.Kcbmid  = float(lines[endast + 2][:9])
+            self.Kcbend  = float(lines[endast + 3][:9])
+            self.Lini    =   int(lines[endast + 4][:9])
+            self.Ldev    =   int(lines[endast + 5][:9])
+            self.Lmid    =   int(lines[endast + 6][:9])
+            self.Lend    =   int(lines[endast + 7][:9])
+            self.hini    = float(lines[endast + 8][:9])
+            self.hmax    = float(lines[endast + 9][:9])
+            self.thetaFC = float(lines[endast +10][:9])
+            self.thetaWP = float(lines[endast +11][:9])
+            self.theta0  = float(lines[endast +12][:9])
+            self.Zrini   = float(lines[endast +13][:9])
+            self.Zrmax   = float(lines[endast +14][:9])
+            self.pbase   = float(lines[endast +15][:9])
+            self.Ze      = float(lines[endast +16][:9])
+            self.REW     = float(lines[endast +17][:9])

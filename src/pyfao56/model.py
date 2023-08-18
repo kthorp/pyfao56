@@ -56,8 +56,7 @@ class Model:
         If False, p follows FAO-56; if True, p is constant (=pbase)
         (default = False)
     label : str, optional
-        Provide a string to customize plot/unit information and
-        other metadata for each simulation (default = None).
+        User-defined file descriptions or metadata (default = None)
     ModelState : class
         Contains parameters and model states for a single timestep
     cnames : list
@@ -150,8 +149,7 @@ class Model:
             If False, p follows FAO-56; if True, p is constant (=pbase)
             (default = False)
         label : str, optional
-            Provide a string to customize plot/unit information and
-            other metadata for each simulation (default = None).
+            User-defined file descriptions or metadata (default = None)
         """
 
         self.startDate = datetime.datetime.strptime(start, '%Y-%j')
@@ -162,11 +160,7 @@ class Model:
         self.sol = sol
         self.upd = upd
         self.cons_p = cons_p
-        if label is None:
-            self.label = f'Simulation for {self.startDate} to ' \
-                         f'{self.endDate}'
-        else:
-            self.label = label
+        self.label = label
         self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
                        'h','Kcmax','fc','fw','few','De','Kr','Ke','E',
                        'DPe','Kc','ETc','TAW','TAWrmax','TAWb','Zr','p',
@@ -178,8 +172,7 @@ class Model:
     def __str__(self):
         """Represent the Model class variables as a string."""
 
-        sim_timestamp = datetime.datetime.now().strftime('"%Y-%m-%d '
-                                                         '%H:%M:%S"')
+        tmstamp = datetime.datetime.now().strftime('%m/%d/%Y %H:%M:%S')
         if self.sol is None:
             solmthd = 'D - Default FAO-56 homogenous soil bucket ' \
                       'approach'
@@ -210,9 +203,11 @@ class Model:
         s = ('{:s}\n'
              'pyfao56: FAO-56 Evapotranspiration in Python\n'
              'Output Data\n'
-             '      {:s}\n'
-             '      Simulation timestamp: {:s}\n'
-             '      {:s}\n'
+             'Timestamp: {:s}\n'
+             'Simulation start date: {:s}\n'
+             'Simulation end date: {:s}\n'
+             'Soil method: {:s}\n'
+             '{:s}\n'
              '{:s}\n'
              'Year-DOY  Year  DOY  DOW      Date  ETref  tKcb   Kcb'
              '     h Kcmax    fc    fw   few      De    Kr    Ke      E'
@@ -220,8 +215,15 @@ class Model:
              '     RAW    Ks Kcadj ETcadj      T      DP    Dinc'
              '      Dr     fDr   Drmax  fDrmax      Db     fDb'
              '   Irrig    Rain  Year  DOY  DOW      Date\n'
-             ).format(ast,self.label,sim_timestamp,solmthd,ast)
-        s += self.odata.to_string(header=False,formatters=fmts)
+             ).format(ast,
+                      tmstamp,
+                      self.startDate,
+                      self.endDate,
+                      solmthd,
+                      self.label,
+                      ast)
+        if not self.odata.empty:
+            s += self.odata.to_string(header=False,formatters=fmts)
         return s
 
     def savefile(self,filepath='pyfao56.out'):

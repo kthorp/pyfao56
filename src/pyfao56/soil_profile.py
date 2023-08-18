@@ -29,8 +29,7 @@ class SoilProfile:
     cnames : list
         Column names for sdata
     label : str, optional
-        Provide a string to customize plot/unit information and
-        other metadata for output file (default = None).
+        User-defined file descriptions or metadata (default = None)
     sdata : DataFrame
         Soil profile data as float
         index = Bottom depth of the layer as integer (cm)
@@ -62,19 +61,10 @@ class SoilProfile:
         filepath : str, optional
             Any valid filepath string (default = None).
         label : str, optional
-            Provide a string to customize plot/unit information and
-            other metadata for output file (default = None).
+            User-defined file descriptions or metadata (default = None)
         """
 
-        self.timestamp = datetime.datetime.now().strftime('"%Y-%m-%d '
-                                                          '%H:%M:%S"')
-        if label is None:
-            self.label = 'File Creation Timestamp: ' + self.timestamp
-            self.customlabel = False
-        else:
-            self.label = 'File Creation Timestamp: ' + self.timestamp \
-                         + '\n' + label
-            self.customlabel = True
+        self.label = label
         self.cnames = ['thetaFC', 'thetaWP', 'theta0']
         self.sdata = pd.DataFrame(columns=self.cnames)
 
@@ -84,6 +74,7 @@ class SoilProfile:
     def __str__(self):
         """Represent the SoilProfile class as a string"""
 
+        tmstamp = datetime.datetime.now().strftime('%m/%d/%Y %H:%M:%S')
         fmts = {'__index__':'{:5d}'.format,
                 'thetaFC'  :'{:7.3f}'.format,
                 'thetaWP'  :'{:7.3f}'.format,
@@ -92,9 +83,10 @@ class SoilProfile:
         s = ('{:s}\n'
              'pyfao56: FAO-56 Evapotranspiration in Python\n'
              'Soil Profile Data\n'
+             'Timestamp: {:s}\n'
              '{:s}\n'
              '{:s}\n'
-             'Depth').format(ast,self.label,ast)
+             'Depth').format(ast,tmstamp,self.label,ast)
         for cname in self.cnames:
             s += '{:>8s}'.format(cname)
         s += '\n'
@@ -148,35 +140,13 @@ class SoilProfile:
             lines = f.readlines()
             f.close()
             ast = '*' * 72
-            start_line = None
-            end_line = None
-            for i, line in enumerate(lines):
-                if line.strip() == ast:
-                    if start_line is None:
-                        start_line = i
-                    elif end_line is None:
-                        end_line = i
-                    else:
-                        raise ValueError('Invalid file format. Too many'
-                                         ' asterisk identifier lines '
-                                         'found.')
-            if start_line is None or end_line is None:
-                raise ValueError("Invalid file format. Asterisk "
-                                 "identifiers not found.")
-            if not end_line == 3:
-                self.timestamp = str(lines[start_line + 3][26:45])
-                if start_line + 4 == end_line:
-                    if not self.customlabel:
-                        self.label = 'File Creation Timestamp: "' \
-                                     + self.timestamp + '"'
-                else:
-                    label = lines[start_line + 4:end_line]
-                    label[-1] = label[-1].rstrip()
-                    self.label = 'File Creation Timestamp: "' \
-                                 + self.timestamp + '"' + '\n' + \
-                                 ''.join(label)
-
-            for line in lines[end_line+2:]:
+            a = [i for i,line in enumerate(lines) if line.strip()==ast]
+            endast = a[-1] 
+            if endast <= 4:
+                self.label = None
+            else:
+                self.label = ''.join(lines[4:endast])
+            for line in lines[endast+2:]:
                 line = line.strip().split()
                 depth = int(line[0])
                 data = list()
