@@ -49,8 +49,9 @@ class Forecast():
     longitude : float
         Site longitude (decimal degrees)
     wndht : float, optional
-        User defined wind speed measurement height (m)
-        (Should be the same as wndht in fao.Weather, default = 2.0)
+        Correction height for NDFD wind speed (m)
+        Should be the same as wndht in Weather class
+        (default = 10.0, no correction)
     elevation : float, optional
         Site elevation (m) (default = NaN)
     forecast : DataFrame
@@ -72,7 +73,8 @@ class Forecast():
         the self.forecast DataFrame.
     """
 
-    def __init__(self, latitude, longitude, wndht=2.0, elevation=float('NaN')):
+    def __init__(self, latitude, longitude, wndht=10.0,
+                 elevation=float('NaN')):
         """Initialize the Forecast class attributes
 
         Parameters
@@ -82,8 +84,9 @@ class Forecast():
         longitude : float
             Site longitude (decimal degrees)
         wndht : float, optional
-            Wind speed measurement height (m) used in fao.Weather
-            (default = 2.0)
+            Correction height for NDFD wind speed (m)
+            Should be the same as wndht in Weather class
+            (default = 10.0, no correction)
         elevation : float, optional
             Site elevation (m) (default = NaN)
         """
@@ -211,25 +214,17 @@ class Forecast():
                         dayvals.append(values[j])
                 if len(dayvals) > 0:
                     mean = np.mean(np.array(dayvals))
-                    if item == 'Wndsp':
-                        # Adjust wind speed forecast from NWS wndht
-                        # NWS wind speed measurement height (zNWS, m)
-                        zNWS = 10.0
-                        # NWS forecasted wind speed (uzNWS, m s^-1)
-                        uzNWS = mean
-                        # Wind speed at 2m - FAO-56 Eq. 47 (u2, m s^-1)
-                        u2 = uzNWS * (4.87 / np.log(67.8 * zNWS - 5.42))
-                        # User-defined wind measurement height (z, m)
-                        z = self.wndht
-                        # Convert speed to the user-defined wind height
-                        if z == 2.0:
-                            mean = u2
-                        else:
-                            # Wind speed at wndht z, (uz, m s^-1)
-                            # FAO-56 Annex 2, Table 2.9
-                            uz = u2 / (4.87 / np.log(67.8 * z - 5.42))
-                            mean = uz
-
+                    if item == 'Wndsp' and self.wndht != 10.0:
+                        # Adjust NDFD wind speed from 10.0 m to station
+                        # height (wndht in Weather class)
+                        zNDFD = 10.0
+                        # u2 : wind speed at 2 m (m s^-1)
+                        #ASCE (2005) Eq. 33 and Appendix E
+                        u2 = mean * (4.87/math.log(67.8*zNDFD-5.42))
+                        # uz : wind speed at wndht in Weather (m s^-1)
+                        # ASCE (2005) Eq. 33 and Appendix E
+                        uz = u2 / (4.87/math.log(67.8*self.wndht-5.42))
+                        mean = uz
                     self.forecast.loc[key1,item] = mean
                     #Estimate Srad from cloud cover and rso
                     if item == 'Clds':
