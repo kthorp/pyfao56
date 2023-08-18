@@ -23,13 +23,15 @@ class Irrigation:
     ----------
     label : str, optional
         User-defined file descriptions or metadata (default = None)
+    tmstmp : datetime
+        Time stamp for the class
     idata : DataFrame
         Irrigation data as float
         index - Year and day of year as string ('yyyy-ddd')
         columns - ['Depth','fw']
             Depth - Irrigation depth (mm)
             fw - fraction of soil surface wetted (FAO-56 Table 20)
-
+    
     Methods
     -------
     savefile(filepath='pyfao56.irr')
@@ -56,6 +58,7 @@ class Irrigation:
         """
 
         self.label = label
+        self.tmstmp = datetime.datetime.now()
         self.idata = pd.DataFrame(columns=['Depth','fw'])
 
         if filepath is not None:
@@ -64,7 +67,8 @@ class Irrigation:
     def __str__(self):
         """Represent the Irrigation class variables as a string."""
 
-        tmstamp = datetime.datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+        self.tmstmp = datetime.datetime.now()
+        timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
         pd.options.display.float_format = '{:6.2f}'.format
         ast='*'*72
         s=('{:s}\n'
@@ -74,7 +78,7 @@ class Irrigation:
            '{:s}\n'
            '{:s}\n'
            'Year-DOY  Depth     fw\n'
-          ).format(ast,tmstamp,self.label,ast)
+          ).format(ast,timestamp,self.label,ast)
         if not self.idata.empty:
             s += self.idata.to_string(header=False)
         return s
@@ -124,11 +128,14 @@ class Irrigation:
             f.close()
             ast = '*' * 72
             a = [i for i,line in enumerate(lines) if line.strip()==ast]
-            endast = a[-1] 
+            endast = a[-1]
             if endast <= 4:
                 self.label = None
             else:
                 self.label = ''.join(lines[4:endast])
+            if endast >= 4:
+                ts = lines[4].strip().split(':').strip()
+                self.tmstmp = datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
             self.idata = pd.DataFrame(columns=['Depth','fw'])
             for line in lines[endast+2:]:
                 line = line.strip().split()

@@ -22,6 +22,10 @@ class Weather:
 
     Attributes
     ----------
+    label : str, optional
+        User-defined file descriptions or metadata (default = None)
+    tmstmp : datetime
+        Time stamp for the class
     rfcrp : str
         Type of reference crop  - Short ('S') or Tall ('T')
     z : float
@@ -32,8 +36,6 @@ class Weather:
         Weather station wind speed measurement height (m)
     cnames : list
         Column names for wdata
-    label : str, optional
-        User-defined file descriptions or metadata (default = None)
     wdata : DataFrame
         Weather data as float
         index - Year and day of year as string ('yyyy-ddd')
@@ -79,6 +81,7 @@ class Weather:
         """
 
         self.label = label
+        self.tmstmp = datetime.datetime.now()
         self.rfcrp = 'S'
         self.z     = float('NaN')
         self.lat   = float('NaN')
@@ -93,7 +96,8 @@ class Weather:
     def __str__(self):
         """Represent the Weather class variables as a string."""
 
-        tmstamp = datetime.datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+        self.tmstmp = datetime.datetime.now()
+        timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
         fmts = {'Srad':'{:6.2f}'.format,'Tmax':'{:6.2f}'.format,
                 'Tmin':'{:6.2f}'.format,'Tdew':'{:6.2f}'.format,
                 'Vapr':'{:6.2f}'.format,'RHmax':'{:6.2f}'.format,
@@ -113,7 +117,7 @@ class Weather:
              '{:12.7f} Wind speed measurement height (m)\n\n'
              'Daily weather data:\n'
              'Year-DOY'
-             ).format(ast,tmstamp,self.label,ast,self.rfcrp,self.z,
+             ).format(ast,timestamp,self.label,ast,self.rfcrp,self.z,
                       self.lat,self.wndht)
         for cname in self.cnames:
             s += '{:>7s}'.format(cname)
@@ -173,10 +177,13 @@ class Weather:
                 self.label = None
             else:
                 self.label = ''.join(lines[4:endast])
-            self.rfcrp = lines[end_line+1][:12].strip()
-            self.z = float(lines[end_line+2][:12])
-            self.lat = float(lines[end_line+3][:12])
-            self.wndht = float(lines[end_line+4][:12])
+            if endast >= 4:
+                ts = lines[4].strip().split(':').strip()
+                self.tmstmp = datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
+            self.rfcrp = lines[endast+1][:12].strip()
+            self.z = float(lines[endast+2][:12])
+            self.lat = float(lines[endast+3][:12])
+            self.wndht = float(lines[endast+4][:12])
             self.wdata = pd.DataFrame(columns=self.cnames)
             for line in lines[endast+8:]:
                 line = line.strip().split()

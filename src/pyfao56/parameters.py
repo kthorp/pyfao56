@@ -56,6 +56,8 @@ class Parameters:
         Total depth Stage 1 evaporation (mm) (FAO-56 Table 19)
     label : str, optional
         User-defined file descriptions or metadata (default = None)
+    tmstmp : datetime
+        Time stamp for the class
 
     Methods
     -------
@@ -116,11 +118,13 @@ class Parameters:
         self.Ze      = Ze
         self.REW     = REW
         self.label   = label
+        self.tmstmp  = datetime.datetime.now()
 
     def __str__(self):
         """Represent the Parameter class variables as a string."""
 
-        tmstamp = datetime.datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+        self.tmstmp = datetime.datetime.now()
+        timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
         ast='*'*72
         s=('{:s}\n'
            'pyfao56: FAO-56 Evapotranspiration in Python\n'
@@ -152,7 +156,7 @@ class Parameters:
            '(FAO-56 Table 19 and Page 144)\n'
            '{:9.4f} REW, Total depth Stage 1 evaporation (mm) '
            '(FAO-56 Table 19)\n'
-          ).format(ast,tmstamp,self.label,ast,self.Kcbini,self.Kcbmid,
+          ).format(ast,timestamp,self.label,ast,self.Kcbini,self.Kcbmid,
                    self.Kcbend,self.Lini,self.Ldev,self.Lmid,self.Lend,
                    self.hini,self.hmax,self.thetaFC,self.thetaWP,
                    self.theta0,self.Zrini,self.Zrmax,self.pbase,self.Ze,
@@ -209,7 +213,9 @@ class Parameters:
                 self.label = None
             else:
                 self.label = ''.join(lines[4:endast])
-            
+            if endast >= 4:
+                ts = lines[4].strip().split(':').strip()
+                self.tmstmp = datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
             for line in lines[endast+1:]:
                 line = line.strip().split(',').split()
                 if line[1].lower() == 'kcbini':

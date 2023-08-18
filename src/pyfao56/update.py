@@ -24,6 +24,8 @@ class Update:
     ----------
     label : str, optional
         User-defined file descriptions or metadata (default = None)
+    tmstmp : datetime
+        Time stamp for the class
     udata : DataFrame
         Update data as float
         index - Year and day of year as string ('yyyy-ddd')
@@ -58,6 +60,7 @@ class Update:
         """
 
         self.label = label
+        self.tmstmp = datetime.datetime.now()
         self.udata = pd.DataFrame(columns=['Kcb','h','fc'])
 
         if filepath is not None:
@@ -66,7 +69,8 @@ class Update:
     def __str__(self):
         """Represent the Update class variables as a string."""
 
-        tmstamp = datetime.datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+        self.tmstmp = datetime.datetime.now()
+        timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
         pd.options.display.float_format = '{:6.4f}'.format
         ast='*'*72
         s=('{:s}\n'
@@ -76,7 +80,7 @@ class Update:
            '{:s}\n'
            '{:s}\n'
            'Year-DOY    Kcb      h     fc\n'
-          ).format(ast,tmstamp,self.label,ast)
+          ).format(ast,timestamp,self.label,ast)
         if not self.udata.empty:
             s += self.udata.to_string(header=False, na_rep='   NaN')
         return s
@@ -131,6 +135,9 @@ class Update:
                 self.label = None
             else:
                 self.label = ''.join(lines[4:endast])
+            if endast >= 4:
+                ts = lines[4].strip().split(':').strip()
+                self.tmstmp = datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
             self.udata = pd.DataFrame(columns=['Kcb','h','fc'])
             for line in lines[endast+2:]:
                 line = line.strip().split()

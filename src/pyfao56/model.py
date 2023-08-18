@@ -57,6 +57,8 @@ class Model:
         (default = False)
     label : str, optional
         User-defined file descriptions or metadata (default = None)
+    tmstmp : datetime
+        Time stamp for the class
     ModelState : class
         Contains parameters and model states for a single timestep
     cnames : list
@@ -161,6 +163,7 @@ class Model:
         self.upd = upd
         self.cons_p = cons_p
         self.label = label
+        self.tmstmp = datetime.datetime.now()
         self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
                        'h','Kcmax','fc','fw','few','De','Kr','Ke','E',
                        'DPe','Kc','ETc','TAW','TAWrmax','TAWb','Zr','p',
@@ -172,7 +175,8 @@ class Model:
     def __str__(self):
         """Represent the Model class variables as a string."""
 
-        tmstamp = datetime.datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+        self.tmstmp = datetime.datetime.now()
+        timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
         if self.sol is None:
             solmthd = 'D - Default FAO-56 homogenous soil bucket ' \
                       'approach'
@@ -216,7 +220,7 @@ class Model:
              '      Dr     fDr   Drmax  fDrmax      Db     fDb'
              '   Irrig    Rain  Year  DOY  DOW      Date\n'
              ).format(ast,
-                      tmstamp,
+                      timestamp,
                       self.startDate,
                       self.endDate,
                       solmthd,

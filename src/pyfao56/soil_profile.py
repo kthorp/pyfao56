@@ -26,10 +26,12 @@ class SoilProfile:
 
     Attributes
     ----------
-    cnames : list
-        Column names for sdata
     label : str, optional
         User-defined file descriptions or metadata (default = None)
+    tmstmp : datetime
+        Time stamp for the class
+    cnames : list
+        Column names for sdata
     sdata : DataFrame
         Soil profile data as float
         index = Bottom depth of the layer as integer (cm)
@@ -65,6 +67,7 @@ class SoilProfile:
         """
 
         self.label = label
+        self.tmstmp = datetime.datetime.now()
         self.cnames = ['thetaFC', 'thetaWP', 'theta0']
         self.sdata = pd.DataFrame(columns=self.cnames)
 
@@ -74,7 +77,8 @@ class SoilProfile:
     def __str__(self):
         """Represent the SoilProfile class as a string"""
 
-        tmstamp = datetime.datetime.now().strftime('%m/%d/%Y %H:%M:%S')
+        self.tmstmp = datetime.datetime.now()
+        timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
         fmts = {'__index__':'{:5d}'.format,
                 'thetaFC'  :'{:7.3f}'.format,
                 'thetaWP'  :'{:7.3f}'.format,
@@ -86,7 +90,7 @@ class SoilProfile:
              'Timestamp: {:s}\n'
              '{:s}\n'
              '{:s}\n'
-             'Depth').format(ast,tmstamp,self.label,ast)
+             'Depth').format(ast,timestamp,self.label,ast)
         for cname in self.cnames:
             s += '{:>8s}'.format(cname)
         s += '\n'
@@ -146,6 +150,9 @@ class SoilProfile:
                 self.label = None
             else:
                 self.label = ''.join(lines[4:endast])
+            if endast >= 4:
+                ts = lines[4].strip().split(':').strip()
+                self.tmstmp = datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
             for line in lines[endast+2:]:
                 line = line.strip().split()
                 depth = int(line[0])
