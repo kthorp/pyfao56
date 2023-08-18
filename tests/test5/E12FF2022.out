@@ -1,6 +1,9 @@
 ************************************************************************
 pyfao56: FAO-56 Evapotranspiration in Python
 Output Data
+      Simulation for 2022-05-09 00:00:00 to 2022-10-26 00:00:00
+      Simulation timestamp: "2023-06-08 09:19:39"
+      L - Fort Collins ARS stratified soil layers approach
 ************************************************************************
 Year-DOY  Year  DOY  DOW      Date  ETref  tKcb   Kcb     h Kcmax    fc    fw   few      De    Kr    Ke      E     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p     RAW    Ks Kcadj ETcadj      T      DP    Dinc      Dr     fDr   Drmax  fDrmax      Db     fDb   Irrig    Rain  Year  DOY  DOW      Date
 2022-129  2022  129  Mon  05/09/22  8.830 0.150 0.155 0.062 1.000 0.005 1.000 0.995  12.001 0.000 0.000  0.000   0.000 0.155  1.369  27.750 108.750  81.000 0.200 0.500  13.875 1.000 0.155  1.369  1.369   0.000   0.000   6.869   0.248  14.869   0.137   8.000   0.099   0.000   0.000  2022  129  Mon  05/09/22

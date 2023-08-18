@@ -13,6 +13,8 @@ The parameters.py module contains the following:
 ########################################################################
 """
 
+import datetime
+
 class Parameters:
     """A class for managing input parameters for FAO-56 calculations
 
@@ -52,6 +54,9 @@ class Parameters:
         Depth of surface evaporation layer (m) (FAO-56 Table 19 & p144)
     REW : float
         Total depth Stage 1 evaporation (mm) (FAO-56 Table 19)
+    label : str, optional
+        Provide a string to customize plot/unit information and
+        other metadata for output file (default = None).
 
     Methods
     -------
@@ -64,7 +69,7 @@ class Parameters:
     def __init__(self, Kcbini=0.15, Kcbmid=1.10, Kcbend=0.50, Lini=25,
                  Ldev=50, Lmid=50, Lend=25, hini=0.010, hmax=1.20,
                  thetaFC=0.250, thetaWP=0.100, theta0=0.100, Zrini=0.20,
-                 Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0):
+                 Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0, label=None):
         """Initialize the Parameters class attributes.
 
         Default parameter values are given below. Users should update
@@ -73,6 +78,9 @@ class Parameters:
 
         Parameters
         ----------
+        label : str, optional
+            Provide a string to customize plot/unit information and
+            other metadata for output file (default = None).
         See Parameters class docstring for parameter definitions.
         Kcbini  : float, default = 0.15
         Kcbmid  : float, default = 1.10
@@ -111,6 +119,16 @@ class Parameters:
         self.Ze      = Ze
         self.REW     = REW
 
+        self.timestamp = datetime.datetime.now().strftime('"%Y-%m-%d '
+                                                          '%H:%M:%S"')
+        if label is None:
+            self.label = 'File Creation Timestamp: ' + self.timestamp
+            self.customlabel = False
+        else:
+            self.label = 'File Creation Timestamp: ' + self.timestamp \
+                         + '\n' + label
+            self.customlabel = True
+
     def __str__(self):
         """Represent the Parameter class variables as a string."""
 
@@ -118,6 +136,7 @@ class Parameters:
         s=('{:s}\n'
            'pyfao56: FAO-56 Evapotranspiration in Python\n'
            'Parameter Data\n'
+           '{:s}\n'
            '{:s}\n'
            '{:9.4f} Kcbini, Kcb Initial (FAO-56 Table 17)\n'
            '{:9.4f} Kcbmid, Kcb Mid (FAO-56 Table 17)\n'
@@ -143,10 +162,11 @@ class Parameters:
            '(FAO-56 Table 19 and Page 144)\n'
            '{:9.4f} REW, Total depth Stage 1 evaporation (mm) '
            '(FAO-56 Table 19)\n'
-          ).format(ast,ast,self.Kcbini,self.Kcbmid,self.Kcbend,
-                   self.Lini,self.Ldev,self.Lmid,self.Lend,self.hini,
-                   self.hmax,self.thetaFC,self.thetaWP,self.theta0,
-                   self.Zrini,self.Zrmax,self.pbase,self.Ze,self.REW)
+          ).format(ast,self.label,ast,self.Kcbini,self.Kcbmid,
+                   self.Kcbend,self.Lini,self.Ldev,self.Lmid,self.Lend,
+                   self.hini,self.hmax,self.thetaFC,self.thetaWP,
+                   self.theta0,self.Zrini,self.Zrmax,self.pbase,self.Ze,
+                   self.REW)
         return s
 
     def savefile(self,filepath='pyfao56.par'):
@@ -192,20 +212,49 @@ class Parameters:
         else:
             lines = f.readlines()
             f.close()
-            self.Kcbini  = float(lines[ 4][:9])
-            self.Kcbmid  = float(lines[ 5][:9])
-            self.Kcbend  = float(lines[ 6][:9])
-            self.Lini    =   int(lines[ 7][:9])
-            self.Ldev    =   int(lines[ 8][:9])
-            self.Lmid    =   int(lines[ 9][:9])
-            self.Lend    =   int(lines[10][:9])
-            self.hini    = float(lines[11][:9])
-            self.hmax    = float(lines[12][:9])
-            self.thetaFC = float(lines[13][:9])
-            self.thetaWP = float(lines[14][:9])
-            self.theta0  = float(lines[15][:9])
-            self.Zrini   = float(lines[16][:9])
-            self.Zrmax   = float(lines[17][:9])
-            self.pbase   = float(lines[18][:9])
-            self.Ze      = float(lines[19][:9])
-            self.REW     = float(lines[20][:9])
+            ast = '*' * 72
+            start_line = None
+            end_line = None
+            for i, line in enumerate(lines):
+                if line.strip() == ast:
+                    if start_line is None:
+                        start_line = i
+                    elif end_line is None:
+                        end_line = i
+                    else:
+                        raise ValueError('Invalid file format. Too many'
+                                         ' asterisk identifier lines '
+                                         'found.')
+            if start_line is None or end_line is None:
+                raise ValueError("Invalid file format. Asterisk "
+                                 "identifiers not found.")
+            if not end_line == 3:
+                self.timestamp = str(lines[start_line + 3][26:45])
+                if start_line + 4 == end_line:
+                    if not self.customlabel:
+                        self.label = 'File Creation Timestamp: "' \
+                                     + self.timestamp + '"'
+                else:
+                    label = lines[start_line + 4:end_line]
+                    label[-1] = label[-1].rstrip()
+                    self.label = 'File Creation Timestamp: "' \
+                                 + self.timestamp + '"' + '\n' + \
+                                 ''.join(label)
+
+            self.Kcbini  = float(lines[end_line + 1][:9])
+            self.Kcbmid  = float(lines[end_line + 2][:9])
+            self.Kcbend  = float(lines[end_line + 3][:9])
+            self.Lini    =   int(lines[end_line + 4][:9])
+            self.Ldev    =   int(lines[end_line + 5][:9])
+            self.Lmid    =   int(lines[end_line + 6][:9])
+            self.Lend    =   int(lines[end_line + 7][:9])
+            self.hini    = float(lines[end_line + 8][:9])
+            self.hmax    = float(lines[end_line + 9][:9])
+            self.thetaFC = float(lines[end_line +10][:9])
+            self.thetaWP = float(lines[end_line +11][:9])
+            self.theta0  = float(lines[end_line +12][:9])
+            self.Zrini   = float(lines[end_line +13][:9])
+            self.Zrmax   = float(lines[end_line +14][:9])
+            self.pbase   = float(lines[end_line +15][:9])
+            self.Ze      = float(lines[end_line +16][:9])
+            self.REW     = float(lines[end_line +17][:9])

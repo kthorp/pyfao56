@@ -55,6 +55,9 @@ class Model:
     cons_p : boolean, optional
         If False, p follows FAO-56; if True, p is constant (=pbase)
         (default = False)
+    label : str, optional
+        Provide a string to customize plot/unit information and
+        other metadata for each simulation (default = None).
     ModelState : class
         Contains parameters and model states for a single timestep
     cnames : list
@@ -121,7 +124,7 @@ class Model:
     """
 
     def __init__(self, start, end, par, wth, irr=None, sol=None,
-                 upd=None, cons_p=False):
+                 upd=None, cons_p=False, label=None):
         """Initialize the Model class attributes.
 
         Parameters
@@ -146,6 +149,9 @@ class Model:
         cons_p : boolean, optional
             If False, p follows FAO-56; if True, p is constant (=pbase)
             (default = False)
+        label : str, optional
+            Provide a string to customize plot/unit information and
+            other metadata for each simulation (default = None).
         """
 
         self.startDate = datetime.datetime.strptime(start, '%Y-%j')
@@ -156,6 +162,11 @@ class Model:
         self.sol = sol
         self.upd = upd
         self.cons_p = cons_p
+        if label is None:
+            self.label = f'Simulation for {self.startDate} to ' \
+                         f'{self.endDate}'
+        else:
+            self.label = label
         self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
                        'h','Kcmax','fc','fw','few','De','Kr','Ke','E',
                        'DPe','Kc','ETc','TAW','TAWrmax','TAWb','Zr','p',
@@ -167,6 +178,14 @@ class Model:
     def __str__(self):
         """Represent the Model class variables as a string."""
 
+        sim_timestamp = datetime.datetime.now().strftime('"%Y-%m-%d '
+                                                         '%H:%M:%S"')
+        if self.sol is None:
+            solmthd = 'D - Default FAO-56 homogenous soil bucket ' \
+                      'approach'
+        else:
+            solmthd = 'L - Fort Collins ARS stratified soil layers ' \
+                      'approach'
         fmts = {'Year':'{:4s}'.format,'DOY':'{:3s}'.format,
                 'DOW':'{:3s}'.format,'Date':'{:8s}'.format,
                 'ETref':'{:6.3f}'.format,'tKcb':'{:5.3f}'.format,
@@ -191,6 +210,9 @@ class Model:
         s = ('{:s}\n'
              'pyfao56: FAO-56 Evapotranspiration in Python\n'
              'Output Data\n'
+             '      {:s}\n'
+             '      Simulation timestamp: {:s}\n'
+             '      {:s}\n'
              '{:s}\n'
              'Year-DOY  Year  DOY  DOW      Date  ETref  tKcb   Kcb'
              '     h Kcmax    fc    fw   few      De    Kr    Ke      E'
@@ -198,7 +220,7 @@ class Model:
              '     RAW    Ks Kcadj ETcadj      T      DP    Dinc'
              '      Dr     fDr   Drmax  fDrmax      Db     fDb'
              '   Irrig    Rain  Year  DOY  DOW      Date\n'
-             ).format(ast,ast)
+             ).format(ast,self.label,sim_timestamp,solmthd,ast)
         s += self.odata.to_string(header=False,formatters=fmts)
         return s
 

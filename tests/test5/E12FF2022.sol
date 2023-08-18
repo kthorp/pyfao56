@@ -1,6 +1,7 @@
 ************************************************************************
 pyfao56: FAO-56 Evapotranspiration in Python
 Soil Profile Data
+File Creation Timestamp: "2023-06-08 09:19:34"
 ************************************************************************
 Depth thetaFC thetaWP  theta0
    15   0.290   0.145   0.260
