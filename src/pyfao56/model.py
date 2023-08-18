@@ -19,6 +19,7 @@ The model.py module contains the following:
 11/04/2021 Finalized updates for inclusion in the pyfao56 Python package
 10/27/2022 Incorporated Fort Collins ARS stratified soil layers approach
 11/30/2022 Incorporated Fort Collins ARS water balance approach
+08/17/2023 Improved logic for case of missing rhmin data
 ########################################################################
 """
 
@@ -42,8 +43,9 @@ class Model:
         Provides the parameter data for simulations
     wth : pyfao56 Weather class
         Provides the weather data for simulations
-    irr : pyfao56 Irrigation class
+    irr : pyfao56 Irrigation class, optional
         Provides the irrigation data for simulations
+        (default = None)
     sol : pyfao56 SoilProfile class, optional
         Provides data for modeling with stratified soil layers
         (default = None)
@@ -53,6 +55,10 @@ class Model:
     cons_p : boolean, optional
         If False, p follows FAO-56; if True, p is constant (=pbase)
         (default = False)
+    label : str, optional
+        User-defined file descriptions or metadata (default = None)
+    tmstmp : datetime
+        Time stamp for the class
     ModelState : class
         Contains parameters and model states for a single timestep
     cnames : list
@@ -63,9 +69,9 @@ class Model:
         columns - ['Year','DOY','DOW','Date','ETref','tKcb','Kcb','h',
                    'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
                    'Kc','ETc','TAW','TAWrmax','TAWb','Zr','p','RAW',
-                   'Ks','ETcadj','T','DP','Dinc','Dr','fDr','Drmax',
-                   'fDrmax','Db','fDb','Irrig','Rain','Year','DOY',
-                   'DOW','Date']
+                   'Ks','Kcadj','ETcadj','T','DP','Dinc','Dr','fDr',
+                   'Drmax','fDrmax','Db','fDb','Irrig','Rain','Year',
+                   'DOY','DOW','Date']
             Year    - 4-digit year (yyyy)
             DOY     - Day of year (ddd)
             DOW     - Day of week
@@ -92,6 +98,7 @@ class Model:
             p       - Fraction depleted TAW, FAO-56 p162 and Table 22
             RAW     - Readily available water (mm), FAO-56 Equation 83
             Ks      - Transpiration reduction factor, FAO-56 Eq. 84
+            Kcadj   - Adjusted crop coefficient, FA0-56 Eq. 80
             ETcadj  - Adjusted crop ET (mm), FAO-56 Eq. 80
             T       - Adjusted crop transpiration (mm)
             DP      - Deep percolation (mm), FAO-56 Eq. 88
@@ -117,8 +124,8 @@ class Model:
         Conduct the FAO-56 calculations from startDate to endDate
     """
 
-    def __init__(self, start, end, par, wth, irr, sol=None, upd=None,
-                 cons_p=False):
+    def __init__(self, start, end, par, wth, irr=None, sol=None,
+                 upd=None, cons_p=False, label=None):
         """Initialize the Model class attributes.
 
         Parameters
@@ -131,8 +138,9 @@ class Model:
             Provides the parameter data for simulations
         wth : pyfao56 Weather object
             Provides the weather data for simulations
-        irr : pyfao56 Irrigation object
+        irr : pyfao56 Irrigation object, optional
             Provides the irrigation data for simulations
+            (default = None)
         sol : pyfao56 SoilProfile object, optional
             Provides data for modeling with stratified soil layers
             (default = None)
@@ -142,6 +150,8 @@ class Model:
         cons_p : boolean, optional
             If False, p follows FAO-56; if True, p is constant (=pbase)
             (default = False)
+        label : str, optional
+            User-defined file descriptions or metadata (default = None)
         """
 
         self.startDate = datetime.datetime.strptime(start, '%Y-%j')
@@ -152,6 +162,8 @@ class Model:
         self.sol = sol
         self.upd = upd
         self.cons_p = cons_p
+        self.label = label
+        self.tmstmp = datetime.datetime.now()
         self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
                        'h','Kcmax','fc','fw','few','De','Kr','Ke','E',
                        'DPe','Kc','ETc','TAW','TAWrmax','TAWb','Zr','p',
@@ -163,6 +175,14 @@ class Model:
     def __str__(self):
         """Represent the Model class variables as a string."""
 
+        self.tmstmp = datetime.datetime.now()
+        timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
+        if self.sol is None:
+            solmthd = 'D - Default FAO-56 homogenous soil bucket ' \
+                      'approach'
+        else:
+            solmthd = 'L - Fort Collins ARS stratified soil layers ' \
+                      'approach'
         fmts = {'Year':'{:4s}'.format,'DOY':'{:3s}'.format,
                 'DOW':'{:3s}'.format,'Date':'{:8s}'.format,
                 'ETref':'{:6.3f}'.format,'tKcb':'{:5.3f}'.format,
@@ -187,6 +207,11 @@ class Model:
         s = ('{:s}\n'
              'pyfao56: FAO-56 Evapotranspiration in Python\n'
              'Output Data\n'
+             'Timestamp: {:s}\n'
+             'Simulation start date: {:s}\n'
+             'Simulation end date: {:s}\n'
+             'Soil method: {:s}\n'
+             '{:s}\n'
              '{:s}\n'
              'Year-DOY  Year  DOY  DOW      Date  ETref  tKcb   Kcb'
              '     h Kcmax    fc    fw   few      De    Kr    Ke      E'
@@ -194,8 +219,15 @@ class Model:
              '     RAW    Ks Kcadj ETcadj      T      DP    Dinc'
              '      Dr     fDr   Drmax  fDrmax      Db     fDb'
              '   Irrig    Rain  Year  DOY  DOW      Date\n'
-             ).format(ast,ast)
-        s += self.odata.to_string(header=False,formatters=fmts)
+             ).format(ast,
+                      timestamp,
+                      self.startDate,
+                      self.endDate,
+                      solmthd,
+                      self.label,
+                      ast)
+        if not self.odata.empty:
+            s += self.odata.to_string(header=False,formatters=fmts)
         return s
 
     def savefile(self,filepath='pyfao56.out'):
@@ -324,19 +356,23 @@ class Model:
             io.rhmin = self.wth.wdata.loc[mykey,'RHmin']
             if math.isnan(io.rhmin):
                 tmax = self.wth.wdata.loc[mykey,'Tmax']
-                tdew = self.wth.wdata.loc[mykey,'Tmin']
-                emax = 0.6108*math.exp((17.27*io.tmax)/
-                                       (io.tmax+237.3))
-                ea   = 0.6108*math.exp((17.27*io.tdew)/
-                                       (io.tdew+237.3))
+                tmin = self.wth.wdata.loc[mykey,'Tmin']
+                tdew = self.wth.wdata.loc[mykey,'Tdew']
+                if math.isnan(tdew):
+                    tdew = tmin
+                #ASCE (2005) Eqs. 7 and 8
+                emax = 0.6108*math.exp((17.27*tmax)/
+                                       (tmax+237.3))
+                ea   = 0.6108*math.exp((17.27*tdew)/
+                                       (tdew+237.3))
                 io.rhmin = ea/emax*100.
             if math.isnan(io.rhmin):
                 io.rhmin = 45.
-            if mykey in self.irr.idata.index:
-                io.idep = self.irr.idata.loc[mykey,'Depth']
-                io.fw = self.irr.idata.loc[mykey,'fw']
-            else:
-                io.idep = 0.0
+            io.idep = 0.0
+            if self.irr is not None:
+                if mykey in self.irr.idata.index:
+                    io.idep = self.irr.idata.loc[mykey,'Depth']
+                    io.fw = self.irr.idata.loc[mykey,'fw']
 
             #Obtain updates for Kcb, h, and fc, if available
             io.updKcb = float('NaN')

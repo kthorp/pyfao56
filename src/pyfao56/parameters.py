@@ -13,6 +13,8 @@ The parameters.py module contains the following:
 ########################################################################
 """
 
+import datetime
+
 class Parameters:
     """A class for managing input parameters for FAO-56 calculations
 
@@ -52,6 +54,10 @@ class Parameters:
         Depth of surface evaporation layer (m) (FAO-56 Table 19 & p144)
     REW : float
         Total depth Stage 1 evaporation (mm) (FAO-56 Table 19)
+    label : str, optional
+        User-defined file descriptions or metadata (default = None)
+    tmstmp : datetime
+        Time stamp for the class
 
     Methods
     -------
@@ -62,9 +68,9 @@ class Parameters:
     """
 
     def __init__(self, Kcbini=0.15, Kcbmid=1.10, Kcbend=0.50, Lini=25,
-                 Ldev=50, Lmid=50, Lend=25, hini=0.05, hmax=1.20,
+                 Ldev=50, Lmid=50, Lend=25, hini=0.010, hmax=1.20,
                  thetaFC=0.250, thetaWP=0.100, theta0=0.100, Zrini=0.20,
-                 Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0):
+                 Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0, label=None):
         """Initialize the Parameters class attributes.
 
         Default parameter values are given below. Users should update
@@ -81,7 +87,7 @@ class Parameters:
         Ldev    : int  , default = 50
         Lmid    : int  , default = 50
         Lend    : int  , default = 25
-        hini    : float, default = 0.05
+        hini    : float, default = 0.010
         hmax    : float, default = 1.20
         thetaFC : float, default = 0.250
         thetaWP : float, default = 0.100
@@ -91,6 +97,7 @@ class Parameters:
         pbase   : float, default = 0.50
         Ze      : float, default = 0.10
         REW     : float, default = 8.0
+        label   : str  , optional, default = None
         """
 
         self.Kcbini  = Kcbini
@@ -110,14 +117,20 @@ class Parameters:
         self.pbase   = pbase
         self.Ze      = Ze
         self.REW     = REW
+        self.label   = label
+        self.tmstmp  = datetime.datetime.now()
 
     def __str__(self):
         """Represent the Parameter class variables as a string."""
 
+        self.tmstmp = datetime.datetime.now()
+        timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
         ast='*'*72
         s=('{:s}\n'
            'pyfao56: FAO-56 Evapotranspiration in Python\n'
            'Parameter Data\n'
+           'Timestamp: {:s}\n'
+           '{:s}\n'
            '{:s}\n'
            '{:9.4f} Kcbini, Kcb Initial (FAO-56 Table 17)\n'
            '{:9.4f} Kcbmid, Kcb Mid (FAO-56 Table 17)\n'
@@ -143,10 +156,11 @@ class Parameters:
            '(FAO-56 Table 19 and Page 144)\n'
            '{:9.4f} REW, Total depth Stage 1 evaporation (mm) '
            '(FAO-56 Table 19)\n'
-          ).format(ast,ast,self.Kcbini,self.Kcbmid,self.Kcbend,
-                   self.Lini,self.Ldev,self.Lmid,self.Lend,self.hini,
-                   self.hmax,self.thetaFC,self.thetaWP,self.theta0,
-                   self.Zrini,self.Zrmax,self.pbase,self.Ze,self.REW)
+          ).format(ast,timestamp,self.label,ast,self.Kcbini,self.Kcbmid,
+                   self.Kcbend,self.Lini,self.Ldev,self.Lmid,self.Lend,
+                   self.hini,self.hmax,self.thetaFC,self.thetaWP,
+                   self.theta0,self.Zrini,self.Zrmax,self.pbase,self.Ze,
+                   self.REW)
         return s
 
     def savefile(self,filepath='pyfao56.par'):
@@ -192,20 +206,49 @@ class Parameters:
         else:
             lines = f.readlines()
             f.close()
-            self.Kcbini  = float(lines[ 4][:9])
-            self.Kcbmid  = float(lines[ 5][:9])
-            self.Kcbend  = float(lines[ 6][:9])
-            self.Lini    =   int(lines[ 7][:9])
-            self.Ldev    =   int(lines[ 8][:9])
-            self.Lmid    =   int(lines[ 9][:9])
-            self.Lend    =   int(lines[10][:9])
-            self.hini    = float(lines[11][:9])
-            self.hmax    = float(lines[12][:9])
-            self.thetaFC = float(lines[13][:9])
-            self.thetaWP = float(lines[14][:9])
-            self.theta0  = float(lines[15][:9])
-            self.Zrini   = float(lines[16][:9])
-            self.Zrmax   = float(lines[17][:9])
-            self.pbase   = float(lines[18][:9])
-            self.Ze      = float(lines[19][:9])
-            self.REW     = float(lines[20][:9])
+            ast = '*' * 72
+            a = [i for i,line in enumerate(lines) if line.strip()==ast]
+            endast = a[-1] 
+            if endast <= 4:
+                self.label = None
+            else:
+                self.label = ''.join(lines[4:endast])
+            if endast >= 4:
+                ts = lines[4].strip().split(':').strip()
+                self.tmstmp = datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
+            for line in lines[endast+1:]:
+                line = line.strip().split(',').split()
+                if line[1].lower() == 'kcbini':
+                    self.Kcbini = float(line[0])
+                elif line[1].lower() == 'kcbmid':
+                    self.Kcbmid = float(line[0])
+                elif line[1].lower() == 'kcbend':
+                    self.Kcbend = float(line[0])
+                elif line[1].lower() == 'lini':
+                    self.Lini = int(line[0])
+                elif line[1].lower() == 'ldev':
+                    self.Ldev = int(line[0])
+                elif line[1].lower() == 'lmid':
+                    self.Lmid = int(line[0])
+                elif line[1].lower() == 'lend':
+                    self.Lend = int(line[0])
+                elif line[1].lower() == 'hini':
+                    self.hini = float(line[0])
+                elif line[1].lower() == 'hmax':
+                    self.hmax = float(line[0])
+                elif line[1].lower() == 'thetafc':
+                    self.thetaFC = float(line[0])
+                elif line[1].lower() == 'thetawp':
+                    self.thetaWP = float(line[0])
+                elif line[1].lower() == 'theta0':
+                    self.theta0 = float(line[0])
+                elif line[1].lower() == 'zrini':
+                    self.Zrini = float(line[0])
+                elif line[1].lower() == 'zrmax':
+                    self.Zrmax = float(line[0])
+                elif line[1].lower() == 'pbase':
+                    self.pbase = float(line[0])
+                elif line[1].lower() == 'ze':
+                    self.Ze = float(line[0])
+                elif line[1].lower() == 'rew':
+                    self.REW = float(line[0])
