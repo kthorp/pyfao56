@@ -125,8 +125,9 @@ class Weather:
         for cname in self.cnames:
             s += '{:>7s}'.format(cname)
         s += '\n'
-        s += self.wdata.to_string(header=False,na_rep='   NaN',
-                                  formatters=fmts)
+        if not self.wdata.empty:
+            s += self.wdata.to_string(header=False,na_rep='   NaN',
+                                      formatters=fmts)
         return s
 
     def savefile(self,filepath='pyfao56.wth'):

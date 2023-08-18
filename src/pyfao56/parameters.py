@@ -67,7 +67,7 @@ class Parameters:
     """
 
     def __init__(self, Kcbini=0.15, Kcbmid=1.10, Kcbend=0.50, Lini=25,
-                 Ldev=50, Lmid=50, Lend=25, hini=0.05, hmax=1.20,
+                 Ldev=50, Lmid=50, Lend=25, hini=0.010, hmax=1.20,
                  thetaFC=0.250, thetaWP=0.100, theta0=0.100, Zrini=0.20,
                  Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0, label=None):
         """Initialize the Parameters class attributes.
@@ -89,7 +89,7 @@ class Parameters:
         Ldev    : int  , default = 50
         Lmid    : int  , default = 50
         Lend    : int  , default = 25
-        hini    : float, default = 0.05
+        hini    : float, default = 0.010
         hmax    : float, default = 1.20
         thetaFC : float, default = 0.250
         thetaWP : float, default = 0.100

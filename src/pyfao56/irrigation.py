@@ -39,6 +39,8 @@ class Irrigation:
         Load irrigation data from a file
     addevent(year,doy,depth,fw)
         Add an irrigation event to self.idata
+    customload()
+        Users can override for custom loading of irrigation data.
     """
 
     def __init__(self,filepath=None,label=None):
@@ -81,7 +83,8 @@ class Irrigation:
            '{:s}\n'
            'Year-DOY  Depth     fw\n'
           ).format(ast,self.label,ast)
-        s += self.idata.to_string(header=False)
+        if not self.idata.empty:
+            s += self.idata.to_string(header=False)
         return s
 
     def savefile(self,filepath='pyfao56.irr'):
@@ -181,3 +184,9 @@ class Irrigation:
 
         key = '{:04d}-{:03d}'.format(year,doy)
         self.idata.loc[key] = [depth,fw]
+
+    def customload(self):
+        """Override this function to customize loading irrigation
+        data."""
+
+        pass

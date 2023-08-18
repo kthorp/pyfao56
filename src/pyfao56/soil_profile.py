@@ -35,12 +35,12 @@ class SoilProfile:
         Soil profile data as float
         index = Bottom depth of the layer as integer (cm)
         columns = ['thetaFC', 'thetaWP', 'theta0']
-            thetaFC - Volumetric Soil Water Content, Field Capacity 
-                      (cm^3/cm^3)
+            thetaFC - Volumetric Soil Water Content, Field Capacity
+                      (cm3/cm3)
             thetaWP - Volumetric Soil Water Content, Wilting Point
-                      (cm^3/cm^3)
+                      (cm3/cm3)
             theta0  - Volumetric Soil Water Content, Initial
-                      (cm^3/cm^3)
+                      (cm3/cm3)
 
     Methods
     -------
@@ -49,7 +49,7 @@ class SoilProfile:
     loadfile(filepath='pyfao56.sol')
         Load soil profile data from a file
     customload()
-        Override this function to customize loading soil data.
+        Users can override for custom loading of soil data.
     """
 
     def __init__(self, filepath=None, label=None):
@@ -98,9 +98,10 @@ class SoilProfile:
         for cname in self.cnames:
             s += '{:>8s}'.format(cname)
         s += '\n'
-        s += self.sdata.to_string(header=False,
-                                  na_rep='    NaN',
-                                  formatters=fmts)
+        if not self.sdata.empty:
+            s += self.sdata.to_string(header=False,
+                                      na_rep='    NaN',
+                                      formatters=fmts)
         return s
 
     def savefile(self, filepath='pyfao56.sol'):
