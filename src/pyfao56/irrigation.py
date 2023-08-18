@@ -14,12 +14,15 @@ The irrigation.py module contains the following:
 """
 
 import pandas as pd
+import datetime
 
 class Irrigation:
     """A class for managing irrigation data for FAO-56 calculations
 
     Attributes
     ----------
+    label : str, optional
+        User-defined file descriptions or metadata (default = None)
     idata : DataFrame
         Irrigation data as float
         index - Year and day of year as string ('yyyy-ddd')
@@ -35,9 +38,11 @@ class Irrigation:
         Load irrigation data from a file
     addevent(year,doy,depth,fw)
         Add an irrigation event to self.idata
+    customload()
+        Users can override for custom loading of irrigation data.
     """
 
-    def __init__(self,filepath=None):
+    def __init__(self,filepath=None,label=None):
         """Initialize the Irrigation class attributes.
 
         If filepath is provided, irrigation data is loaded from the file
@@ -46,8 +51,11 @@ class Irrigation:
         ----------
         filepath : str, optional
             Any valid filepath string (default = None)
+        label : str, optional
+            User-defined file descriptions or metadata (default = None)
         """
 
+        self.label = label
         self.idata = pd.DataFrame(columns=['Depth','fw'])
 
         if filepath is not None:
@@ -56,15 +64,19 @@ class Irrigation:
     def __str__(self):
         """Represent the Irrigation class variables as a string."""
 
+        tmstamp = datetime.datetime.now().strftime('%m/%d/%Y %H:%M:%S')
         pd.options.display.float_format = '{:6.2f}'.format
         ast='*'*72
         s=('{:s}\n'
            'pyfao56: FAO-56 Evapotranspiration in Python\n'
            'Irrigation Data\n'
+           'Timestamp: {:s}\n'
+           '{:s}\n'
            '{:s}\n'
            'Year-DOY  Depth     fw\n'
-          ).format(ast,ast)
-        s += self.idata.to_string(header=False)
+          ).format(ast,tmstamp,self.label,ast)
+        if not self.idata.empty:
+            s += self.idata.to_string(header=False)
         return s
 
     def savefile(self,filepath='pyfao56.irr'):
@@ -110,8 +122,15 @@ class Irrigation:
         else:
             lines = f.readlines()
             f.close()
+            ast = '*' * 72
+            a = [i for i,line in enumerate(lines) if line.strip()==ast]
+            endast = a[-1] 
+            if endast <= 4:
+                self.label = None
+            else:
+                self.label = ''.join(lines[4:endast])
             self.idata = pd.DataFrame(columns=['Depth','fw'])
-            for line in lines[5:]:
+            for line in lines[endast+2:]:
                 line = line.strip().split()
                 year = line[0][:4]
                 doy = line[0][-3:]
@@ -135,3 +154,9 @@ class Irrigation:
 
         key = '{:04d}-{:03d}'.format(year,doy)
         self.idata.loc[key] = [depth,fw]
+
+    def customload(self):
+        """Override this function to customize loading irrigation
+        data."""
+
+        pass

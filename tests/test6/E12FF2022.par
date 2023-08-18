@@ -1,0 +1,21 @@
+************************************************************************
+pyfao56: FAO-56 in Python
+Parameter Data
+************************************************************************
+   0.1500 Kcbini, Kcb Initial (FAO-56 Table 17)
+   0.9600 Kcbmid, Kcb Mid (FAO-56 Table 17)
+   0.5000 Kcbend, Kcb End (FAO-56 Table 17)
+       30 Lini, Length Stage Initial (days) (FAO-56 Table 11)
+       40 Ldev, Length Stage Development (days) (FAO-56 Table 11)
+       50 Lmid, Length Stage Mid (days) (FAO-56 Table 11)
+       50 Lend, Length Stage End (days) (FAO-56 Table 11)
+   0.0500 hini, Plant Height Initial (m)
+   2.0000 hmax, Plant Height Maximum (m) (FAO-56 Table 12)
+   0.2070 thetaFC, Vol. Soil Water Content, Field Capacity (cm3/cm3)
+   0.1035 thetaWP, Vol. Soil Water Content, Wilting Point (cm3/cm3)
+   0.2070 theta0, Vol. Soil Water Content, Initial (cm3/cm3)
+   0.2000 Zrini, Rooting Depth Initial (m)
+   1.0500 Zrmax, Rooting Depth Maximum (m) (FAO-56 Table 22)
+   0.5000 pbase, Depletion Fraction (p) (FAO-56 Table 22)
+   0.0773 Ze, Depth of surface evaporation layer (m) (FAO-56 Table 19 and Page 144)
+   8.0000 REW, Total depth Stage 1 evaporation (mm) (FAO-56 Table 19)

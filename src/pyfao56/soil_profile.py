@@ -19,6 +19,7 @@ The soil_profile.py module contains the following:
 """
 
 import pandas as pd
+import datetime
 
 class SoilProfile:
     """A class for managing layered soil profile data in pyfao56.
@@ -27,16 +28,18 @@ class SoilProfile:
     ----------
     cnames : list
         Column names for sdata
+    label : str, optional
+        User-defined file descriptions or metadata (default = None)
     sdata : DataFrame
         Soil profile data as float
         index = Bottom depth of the layer as integer (cm)
         columns = ['thetaFC', 'thetaWP', 'theta0']
-            thetaFC - Volumetric Soil Water Content, Field Capacity 
-                      (cm^3/cm^3)
+            thetaFC - Volumetric Soil Water Content, Field Capacity
+                      (cm3/cm3)
             thetaWP - Volumetric Soil Water Content, Wilting Point
-                      (cm^3/cm^3)
+                      (cm3/cm3)
             theta0  - Volumetric Soil Water Content, Initial
-                      (cm^3/cm^3)
+                      (cm3/cm3)
 
     Methods
     -------
@@ -45,10 +48,10 @@ class SoilProfile:
     loadfile(filepath='pyfao56.sol')
         Load soil profile data from a file
     customload()
-        Override this function to customize loading soil data.
+        Users can override for custom loading of soil data.
     """
 
-    def __init__(self, filepath=None):
+    def __init__(self, filepath=None, label=None):
         """Initialize the SoilProfile class attributes.
 
         If filepath is provided, soil data is loaded from the file.
@@ -57,8 +60,11 @@ class SoilProfile:
         ----------
         filepath : str, optional
             Any valid filepath string (default = None).
+        label : str, optional
+            User-defined file descriptions or metadata (default = None)
         """
 
+        self.label = label
         self.cnames = ['thetaFC', 'thetaWP', 'theta0']
         self.sdata = pd.DataFrame(columns=self.cnames)
 
@@ -68,6 +74,7 @@ class SoilProfile:
     def __str__(self):
         """Represent the SoilProfile class as a string"""
 
+        tmstamp = datetime.datetime.now().strftime('%m/%d/%Y %H:%M:%S')
         fmts = {'__index__':'{:5d}'.format,
                 'thetaFC'  :'{:7.3f}'.format,
                 'thetaWP'  :'{:7.3f}'.format,
@@ -76,14 +83,17 @@ class SoilProfile:
         s = ('{:s}\n'
              'pyfao56: FAO-56 Evapotranspiration in Python\n'
              'Soil Profile Data\n'
+             'Timestamp: {:s}\n'
              '{:s}\n'
-             'Depth').format(ast,ast)
+             '{:s}\n'
+             'Depth').format(ast,tmstamp,self.label,ast)
         for cname in self.cnames:
             s += '{:>8s}'.format(cname)
         s += '\n'
-        s += self.sdata.to_string(header=False,
-                                  na_rep='    NaN',
-                                  formatters=fmts)
+        if not self.sdata.empty:
+            s += self.sdata.to_string(header=False,
+                                      na_rep='    NaN',
+                                      formatters=fmts)
         return s
 
     def savefile(self, filepath='pyfao56.sol'):
@@ -129,7 +139,14 @@ class SoilProfile:
         else:
             lines = f.readlines()
             f.close()
-            for line in lines[5:]:
+            ast = '*' * 72
+            a = [i for i,line in enumerate(lines) if line.strip()==ast]
+            endast = a[-1] 
+            if endast <= 4:
+                self.label = None
+            else:
+                self.label = ''.join(lines[4:endast])
+            for line in lines[endast+2:]:
                 line = line.strip().split()
                 depth = int(line[0])
                 data = list()

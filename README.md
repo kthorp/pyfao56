@@ -122,9 +122,11 @@ The Update class enables users to update key state variables during the model si
 The pyfao56 Model class provides an argument to optionally set the TAW depletion fraction (p) to a constant value. FAO-56 specifies a methodology for varying the depletion fraction based on daily crop evapotranspiration (ETc) (see [FAO-56 page 162 and Table 22](https://www.fao.org/3/x0490e/x0490e0e.htm#readily%20available%20water%20(raw))). However, FAO-56 also discusses using constant values for depletion fraction (see [FAO-56 page 162](https://www.fao.org/3/x0490e/x0490e0e.htm#readily%20available%20water%20(raw)) and [Annex 8](https://www.fao.org/3/x0490e/x0490e0p.htm#annex%208.%20calculation%20example%20for%20applying%20the%20dual%20kc%20procedure%20in%20irrigation%20sc)). Annex 8 of FAO-56 suggests setting a constant depletion fraction equal to the management allowed depletion (MAD). Using a constant depletion fraction makes readily available water (RAW) vary only with rooting depth (Zr). Users can run the model with a constant depletion fraction by issuing `cons_p=True` at Model instantiation: `mdl = fao.Model('2019-108', '2019-274', par, wth, irr, cons_p=True)`. By default, the model is instantiated with `cons_p=False`, which leads to depletion fraction adjustments with ETc.
 
 ## Further information
-The pyfao56 package is further described in the following article:
+The pyfao56 package is further described in the following articles:
 
-Thorp, K. R., pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 19, 101208. [doi:10.1016/softx.2022.101208](https://doi.org/10.1016/j.softx.2022.101208).
+Thorp, K. R., 2022. pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 19, 101208. [doi:10.1016/softx.2022.101208](https://doi.org/10.1016/j.softx.2022.101208).
+
+Brekel, J., Thorp, K. R., DeJonge, K. C., Trout, T. J., 2023. Version 1.1.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 22, 101336. [doi.10.1016/j.softx.2023.101336](https://doi.org/10.1016/j.softx.2023.101336).
 
 
 Also, the pyfao56 package was used to conduct the following research:
