@@ -1,6 +1,12 @@
 ************************************************************************
 pyfao56: FAO-56 Evapotranspiration in Python
 Output Data
+Timestamp: 08/22/2023 16:35:47
+Simulation start date: 05/09/2022
+Simulation end date: 10/26/2022
+Soil method: D - Default FAO-56 homogenous soil bucket approach
+************************************************************************
+Comments: 
 ************************************************************************
 Year-DOY  Year  DOY  DOW      Date  ETref  tKcb   Kcb     h Kcmax    fc    fw   few      De    Kr    Ke      E     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p     RAW    Ks Kcadj ETcadj      T      DP    Dinc      Dr     fDr   Drmax  fDrmax      Db     fDb   Irrig    Rain  Year  DOY  DOW      Date
 2022-129  2022  129  Mon  05/09/22  8.830 0.150 0.155 0.062 1.000 0.005 1.000 0.995  12.001 0.000 0.000  0.000   0.000 0.155  1.369  20.700 -99.999 -99.999 0.200 0.500  10.350 1.000 0.155  1.369  1.369   0.000 -99.999   1.369   0.066 -99.999 -99.999 -99.999 -99.999   0.000   0.000  2022  129  Mon  05/09/22

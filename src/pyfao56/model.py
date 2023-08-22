@@ -55,8 +55,8 @@ class Model:
     cons_p : boolean, optional
         If False, p follows FAO-56; if True, p is constant (=pbase)
         (default = False)
-    label : str, optional
-        User-defined file descriptions or metadata (default = None)
+    comment : str, optional
+        User-defined file descriptions or metadata (default = '')
     tmstmp : datetime
         Time stamp for the class
     ModelState : class
@@ -125,7 +125,7 @@ class Model:
     """
 
     def __init__(self, start, end, par, wth, irr=None, sol=None,
-                 upd=None, cons_p=False, label=None):
+                 upd=None, cons_p=False, comment=''):
         """Initialize the Model class attributes.
 
         Parameters
@@ -150,8 +150,8 @@ class Model:
         cons_p : boolean, optional
             If False, p follows FAO-56; if True, p is constant (=pbase)
             (default = False)
-        label : str, optional
-            User-defined file descriptions or metadata (default = None)
+        comment : str, optional
+            User-defined file descriptions or metadata (default = '')
         """
 
         self.startDate = datetime.datetime.strptime(start, '%Y-%j')
@@ -162,7 +162,7 @@ class Model:
         self.sol = sol
         self.upd = upd
         self.cons_p = cons_p
-        self.label = label
+        self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
         self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
                        'h','Kcmax','fc','fw','few','De','Kr','Ke','E',
@@ -177,6 +177,8 @@ class Model:
 
         self.tmstmp = datetime.datetime.now()
         timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
+        sdate = self.startDate.strftime('%m/%d/%Y')
+        edate = self.endDate.strftime('%m/%d/%Y')
         if self.sol is None:
             solmthd = 'D - Default FAO-56 homogenous soil bucket ' \
                       'approach'
@@ -213,6 +215,7 @@ class Model:
              'Soil method: {:s}\n'
              '{:s}\n'
              '{:s}\n'
+             '{:s}\n'
              'Year-DOY  Year  DOY  DOW      Date  ETref  tKcb   Kcb'
              '     h Kcmax    fc    fw   few      De    Kr    Ke      E'
              '     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p'
@@ -221,10 +224,11 @@ class Model:
              '   Irrig    Rain  Year  DOY  DOW      Date\n'
              ).format(ast,
                       timestamp,
-                      self.startDate,
-                      self.endDate,
+                      sdate,
+                      edate,
                       solmthd,
-                      self.label,
+                      ast,
+                      self.comment,
                       ast)
         if not self.odata.empty:
             s += self.odata.to_string(header=False,formatters=fmts)

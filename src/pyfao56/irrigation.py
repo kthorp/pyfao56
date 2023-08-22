@@ -21,8 +21,8 @@ class Irrigation:
 
     Attributes
     ----------
-    label : str, optional
-        User-defined file descriptions or metadata (default = None)
+    comment : str, optional
+        User-defined file descriptions or metadata (default = '')
     tmstmp : datetime
         Time stamp for the class
     idata : DataFrame
@@ -44,7 +44,7 @@ class Irrigation:
         Users can override for custom loading of irrigation data.
     """
 
-    def __init__(self,filepath=None,label=None):
+    def __init__(self,filepath=None,comment=''):
         """Initialize the Irrigation class attributes.
 
         If filepath is provided, irrigation data is loaded from the file
@@ -53,11 +53,11 @@ class Irrigation:
         ----------
         filepath : str, optional
             Any valid filepath string (default = None)
-        label : str, optional
-            User-defined file descriptions or metadata (default = None)
+        comment : str, optional
+            User-defined file descriptions or metadata (default = '')
         """
 
-        self.label = label
+        self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
         self.idata = pd.DataFrame(columns=['Depth','fw'])
 
@@ -77,8 +77,9 @@ class Irrigation:
            'Timestamp: {:s}\n'
            '{:s}\n'
            '{:s}\n'
+           '{:s}\n'
            'Year-DOY  Depth     fw\n'
-          ).format(ast,timestamp,self.label,ast)
+          ).format(ast,timestamp,ast,self.comment,ast)
         if not self.idata.empty:
             s += self.idata.to_string(header=False)
         return s
@@ -129,13 +130,14 @@ class Irrigation:
             ast = '*' * 72
             a = [i for i,line in enumerate(lines) if line.strip()==ast]
             endast = a[-1]
-            if endast <= 4:
-                self.label = None
+            if endast == 3: #v1.1.0 and prior - no timestamps & metadata
+                self.comment = 'Comments: '
             else:
-                self.label = ''.join(lines[4:endast])
+                self.comment = ''.join(lines[5:endast]).strip()
             if endast >= 4:
-                ts = lines[4].strip().split(':').strip()
-                self.tmstmp = datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
+                ts = lines[3].strip().split('stamp:')[1].strip()
+                ts = datetime.datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
+                self.tmstmp = ts
             self.idata = pd.DataFrame(columns=['Depth','fw'])
             for line in lines[endast+2:]:
                 line = line.strip().split()

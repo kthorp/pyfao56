@@ -54,8 +54,8 @@ class Parameters:
         Depth of surface evaporation layer (m) (FAO-56 Table 19 & p144)
     REW : float
         Total depth Stage 1 evaporation (mm) (FAO-56 Table 19)
-    label : str, optional
-        User-defined file descriptions or metadata (default = None)
+    comment : str, optional
+        User-defined file descriptions or metadata (default = '')
     tmstmp : datetime
         Time stamp for the class
 
@@ -70,7 +70,7 @@ class Parameters:
     def __init__(self, Kcbini=0.15, Kcbmid=1.10, Kcbend=0.50, Lini=25,
                  Ldev=50, Lmid=50, Lend=25, hini=0.010, hmax=1.20,
                  thetaFC=0.250, thetaWP=0.100, theta0=0.100, Zrini=0.20,
-                 Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0, label=None):
+                 Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0, comment=''):
         """Initialize the Parameters class attributes.
 
         Default parameter values are given below. Users should update
@@ -97,7 +97,7 @@ class Parameters:
         pbase   : float, default = 0.50
         Ze      : float, default = 0.10
         REW     : float, default = 8.0
-        label   : str  , optional, default = None
+        comment   : str  , optional, default = ''
         """
 
         self.Kcbini  = Kcbini
@@ -117,7 +117,7 @@ class Parameters:
         self.pbase   = pbase
         self.Ze      = Ze
         self.REW     = REW
-        self.label   = label
+        self.comment = 'Comments: ' + comment.strip()
         self.tmstmp  = datetime.datetime.now()
 
     def __str__(self):
@@ -130,6 +130,7 @@ class Parameters:
            'pyfao56: FAO-56 Evapotranspiration in Python\n'
            'Parameter Data\n'
            'Timestamp: {:s}\n'
+           '{:s}\n'
            '{:s}\n'
            '{:s}\n'
            '{:9.4f} Kcbini, Kcb Initial (FAO-56 Table 17)\n'
@@ -156,11 +157,11 @@ class Parameters:
            '(FAO-56 Table 19 and Page 144)\n'
            '{:9.4f} REW, Total depth Stage 1 evaporation (mm) '
            '(FAO-56 Table 19)\n'
-          ).format(ast,timestamp,self.label,ast,self.Kcbini,self.Kcbmid,
-                   self.Kcbend,self.Lini,self.Ldev,self.Lmid,self.Lend,
-                   self.hini,self.hmax,self.thetaFC,self.thetaWP,
-                   self.theta0,self.Zrini,self.Zrmax,self.pbase,self.Ze,
-                   self.REW)
+          ).format(ast,timestamp,ast,self.comment,ast,self.Kcbini,
+                   self.Kcbmid,self.Kcbend,self.Lini,self.Ldev,
+                   self.Lmid,self.Lend,self.hini,self.hmax,self.thetaFC,
+                   self.thetaWP,self.theta0,self.Zrini,self.Zrmax,
+                   self.pbase,self.Ze,self.REW)
         return s
 
     def savefile(self,filepath='pyfao56.par'):
@@ -209,15 +210,16 @@ class Parameters:
             ast = '*' * 72
             a = [i for i,line in enumerate(lines) if line.strip()==ast]
             endast = a[-1] 
-            if endast <= 4:
-                self.label = None
+            if endast == 3: #v1.1.0 and prior - no timestamps & metadata
+                self.comment = 'Comments: '
             else:
-                self.label = ''.join(lines[4:endast])
+                self.comment = ''.join(lines[5:endast]).strip()
             if endast >= 4:
-                ts = lines[4].strip().split(':').strip()
-                self.tmstmp = datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
+                ts = lines[3].strip().split('stamp:')[1].strip()
+                ts = datetime.datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
+                self.tmstmp = ts
             for line in lines[endast+1:]:
-                line = line.strip().split(',').split()
+                line = line.strip().split(',')[0].split()
                 if line[1].lower() == 'kcbini':
                     self.Kcbini = float(line[0])
                 elif line[1].lower() == 'kcbmid':

@@ -26,8 +26,8 @@ class SoilProfile:
 
     Attributes
     ----------
-    label : str, optional
-        User-defined file descriptions or metadata (default = None)
+    comment : str, optional
+        User-defined file descriptions or metadata (default = '')
     tmstmp : datetime
         Time stamp for the class
     cnames : list
@@ -53,7 +53,7 @@ class SoilProfile:
         Users can override for custom loading of soil data.
     """
 
-    def __init__(self, filepath=None, label=None):
+    def __init__(self, filepath=None, comment=''):
         """Initialize the SoilProfile class attributes.
 
         If filepath is provided, soil data is loaded from the file.
@@ -62,11 +62,11 @@ class SoilProfile:
         ----------
         filepath : str, optional
             Any valid filepath string (default = None).
-        label : str, optional
-            User-defined file descriptions or metadata (default = None)
+        comment : str, optional
+            User-defined file descriptions or metadata (default = '')
         """
 
-        self.label = label
+        self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
         self.cnames = ['thetaFC', 'thetaWP', 'theta0']
         self.sdata = pd.DataFrame(columns=self.cnames)
@@ -90,7 +90,8 @@ class SoilProfile:
              'Timestamp: {:s}\n'
              '{:s}\n'
              '{:s}\n'
-             'Depth').format(ast,timestamp,self.label,ast)
+             '{:s}\n'
+             'Depth').format(ast,timestamp,ast,self.comment,ast)
         for cname in self.cnames:
             s += '{:>8s}'.format(cname)
         s += '\n'
@@ -146,13 +147,14 @@ class SoilProfile:
             ast = '*' * 72
             a = [i for i,line in enumerate(lines) if line.strip()==ast]
             endast = a[-1] 
-            if endast <= 4:
-                self.label = None
+            if endast == 3: #v1.1.0 and prior - no timestamps & metadata
+                self.comment = 'Comments: '
             else:
-                self.label = ''.join(lines[4:endast])
+                self.comment = ''.join(lines[5:endast]).strip()
             if endast >= 4:
-                ts = lines[4].strip().split(':').strip()
-                self.tmstmp = datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
+                ts = lines[3].strip().split('stamp:')[1].strip()
+                ts = datetime.datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
+                self.tmstmp = ts
             for line in lines[endast+2:]:
                 line = line.strip().split()
                 depth = int(line[0])

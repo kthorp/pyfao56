@@ -24,7 +24,7 @@ def run():
     module_dir = os.path.dirname(os.path.abspath(__file__))
 
     #Specify the model parameters
-    par = fao.Parameters()
+    par = fao.Parameters(comment = '2019 Cotton')
     par.Kcbmid = 1.225
     par.Lini = 35
     par.Ldev = 50
@@ -44,13 +44,13 @@ def run():
     par.loadfile(os.path.join(module_dir,'cotton2019.par'))
 
     #Specify the weather data
-    wth = fao.Weather()
+    wth = fao.Weather(comment = '2019 Cotton')
     wth.loadfile(os.path.join(module_dir,'cotton2019.wth'))
     wth.savefile(os.path.join(module_dir,'cotton2019.wth'))
     wth.loadfile(os.path.join(module_dir,'cotton2019.wth'))
 
     #Specify the irrigation schedule (2019 F13B4 Zone 12-11)
-    irr = fao.Irrigation()
+    irr = fao.Irrigation(comment = '2019 Cotton')
     irr.addevent(2019, 109, 20.4, 1.00)
     irr.addevent(2019, 112, 10.2, 1.00)
     irr.addevent(2019, 114, 10.2, 1.00)
@@ -93,13 +93,14 @@ def run():
     irr.loadfile(os.path.join(module_dir,'cotton2019.irr'))
 
     #Specify the updates for Kcb and fc
-    upd = fao.Update()
+    upd = fao.Update(comment = '2019 Cotton')
     upd.loadfile(os.path.join(module_dir,'cotton2019.upd'))
     upd.savefile(os.path.join(module_dir,'cotton2019.upd'))
     upd.loadfile(os.path.join(module_dir,'cotton2019.upd'))
 
     #Run the model
-    mdl = fao.Model('2019-108','2019-274', par, wth, irr, upd=upd)
+    mdl = fao.Model('2019-108','2019-274', par, wth, irr, upd=upd,
+                    comment = '2019 Cotton')
     mdl.run()
     print(mdl)
     mdl.savefile(os.path.join(module_dir,'cotton2019.out'))

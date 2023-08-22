@@ -1,6 +1,12 @@
 ************************************************************************
 pyfao56: FAO-56 Evapotranspiration in Python
 Output Data
+Timestamp: 08/22/2023 16:20:48
+Simulation start date: 04/18/2018
+Simulation end date: 10/30/2018
+Soil method: D - Default FAO-56 homogenous soil bucket approach
+************************************************************************
+Comments: 2018 Cotton, 60%-60% irrigation treatment
 ************************************************************************
 Year-DOY  Year  DOY  DOW      Date  ETref  tKcb   Kcb     h Kcmax    fc    fw   few      De    Kr    Ke      E     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p     RAW    Ks Kcadj ETcadj      T      DP    Dinc      Dr     fDr   Drmax  fDrmax      Db     fDb   Irrig    Rain  Year  DOY  DOW      Date
 2018-108  2018  108  Wed  04/18/18  5.430 0.150 0.150 0.050 1.222 0.000 1.000 1.000   9.360 0.000 0.000  0.000   0.000 0.150  0.815  21.400 -99.999 -99.999 0.200 0.800  17.120 1.000 0.150  0.815  0.815   0.000 -99.999  11.515   0.538 -99.999 -99.999 -99.999 -99.999   0.000   0.000  2018  108  Wed  04/18/18

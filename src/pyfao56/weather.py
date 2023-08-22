@@ -22,8 +22,8 @@ class Weather:
 
     Attributes
     ----------
-    label : str, optional
-        User-defined file descriptions or metadata (default = None)
+    comment : str, optional
+        User-defined file descriptions or metadata (default = '')
     tmstmp : datetime
         Time stamp for the class
     rfcrp : str
@@ -67,7 +67,7 @@ class Weather:
         index in self.wdata
     """
 
-    def __init__(self,filepath=None,label=None):
+    def __init__(self,filepath=None,comment=''):
         """Initialize the Weather class attributes.
 
         If filepath is provided, weather data is loaded from the file.
@@ -76,11 +76,11 @@ class Weather:
         ----------
         filepath : str, optional
             Any valid filepath string (default = None)
-        label : str, optional
-            User-defined file descriptions or metadata (default = None)
+        comment : str, optional
+            User-defined file descriptions or metadata (default = '')
         """
 
-        self.label = label
+        self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
         self.rfcrp = 'S'
         self.z     = float('NaN')
@@ -111,14 +111,15 @@ class Weather:
              'Timestamp: {:s}\n'
              '{:s}\n'
              '{:s}\n'
+             '{:s}\n'
              '{:>12s} Reference crop - Short (\'S\') or Tall (\'T\')\n'
              '{:12.7f} Weather station elevation (z) (m)\n'
              '{:12.7f} Weather station latitude (decimal degrees)\n'
              '{:12.7f} Wind speed measurement height (m)\n\n'
              'Daily weather data:\n'
              'Year-DOY'
-             ).format(ast,timestamp,self.label,ast,self.rfcrp,self.z,
-                      self.lat,self.wndht)
+             ).format(ast,timestamp,ast,self.comment,ast,self.rfcrp,
+                      self.z,self.lat,self.wndht)
         for cname in self.cnames:
             s += '{:>7s}'.format(cname)
         s += '\n'
@@ -173,13 +174,14 @@ class Weather:
             ast = '*' * 72
             a = [i for i,line in enumerate(lines) if line.strip()==ast]
             endast = a[-1] 
-            if endast <= 4:
-                self.label = None
+            if endast == 3: #v1.1.0 and prior - no timestamps & metadata
+                self.comment = 'Comments: '
             else:
-                self.label = ''.join(lines[4:endast])
+                self.comment = ''.join(lines[5:endast]).strip()
             if endast >= 4:
-                ts = lines[4].strip().split(':').strip()
-                self.tmstmp = datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
+                ts = lines[3].strip().split('stamp:')[1].strip()
+                ts = datetime.datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
+                self.tmstmp = ts
             self.rfcrp = lines[endast+1][:12].strip()
             self.z = float(lines[endast+2][:12])
             self.lat = float(lines[endast+3][:12])
