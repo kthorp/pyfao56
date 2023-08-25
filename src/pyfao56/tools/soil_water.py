@@ -193,12 +193,12 @@ class SoilWaterSeries:
                     mvswc.update({dpth:swc})
                 try:
                     Zr = float(line[2+numdpths*2+1])
-                except
+                except:
                     Zr = float('NaN')
                 swp = self.SoilWaterProfile(mdate,
                                             mvswc,
-                                            par = self.par
-                                            sol = self.sol
+                                            par = self.par,
+                                            sol = self.sol,
                                             Zr = Zr)
                 self.swdata.update({mdate,swp})
     
@@ -209,7 +209,7 @@ class SoilWaterSeries:
 
         pass
 
-    class SoilWaterProfile(self):
+    class SoilWaterProfile:
         """Manage a single soil water content measurement profile
         
         Attributes
@@ -288,8 +288,8 @@ class SoilWaterSeries:
             def __str__(self):
                 """Represent the SoilWaterProfile class as a string"""
             
-                s = ({'{:s},'
-                      '{:d},'
+                s = ('{:s},'
+                     '{:d},'
                     ).format(self.mdate,len(self.mvswc.keys()))
                 for i in len(range(self.mvswc.keys())):
                     s += '{:d},'.format(self.mvswc.keys()[i])

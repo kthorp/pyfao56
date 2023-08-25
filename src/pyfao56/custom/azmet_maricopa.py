@@ -16,7 +16,7 @@ import datetime
 import urllib3
 import math
 import pandas as pd
-from .forecast import Forecast
+from pyfao56.tools import Forecast
 
 class AzmetMaricopa(Weather):
     """A class for obtaining weather data for Maricopa, Arizona
