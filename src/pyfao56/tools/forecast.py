@@ -23,6 +23,7 @@ xx/xx/2019 Initial Python functions developed by Kelly Thorp
 08/17/2023 Added Clds column to output
 ########################################################################
 """
+
 import datetime
 import pandas as pd
 import requests
@@ -130,7 +131,7 @@ class Forecast():
         for i in list(range(-1,10)):
             day = today + datetime.timedelta(days=i)
             key = day.strftime('%Y-%j')
-                        
+
             #ra (float) : Extraterrestrial radiation (MJ m^-2 d^-1)
             #ASCE (2005) Eqs. 21-27
             doy = int(day.strftime('%j'))
@@ -141,14 +142,14 @@ class Forecast():
             ra1 = ws*math.sin(latrad)*math.sin(ldelta) #Eq.21
             ra2 = math.cos(latrad)*math.cos(ldelta)*math.sin(ws) #Eq.21
             ra = 24.0/math.pi*4.92*dr*(ra1+ra2) #Eq.21
-            
+
             #rso (float) : Clear sky solar radiation (MJ m^-2 d^-1)
             #ASCE (2005) Eq. 19
             if not math.isnan(self.elevation):
                 self.rso.update({key:(0.75+2e-5*self.elevation)*ra})
             else:
                 self.rso.update({key:NaN})
-        
+
     def getforecast(self):
         """Request and process weather forecast data from NDFD."""
 

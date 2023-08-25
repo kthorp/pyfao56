@@ -31,7 +31,7 @@ class Irrigation:
         columns - ['Depth','fw']
             Depth - Irrigation depth (mm)
             fw - fraction of soil surface wetted (FAO-56 Table 20)
-    
+
     Methods
     -------
     savefile(filepath='pyfao56.irr')

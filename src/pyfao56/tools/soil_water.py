@@ -73,13 +73,13 @@ class SoilWaterSeries:
         comment : str, optional
             User-defined file descriptions or metadata (default = '')
         """
-        
+
         self.par = par
         self.sol = sol
         self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
         self.swdata = {}
-        
+
         if filepath is not None:
             self.loadfile(filepath)
 
@@ -113,7 +113,7 @@ class SoilWaterSeries:
     def savefile(self,filepath='pyfao56.swc'):
         """Save pyfao56 soil water data to a file.
 
-        The function saves a comma-delimited file with standard 
+        The function saves a comma-delimited file with standard
         pyfao56-styled header.
         Each data line contains the following comma-delimited info:
         1. SWC measurement date as string ('yyyy-ddd')
@@ -127,7 +127,7 @@ class SoilWaterSeries:
         9. mfDrmax (mm/mm)
         10. mSWCr (cm3/cm3)
         11. mSWCrmax (cm3/cm3)
-                
+
         Parameters
         ----------
         filepath : str, optional
@@ -146,11 +146,11 @@ class SoilWaterSeries:
         else:
             f.write(self.__str__())
             f.close()
-    
+
     def loadfile(self, filepath='pyfao56.swc'):
         """Load measured soil water content data from a file
-        
-        The function expects a comma-delimited file with standard 
+
+        The function expects a comma-delimited file with standard
         pyfao56-styled header.
         Each data line contains the following comma-delimited info:
         1. SWC measurement date as string ('yyyy-ddd')
@@ -159,7 +159,7 @@ class SoilWaterSeries:
         4. x SWC measurements as integer (cm3/cm3, same order as depths)
         5. Optionally, an estimate of Zr on the measurement date
         6. Optionally, other values, which are not loaded.
-        
+
         Parameters
         ----------
         filepath : str, optional
@@ -170,7 +170,7 @@ class SoilWaterSeries:
         FileNotFoundError
             If filepath is not found.
         """
-        
+
         try:
             f = open(filepath, 'r')
         except FileNotFoundError:
@@ -201,7 +201,7 @@ class SoilWaterSeries:
                                             sol = self.sol,
                                             Zr = Zr)
                 self.swdata.update({mdate,swp})
-    
+
     def customload(self):
         """Override this function to customize loading measured
         vol. soil water content data into SoilWaterProfile objects.
@@ -211,10 +211,10 @@ class SoilWaterSeries:
 
     class SoilWaterProfile:
         """Manage a single soil water content measurement profile
-        
+
         Attributes
         ----------
-        
+
         mdate : str
             Year and day of year of the measurement ('yyyy-ddd')
         mvswc : dict
@@ -249,7 +249,7 @@ class SoilWaterSeries:
         compute(negdep=False)
             Compute root zone soil water status metrics from mvswc
         """
-        
+
         def __init__(self, mdate, mvswc, par = None, sol = None,
                      Zr=float('NaN')):
             """
@@ -272,7 +272,7 @@ class SoilWaterSeries:
             Zr : float, optional
                 Root depth on SWC measurement date (m) (default = NaN)
             """
-            
+
             self.mdate = mdate
             self.mvswc = mvswc
             self.par = par
@@ -284,10 +284,10 @@ class SoilWaterSeries:
             self.fDrmax = float('NaN')
             self.mSWCr = float('NaN')
             self.mSWCrmax = float('NaN')
-        
+
             def __str__(self):
                 """Represent the SoilWaterProfile class as a string"""
-            
+
                 s = ('{:s},'
                      '{:d},'
                     ).format(self.mdate,len(self.mvswc.keys()))
@@ -299,33 +299,33 @@ class SoilWaterSeries:
                       '{:5.3f},{5.3f}'
                      ).format(self.Zr,self.mDr,self.mDrmax,self.fDr,
                               self.fDrmax,self.mSWCr,self.mSWCrmax)
-                return s            
-        
+                return s
+
             def getZr(self, mdl):
                 """Get Zr from model simulation on the measurement date
-            
+
                 Parameters
                 ----------
                 mdl : pyfao56 Model object
                     Provides a Model instance with an odata DataFrame
                 """
-            
+
                 self.Zr = mdl.odata.loc[self.mdate,'Zr']
-            
+
             def compute(self, negdep = False):
                 """Compute root zone soil water status metrics
-                
+
                 Parameters
                 ----------
                 negdep : boolean, optional
                     Allow negative depletion or not (default = False)
                 """
-            
+
                 #Root zone is evaluated in 10^-5 meter increments
                 #Set root zone depth variables in 10^-5 meter units
                 rzmax = int(self.par.Zrmax * 100000.) #10^-5 meters
-                rz = int(self.Zr * 100000.) #10^-5 meters 
-                
+                rz = int(self.Zr * 100000.) #10^-5 meters
+
                 #Initialize other variables
                 swc_dpths = list(self.mvswc.keys())
                 if self.sol is not None:
@@ -333,7 +333,7 @@ class SoilWaterSeries:
                     thetaFC = self.sol.sdata['thetaFC'].todict()
                     thetaWP = self.sol.sdata['thetaWP'].todict()
                 elif self.par is not None:
-                    sol_dpth = int(self.par.Zrmax*100.) #cm 
+                    sol_dpth = int(self.par.Zrmax*100.) #cm
                     sol_dpths = [sol_dpth] #cm
                     thetaFC = {sol_dpth:self.par.thetaFC}
                     thetaWP = {sol_dpth:self.par.thetaWP}
@@ -345,16 +345,16 @@ class SoilWaterSeries:
                 WPrmax = 0.
                 SWCr = 0.
                 SWCrmax = 0.
-            
+
                 #Iterate the max root zone depth in 10^-5 m increments
                 inc_dpth = 0.01 #mm
                 for inc in list(range(1, rzmax + 1)):
                     #Find soil profile layer depth that contains inc
-                    sol_dpth = [dpth for (idx, dpth) 
+                    sol_dpth = [dpth for (idx, dpth)
                                 in enumerate(sol_dpths)
                                 if inc <= dpth * 1000][0] #10^-5 meters
                     #Find SWC measurement bottom depth that contains inc
-                    swc_dpth = [dpth for (idx, dpth) 
+                    swc_dpth = [dpth for (idx, dpth)
                                 in enumerate(swc_dpths)
                                 if inc <= dpth * 1000][0] #10^-5 meters
                     #Compute incremental values
@@ -363,7 +363,7 @@ class SoilWaterSeries:
                     SWCinc = self.mvswc[swc_dpth] * inc_dpth #mm
                     if not negdep and SWCinc > FCinc:
                         SWCinc = FCinc #no negative depletion
-                       
+
                     #Accumulate
                     FCrmax  += FCinc #mm
                     WPrmax  += WPinc #mm
@@ -372,7 +372,7 @@ class SoilWaterSeries:
                         FCr  += FCinc #mm
                         WPr  += WPinc #mm
                         SWCr += SWCinc #mm
-                        
+
                 #Finalize water status metrics
                 self.mDr = FCr - SWCr #mm
                 self.mDrmax = FCrmax - SWCrmax #mm

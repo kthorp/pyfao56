@@ -89,7 +89,7 @@ class Weather:
         self.cnames = ['Srad','Tmax','Tmin','Vapr','Tdew','RHmax',
                        'RHmin','Wndsp','Rain','ETref','MorP']
         self.wdata = pd.DataFrame(columns=self.cnames)
-        
+
         if filepath is not None:
             self.loadfile(filepath)
 
