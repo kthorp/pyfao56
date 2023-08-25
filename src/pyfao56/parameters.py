@@ -80,24 +80,24 @@ class Parameters:
         Parameters
         ----------
         See Parameters class docstring for parameter definitions.
-        Kcbini  : float, default = 0.15
-        Kcbmid  : float, default = 1.10
-        Kcbend  : float, default = 0.50
-        Lini    : int  , default = 25
-        Ldev    : int  , default = 50
-        Lmid    : int  , default = 50
-        Lend    : int  , default = 25
-        hini    : float, default = 0.010
-        hmax    : float, default = 1.20
-        thetaFC : float, default = 0.250
-        thetaWP : float, default = 0.100
-        theta0  : float, default = 0.100
-        Zrini   : float, default = 0.20
-        Zrmax   : float, default = 1.40
-        pbase   : float, default = 0.50
-        Ze      : float, default = 0.10
-        REW     : float, default = 8.0
-        comment   : str  , optional, default = ''
+        Kcbini  : float, optional, default = 0.15
+        Kcbmid  : float, optional, default = 1.10
+        Kcbend  : float, optional, default = 0.50
+        Lini    : int  , optional, default = 25
+        Ldev    : int  , optional, default = 50
+        Lmid    : int  , optional, default = 50
+        Lend    : int  , optional, default = 25
+        hini    : float, optional, default = 0.010
+        hmax    : float, optional, default = 1.20
+        thetaFC : float, optional, default = 0.250
+        thetaWP : float, optional, default = 0.100
+        theta0  : float, optional, default = 0.100
+        Zrini   : float, optional, default = 0.20
+        Zrmax   : float, optional, default = 1.40
+        pbase   : float, optional, default = 0.50
+        Ze      : float, optional, default = 0.10
+        REW     : float, optional, default = 8.0
+        comment : str  , optional, default = ''
         """
 
         self.Kcbini  = Kcbini
