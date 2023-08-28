@@ -97,17 +97,17 @@ class SoilWaterSeries:
            '{:s}\n'
            '{:s}\n'
           ).format(ast,timestamp,ast,self.comment,ast)
-        s += 'Year-DOY,n,'
         if len(self.swdata) > 0:
             s += 'Year-DOY,n,'
-            n = len(self.swdata[self.swdata.keys()[0]].mvswc)
+            key0 = list(self.swdata.keys())[0]
+            n = len(self.swdata[key0].mvswc)
             for i in range(n):
                 s += 'D{:02d},'.format(i+1)
             for i in range(n):
                 s += 'SWC{:02d},'.format(i+1)
             s += 'Zr,mDr,mDrmax,mfDr,mfDrmax,mSWCr,mSWCrmax\n'
-            for swp in sorted(self.swdata.keys()):
-                s += print(swp) + '\n'
+            for key in sorted(self.swdata.keys()):
+                s += self.swdata[key].__str__() + '\n'
         return s
 
     def savefile(self,filepath='pyfao56.swc'):
@@ -181,6 +181,14 @@ class SoilWaterSeries:
             ast = '*' * 72
             a = [i for i,line in enumerate(lines) if line.strip()==ast]
             endast = a[-1]
+            if endast == 3: #v1.1.0 and prior - no timestamps & metadata
+                self.comment = 'Comments: '
+            else:
+                self.comment = ''.join(lines[5:endast]).strip()
+            if endast >= 4:
+                ts = lines[3].strip().split('stamp:')[1].strip()
+                ts = datetime.datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
+                self.tmstmp = ts
             self.swdata.clear()
             for line in lines[endast+2:]:
                 line = line.strip().split(',')
@@ -200,7 +208,7 @@ class SoilWaterSeries:
                                             par = self.par,
                                             sol = self.sol,
                                             Zr = Zr)
-                self.swdata.update({mdate,swp})
+                self.swdata.update({mdate:swp})
 
     def customload(self):
         """Override this function to customize loading measured
@@ -245,8 +253,8 @@ class SoilWaterSeries:
         Methods
         -------
         getZr(model)
-            Get Zr from model simulation output on a given date
-        compute(negdep=False)
+            Get Zr on measurement date from model simulation output
+        compute(negdep=True)
             Compute root zone soil water status metrics from mvswc
         """
 
@@ -279,104 +287,102 @@ class SoilWaterSeries:
             self.sol = sol
             self.Zr = Zr
             self.mDr = float('NaN')
-            self.Drmax = float('NaN')
-            self.fDr = float('NaN')
-            self.fDrmax = float('NaN')
+            self.mDrmax = float('NaN')
+            self.mfDr = float('NaN')
+            self.mfDrmax = float('NaN')
             self.mSWCr = float('NaN')
             self.mSWCrmax = float('NaN')
 
-            def __str__(self):
-                """Represent the SoilWaterProfile class as a string"""
+        def __str__(self):
+            """Represent the SoilWaterProfile class as a string"""
 
-                s = ('{:s},'
-                     '{:d},'
-                    ).format(self.mdate,len(self.mvswc.keys()))
-                for i in len(range(self.mvswc.keys())):
-                    s += '{:d},'.format(self.mvswc.keys()[i])
-                for key in sorted(self.mvswc.keys()):
-                    s += '{:5.3f},'.format(self.mvswc[key])
-                s += ('{:5.3f},{:7.3f},{:7.3f},{:5.3f},{:5.3f}'
-                      '{:5.3f},{5.3f}'
-                     ).format(self.Zr,self.mDr,self.mDrmax,self.fDr,
-                              self.fDrmax,self.mSWCr,self.mSWCrmax)
-                return s
+            s = ('{:s},'
+                 '{:d},'
+                ).format(self.mdate,len(self.mvswc.keys()))
+            for key in sorted(self.mvswc.keys()):
+                s += '{:d},'.format(key)
+            for key in sorted(self.mvswc.keys()):
+                s += '{:5.3f},'.format(self.mvswc[key])
+            s += ('{:5.3f},{:8.3f},{:8.3f},{:6.3f},{:6.3f},'
+                  '{:5.3f},{:5.3f}'
+                 ).format(self.Zr,self.mDr,self.mDrmax,self.mfDr,
+                          self.mfDrmax,self.mSWCr,self.mSWCrmax)
+            return s
 
-            def getZr(self, mdl):
-                """Get Zr from model simulation on the measurement date
+        def getZr(self, mdl):
+            """Get Zr from model simulation on the measurement date
 
-                Parameters
-                ----------
-                mdl : pyfao56 Model object
-                    Provides a Model instance with an odata DataFrame
-                """
+            Parameters
+            ----------
+            mdl : pyfao56 Model object
+                Provides a Model instance with an odata DataFrame
+            """
 
-                self.Zr = mdl.odata.loc[self.mdate,'Zr']
+            self.Zr = mdl.odata.loc[self.mdate,'Zr']
 
-            def compute(self, negdep = False):
-                """Compute root zone soil water status metrics
+        def compute(self, negdep = True):
+            """Compute root zone soil water status metrics
 
-                Parameters
-                ----------
-                negdep : boolean, optional
-                    Allow negative depletion or not (default = False)
-                """
+            Parameters
+            ----------
+            negdep : boolean, optional
+                Allow negative depletion or not (default = True)
+            """
 
-                #Root zone is evaluated in 10^-5 meter increments
-                #Set root zone depth variables in 10^-5 meter units
-                rzmax = int(self.par.Zrmax * 100000.) #10^-5 meters
-                rz = int(self.Zr * 100000.) #10^-5 meters
+            #Root zone is evaluated in 10^-5 meter increments
+            #Set root zone depth variables in 10^-5 meter units
+            rzmax = int(self.par.Zrmax * 100000.) #10^-5 meters
+            rz = int(self.Zr * 100000.) #10^-5 meters
 
-                #Initialize other variables
-                swc_dpths = list(self.mvswc.keys())
-                if self.sol is not None:
-                    sol_dpths = list(self.sol.sdata.index.values) #cm
-                    thetaFC = self.sol.sdata['thetaFC'].todict()
-                    thetaWP = self.sol.sdata['thetaWP'].todict()
-                elif self.par is not None:
-                    sol_dpth = int(self.par.Zrmax*100.) #cm
-                    sol_dpths = [sol_dpth] #cm
-                    thetaFC = {sol_dpth:self.par.thetaFC}
-                    thetaWP = {sol_dpth:self.par.thetaWP}
-                else:
-                    raise Exception("No soil profile data available.")
-                FCr = 0.
-                FCrmax = 0.
-                WPr = 0.
-                WPrmax = 0.
-                SWCr = 0.
-                SWCrmax = 0.
+            #Initialize other variables
+            swc_dpths = list(self.mvswc.keys())
+            if self.sol is not None:
+                sol_dpths = list(self.sol.sdata.index.values) #cm
+                thetaFC = self.sol.sdata['thetaFC'].to_dict()
+                thetaWP = self.sol.sdata['thetaWP'].to_dict()
+            elif self.par is not None:
+                sol_dpth = int(self.par.Zrmax*100.) #cm
+                sol_dpths = [sol_dpth] #cm
+                thetaFC = {sol_dpth:self.par.thetaFC}
+                thetaWP = {sol_dpth:self.par.thetaWP}
+            else:
+                raise Exception("No soil profile data available.")
+            FCr = 0.
+            FCrmax = 0.
+            WPr = 0.
+            WPrmax = 0.
+            SWCr = 0.
+            SWCrmax = 0.
 
-                #Iterate the max root zone depth in 10^-5 m increments
-                inc_dpth = 0.01 #mm
-                for inc in list(range(1, rzmax + 1)):
-                    #Find soil profile layer depth that contains inc
-                    sol_dpth = [dpth for (idx, dpth)
-                                in enumerate(sol_dpths)
-                                if inc <= dpth * 1000][0] #10^-5 meters
-                    #Find SWC measurement bottom depth that contains inc
-                    swc_dpth = [dpth for (idx, dpth)
-                                in enumerate(swc_dpths)
-                                if inc <= dpth * 1000][0] #10^-5 meters
-                    #Compute incremental values
-                    FCinc  = thetaFC[sol_dpth] * inc_dpth #mm
-                    WPinc  = thetaWP[sol_dpth] * inc_dpth #mm
-                    SWCinc = self.mvswc[swc_dpth] * inc_dpth #mm
-                    if not negdep and SWCinc > FCinc:
-                        SWCinc = FCinc #no negative depletion
+            #Iterate the max root zone depth in 10^-5 m increments
+            inc_dpth = 0.01 #mm
+            for inc in list(range(1, rzmax + 1)):
+                #Find soil profile layer depth that contains inc
+                sol_dpth = [dpth for (idx, dpth) in enumerate(sol_dpths)
+                            if inc <= dpth * 1000][0] #10^-5 meters
+                #Find SWC measurement bottom depth that contains inc
+                swc_dpth = [dpth for (idx, dpth) in enumerate(swc_dpths)
+                            if inc <= dpth * 1000][0] #10^-5 meters
+                #Compute incremental values
+                FCinc  = thetaFC[sol_dpth] * inc_dpth #mm
+                WPinc  = thetaWP[sol_dpth] * inc_dpth #mm
+                SWCinc = self.mvswc[swc_dpth] * inc_dpth #mm
+                if not negdep and SWCinc > FCinc:
+                    SWCinc = FCinc #no negative depletion
 
-                    #Accumulate
-                    FCrmax  += FCinc #mm
-                    WPrmax  += WPinc #mm
-                    SWCrmax += SWCinc #mm
-                    if inc < rz:
-                        FCr  += FCinc #mm
-                        WPr  += WPinc #mm
-                        SWCr += SWCinc #mm
+                #Accumulate
+                FCrmax  += FCinc #mm
+                WPrmax  += WPinc #mm
+                SWCrmax += SWCinc #mm
+                if inc < rz:
+                    FCr  += FCinc #mm
+                    WPr  += WPinc #mm
+                    SWCr += SWCinc #mm
 
-                #Finalize water status metrics
-                self.mDr = FCr - SWCr #mm
-                self.mDrmax = FCrmax - SWCrmax #mm
-                self.mfDr = (FCr - SWCr) / (FCr - WPr) #mm/mm
-                self.mfDrmax = (FCrmax-SWCrmax)/(FCrmax-WPrmax) #mm/mm
-                self.mSWCr = SWCr / (rz * inc_dpth) #cm3/cm3
-                self.mSWCrmax = SWCrmax / (rzmax * inc_dpth) #cm3/cm3
+            #Finalize water status metrics
+            self.mDr = FCr - SWCr #mm
+            self.mDrmax = FCrmax - SWCrmax #mm
+            self.mfDr = (FCr - SWCr) / (FCr - WPr) #mm/mm
+            self.mfDrmax = (FCrmax-SWCrmax)/(FCrmax-WPrmax) #mm/mm
+            self.mSWCr = SWCr / (rz * inc_dpth) #cm3/cm3
+            self.mSWCrmax = SWCrmax / (rzmax * inc_dpth) #cm3/cm3
