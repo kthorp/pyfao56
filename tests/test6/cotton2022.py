@@ -112,7 +112,8 @@ def run():
     for key in sorted(swc.swdata.keys()):
         print('Computing soil water depletion for {:s}'.format(key))
         swc.swdata[key].getZr(mdl)
-        swc.swdata[key].compute()
+        swc.swdata[key].computeDr()
+        swc.swdata[key].computeKs(mdl)
     swc.savefile(os.path.join(module_dir,'cotton2022p10-2.swc'))
 
 if __name__ == '__main__':

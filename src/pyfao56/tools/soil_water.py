@@ -53,6 +53,8 @@ class SoilWaterSeries:
     customload()
         Override this function to customize loading measured volumetric
         soil water content data.
+    summarize()
+        Summarize the series of root zone soil water metrics
     """
 
     def __init__(self,filepath=None,par=None,sol=None,comment=''):
@@ -105,7 +107,7 @@ class SoilWaterSeries:
                 s += 'D{:02d},'.format(i+1)
             for i in range(n):
                 s += 'SWC{:02d},'.format(i+1)
-            s += 'Zr,mDr,mDrmax,mfDr,mfDrmax,mSWCr,mSWCrmax\n'
+            s += 'Zr,mDr,mDrmax,mfDr,mfDrmax,mSWCr,mSWCrmax,mKs\n'
             for key in sorted(self.swdata.keys()):
                 s += self.swdata[key].__str__() + '\n'
         return s
@@ -217,6 +219,29 @@ class SoilWaterSeries:
 
         pass
 
+    def summarize():
+        """Summarize the series of root zone soil water metrics
+
+        Returns
+        -------
+        summary : DataFrame
+            Summary of series of root zone soil water metrics
+        """
+
+        cols = ['Year-DOY','mDr','mDrmax','mfDr','mfDrmax',
+                'mSWCr','mSWCrmax','mKs']
+        summary = pd.DataFrame(columns = cols)
+        summary = summary.set_index('Year-DOY')
+        for key in sorted(self.swdata.keys()):
+            summary.loc[key,'mDr'] = self.swdata[key].mDr
+            summary.loc[key,'mDrmax'] = self.swdata[key].mDrmax
+            summary.loc[key,'mfDr'] = self.swdata[key].mfDr
+            summary.loc[key,'mfDrmax'] = self.swdata[key].mfDrmax
+            summary.loc[key,'mSWCr'] = self.swdata[key].mSWCr
+            summary.loc[key,'mSWCrmax'] = self.swdata[key].mSWCrmax
+            summary.loc[key,'mKs'] = self.swdata[key].mKs
+        return summary
+
     class SoilWaterProfile:
         """Manage a single soil water content measurement profile
 
@@ -249,13 +274,17 @@ class SoilWaterSeries:
             Measured soil water content for root zone (cm3/cm3)
         mSWCrmax : float
             Measured soil water content for maximum root zone (cm3/cm3)
+        mKs : float
+            Measured transpiration reduction factor (Ks, 0.0-1.0)
 
         Methods
         -------
         getZr(model)
             Get Zr on measurement date from model simulation output
-        compute(negdep=True)
+        computeDr(negdep=True)
             Compute root zone soil water status metrics from mvswc
+        computeKs(model)
+            Estimate Ks from measured Dr, TAW, and RAW
         """
 
         def __init__(self, mdate, mvswc, par = None, sol = None,
@@ -292,6 +321,7 @@ class SoilWaterSeries:
             self.mfDrmax = float('NaN')
             self.mSWCr = float('NaN')
             self.mSWCrmax = float('NaN')
+            self.mKs = float('NaN')
 
         def __str__(self):
             """Represent the SoilWaterProfile class as a string"""
@@ -304,9 +334,10 @@ class SoilWaterSeries:
             for key in sorted(self.mvswc.keys()):
                 s += '{:5.3f},'.format(self.mvswc[key])
             s += ('{:5.3f},{:8.3f},{:8.3f},{:6.3f},{:6.3f},'
-                  '{:5.3f},{:5.3f}'
+                  '{:5.3f},{:5.3f},{:6.3f}'
                  ).format(self.Zr,self.mDr,self.mDrmax,self.mfDr,
-                          self.mfDrmax,self.mSWCr,self.mSWCrmax)
+                          self.mfDrmax,self.mSWCr,self.mSWCrmax,
+                          self.mKs)
             return s
 
         def getZr(self, mdl):
@@ -320,7 +351,7 @@ class SoilWaterSeries:
 
             self.Zr = mdl.odata.loc[self.mdate,'Zr']
 
-        def compute(self, negdep = True):
+        def computeDr(self, negdep = True):
             """Compute root zone soil water status metrics
 
             Parameters
@@ -386,3 +417,17 @@ class SoilWaterSeries:
             self.mfDrmax = (FCrmax-SWCrmax)/(FCrmax-WPrmax) #mm/mm
             self.mSWCr = SWCr / (rz * inc_dpth) #cm3/cm3
             self.mSWCrmax = SWCrmax / (rzmax * inc_dpth) #cm3/cm3
+
+        def computeKs(self, mdl):
+            """Estimate Ks from measured Dr, TAW, and RAW
+
+            Parameters
+            ----------
+            mdl : pyfao56 Model object
+                Provides a Model instance with an odata DataFrame
+            """
+
+            TAW = mdl.odata.loc[self.mdate,'TAW']
+            RAW = mdl.odata.loc[self.mdate,'RAW']
+            Ks = (TAW - self.mDr) / (TAW - RAW) #FAO-56 Eq. 84
+            self.mKs = sorted([0.0,Ks,1.0])[1]
