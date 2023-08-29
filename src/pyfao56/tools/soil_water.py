@@ -219,7 +219,7 @@ class SoilWaterSeries:
 
         pass
 
-    def summarize():
+    def summarize(self):
         """Summarize the series of root zone soil water metrics
 
         Returns
