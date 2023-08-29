@@ -46,10 +46,10 @@ class SoilWaterSeries:
 
     Methods
     -------
-    savefile(filepath='pyfao56.swc')
-        Save soil water data to a file
-    loadfile(filepath='pyfao56.swc')
-        Load soil water data from a file
+    savefile(filepath='pyfao56.sws')
+        Save soil water series data to a file
+    loadfile(filepath='pyfao56.sws')
+        Load soil water series data from a file
     customload()
         Override this function to customize loading measured volumetric
         soil water content data.
@@ -112,8 +112,8 @@ class SoilWaterSeries:
                 s += self.swdata[key].__str__() + '\n'
         return s
 
-    def savefile(self,filepath='pyfao56.swc'):
-        """Save pyfao56 soil water data to a file.
+    def savefile(self,filepath='pyfao56.sws'):
+        """Save pyfao56 soil water series data to a file.
 
         The function saves a comma-delimited file with standard
         pyfao56-styled header.
@@ -133,7 +133,7 @@ class SoilWaterSeries:
         Parameters
         ----------
         filepath : str, optional
-            Any valid filepath string (default = 'pyfao56.swc')
+            Any valid filepath string (default = 'pyfao56.sws')
 
         Raises
         ------
@@ -149,7 +149,7 @@ class SoilWaterSeries:
             f.write(self.__str__())
             f.close()
 
-    def loadfile(self, filepath='pyfao56.swc'):
+    def loadfile(self, filepath='pyfao56.sws'):
         """Load measured soil water content data from a file
 
         The function expects a comma-delimited file with standard
@@ -165,7 +165,7 @@ class SoilWaterSeries:
         Parameters
         ----------
         filepath : str, optional
-            Any valid filepath string (default = 'pyfao56.swc')
+            Any valid filepath string (default = 'pyfao56.sws')
 
         Raises
         ------

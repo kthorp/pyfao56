@@ -107,14 +107,14 @@ def run():
     mdl.savefile(os.path.join(module_dir,'cotton2022p10-2.out'))
 
     #Analyzed measured soil water data
-    swc = tools.SoilWaterSeries(filepath='./cotton2022p10-2.swc',
+    sws = tools.SoilWaterSeries(filepath='./cotton2022p10-2.sws',
                                 par=par,sol=sol)
-    for key in sorted(swc.swdata.keys()):
+    for key in sorted(sws.swdata.keys()):
         print('Computing soil water depletion for {:s}'.format(key))
-        swc.swdata[key].getZr(mdl)
-        swc.swdata[key].computeDr()
-        swc.swdata[key].computeKs(mdl)
-    swc.savefile(os.path.join(module_dir,'cotton2022p10-2.swc'))
+        sws.swdata[key].getZr(mdl)
+        sws.swdata[key].computeDr()
+        sws.swdata[key].computeKs(mdl)
+    sws.savefile(os.path.join(module_dir,'cotton2022p10-2.sws'))
 
 if __name__ == '__main__':
     run()
