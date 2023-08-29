@@ -2,8 +2,8 @@
 ########################################################################
 The cotton2022.py module contains a function to setup and run pyfao56
 for plot 10-2 in a 2022 cotton field study at Maricopa, Arizona. The
-SoilWaterSeries class is used to assess measured soil water content data
-for root zone soil water depletion.
+SoilWaterSeries class was also tested to assess measured soil water
+content data for root zone soil water depletion.
 
 The cotton2022.py module contains the following:
     run - function to setup and run pyfao56 for the plot 10-2 in a 2022
@@ -100,7 +100,7 @@ def run():
     sol = fao.SoilProfile(filepath='./cotton2022p10-2.sol')
 
     #Run the model
-    mdl = fao.Model('2022-111','2022-304', par, wth, irr,
+    mdl = fao.Model('2022-111','2022-304', par, wth, irr=irr, sol=sol,
                     comment = '2022 Cotton, plot 10-2')
     mdl.run()
     print(mdl)

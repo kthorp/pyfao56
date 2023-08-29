@@ -102,7 +102,7 @@ def run():
     irr.loadfile(os.path.join(module_dir,'cottonwet2013.irr'))
 
     #Run the model
-    mdl = fao.Model('2013-113','2013-312', par, wth, irr,
+    mdl = fao.Model('2013-113','2013-312', par, wth, irr=irr,
                     comment = '2013 Cotton Wet')
     mdl.run()
     print(mdl)

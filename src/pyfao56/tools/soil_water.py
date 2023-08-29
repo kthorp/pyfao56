@@ -100,14 +100,15 @@ class SoilWaterSeries:
            '{:s}\n'
           ).format(ast,timestamp,ast,self.comment,ast)
         if len(self.swdata) > 0:
-            s += 'Year-DOY,n,'
+            s += 'Year-DOY  n'
             key0 = list(self.swdata.keys())[0]
             n = len(self.swdata[key0].mvswc)
             for i in range(n):
-                s += 'D{:02d},'.format(i+1)
+                s += ' D{:02d}'.format(i+1)
             for i in range(n):
-                s += 'SWC{:02d},'.format(i+1)
-            s += 'Zr,mDr,mDrmax,mfDr,mfDrmax,mSWCr,mSWCrmax,mKs\n'
+                s += ' SWC{:02d}'.format(i+1)
+            s += '    Zr      mDr   mDrmax   mfDr mfDrmax mSWCr mSWCrmax'
+            s += '    mKs\n'
             for key in sorted(self.swdata.keys()):
                 s += self.swdata[key].__str__() + '\n'
         return s
@@ -115,9 +116,8 @@ class SoilWaterSeries:
     def savefile(self,filepath='pyfao56.sws'):
         """Save pyfao56 soil water series data to a file.
 
-        The function saves a comma-delimited file with standard
-        pyfao56-styled header.
-        Each data line contains the following comma-delimited info:
+        The function saves a file with standard pyfao56-styled header.
+        Each data line contains the following info:
         1. SWC measurement date as string ('yyyy-ddd')
         2. The number, x, of SWC measurement depths as integer
         3. x bottom depths of SWC measurement layers as integer (cm)
@@ -129,6 +129,7 @@ class SoilWaterSeries:
         9. mfDrmax (mm/mm)
         10. mSWCr (cm3/cm3)
         11. mSWCrmax (cm3/cm3)
+        12. mKs (0.0-1.0)
 
         Parameters
         ----------
@@ -152,9 +153,8 @@ class SoilWaterSeries:
     def loadfile(self, filepath='pyfao56.sws'):
         """Load measured soil water content data from a file
 
-        The function expects a comma-delimited file with standard
-        pyfao56-styled header.
-        Each data line contains the following comma-delimited info:
+        The function expects a file with standard pyfao56-styled header.
+        Each data line contains the following info:
         1. SWC measurement date as string ('yyyy-ddd')
         2. The number, x, of SWC measurement depths as integer
         3. x bottom depths of SWC measurement layers as integer (cm)
@@ -193,7 +193,7 @@ class SoilWaterSeries:
                 self.tmstmp = ts
             self.swdata.clear()
             for line in lines[endast+2:]:
-                line = line.strip().split(',')
+                line = line.strip().split()
                 mdate = line[0]
                 numdpths = int(line[1])
                 mvswc = dict()
@@ -326,15 +326,15 @@ class SoilWaterSeries:
         def __str__(self):
             """Represent the SoilWaterProfile class as a string"""
 
-            s = ('{:s},'
-                 '{:d},'
+            s = ('{:8s} '
+                 '{:2d} '
                 ).format(self.mdate,len(self.mvswc.keys()))
             for key in sorted(self.mvswc.keys()):
-                s += '{:d},'.format(key)
+                s += '{:3d} '.format(key)
             for key in sorted(self.mvswc.keys()):
-                s += '{:5.3f},'.format(self.mvswc[key])
-            s += ('{:5.3f},{:8.3f},{:8.3f},{:6.3f},{:6.3f},'
-                  '{:5.3f},{:5.3f},{:6.3f}'
+                s += '{:5.3f} '.format(self.mvswc[key])
+            s += ('{:5.3f} {:8.3f} {:8.3f} {:6.3f} {:7.3f} '
+                  '{:5.3f} {:8.3f} {:6.3f}'
                  ).format(self.Zr,self.mDr,self.mDrmax,self.mfDr,
                           self.mfDrmax,self.mSWCr,self.mSWCrmax,
                           self.mKs)

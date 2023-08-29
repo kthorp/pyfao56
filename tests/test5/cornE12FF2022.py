@@ -2,7 +2,8 @@
 ########################################################################
 The cornE12FF2022.py module contains a function to setup and run pyfao56
 for the (fully irrigated) E12 plot in a 2022 corn field study at the
-Limited Irrigation Research Farm (LIRF) in Greeley, Colorado.
+Limited Irrigation Research Farm (LIRF) in Greeley, Colorado. Routines
+related to the SoilProfile classes were also tested.
 
 The cornE12FF2022.py module contains the following:
     run - function to setup and run pyfao56 for the E12 plot in a 2022
@@ -51,27 +52,28 @@ def run():
     upd = fao.Update(upd_file)
 
     #Running the model without Update or SoilProfile classes
-    mdl = fao.Model('2022-129', '2022-299', par, wth, irr, cons_p=True)
+    mdl = fao.Model('2022-129', '2022-299', par, wth, irr=irr,
+                    cons_p=True)
     mdl.run()
     print(mdl)
     mdl.savefile(os.path.join(module_dir,'E12FF2022_default.out'))
 
     #Running the model with SoilProfile class
-    mdl_sol = fao.Model('2022-129', '2022-299', par, wth, irr,
+    mdl_sol = fao.Model('2022-129', '2022-299', par, wth, irr=irr,
                         sol=sol, cons_p=True)
     mdl_sol.run()
     print(mdl_sol)
     mdl_sol.savefile(os.path.join(module_dir,'E12FF2022_Soil.out'))
 
     #Running the model with Update class
-    mdl_kcb = fao.Model('2022-129', '2022-299', par, wth, irr,
+    mdl_kcb = fao.Model('2022-129', '2022-299', par, wth, irr=irr,
                         upd=upd, cons_p=True)
     mdl_kcb.run()
     print(mdl_kcb)
     mdl_kcb.savefile(os.path.join(module_dir,'E12FF2022_CCKcb.out'))
 
     #Running the model with Update and SoilProfile classes
-    mdl_all = fao.Model('2022-129', '2022-299', par, wth, irr,
+    mdl_all = fao.Model('2022-129', '2022-299', par, wth, irr=irr,
                         sol=sol, upd=upd, cons_p=True)
     mdl_all.run()
     print(mdl_all)

@@ -2,7 +2,8 @@
 ########################################################################
 The cotton2018.py module contains a function to setup and run pyfao56
 for the 100%-100% and the 60-60% irrigation treatments in a 2018 cotton
-field study at Maricopa, Arizona.
+field study at Maricopa, Arizona. Simulation output was used in the
+first SoftwareX manuscript for pyfao56.
 
 The cotton2018.py module contains the following:
     run - function to setup and run pyfao56 for the 100%-100% and the
@@ -170,7 +171,7 @@ def run():
     irr120.savefile(os.path.join(module_dir,'cotton2018_120.irr'))
 
     #Run the 60%-60% model
-    mdl060 = fao.Model('2018-108','2018-303', par, wth, irr060,
+    mdl060 = fao.Model('2018-108','2018-303', par, wth, irr=irr060,
                        comment = '2018 Cotton, 60%-60% ' +
                             'irrigation treatment')
     mdl060.run()
@@ -178,7 +179,7 @@ def run():
     mdl060.savefile(os.path.join(module_dir,'cotton2018_060.out'))
 
     #Run the 100%-100% model
-    mdl100 = fao.Model('2018-108','2018-303', par, wth, irr100,
+    mdl100 = fao.Model('2018-108','2018-303', par, wth, irr=irr100,
                        comment = '2018 Cotton, 100%-100% ' + 
                             'irrigation treatment')
     mdl100.run()
@@ -186,7 +187,7 @@ def run():
     mdl100.savefile(os.path.join(module_dir,'cotton2018_100.out'))
 
     #Run the 120%-120% model
-    mdl120 = fao.Model('2018-108','2018-303', par, wth, irr120,
+    mdl120 = fao.Model('2018-108','2018-303', par, wth, irr=irr120,
                        comment = '2018 Cotton, 120%-120% ' +
                             'irrigation treatment')
     mdl120.run()
