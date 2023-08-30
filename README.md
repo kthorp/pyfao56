@@ -21,7 +21,7 @@ The main pyfao56 package contains the following modules:
 
 The source code is available [here](http://github.com/kthorp/pyfao56/). It uses a basic object-oriented design with separate classes to make FAO-56 calculations and to manage parameter, weather, irrigation management, and soil profile data. [Pandas](https://pandas.pydata.org/) data frames are used for data storage and management. Further documentation of the class structure is contained in the source files.
 
-The pyfao56 package contains a subpackage called [tools](https://github.com/kthorp/pyfao56/tree/main/src/pyfao56/custom), which has several modules to facilitate use of the pyfao56 package as follows:
+The pyfao56 package contains a new subpackage called [tools](https://github.com/kthorp/pyfao56/tree/main/src/pyfao56/custom), which has several modules to facilitate model use as follows:
 * forecast.py - Obtain a seven-day weather forecast from the National Digital Forecast Database ([NDFD](https://graphical.weather.gov/xml/rest.php))
 * soil_water.py - I/O tools for managing measured volumetric soil water content data and computing root zone soil water metrics from those measurements
 * visualization.py - Develop plots to visualize measured and simulated data for root zone soil water depletion and evapotranspiration
