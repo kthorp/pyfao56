@@ -1,5 +1,5 @@
 {% set name = "pyfao56" %}
-{% set version = "1.1.0" %}
+{% set version = "1.2.0" %}
 
 
 package:
@@ -20,6 +20,7 @@ requirements:
     - pip
     - python >=3.7
   run:
+    - matplotlib
     - numpy
     - pandas
     - python >=3.7
