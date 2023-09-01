@@ -23,13 +23,15 @@ def run():
     module_dir = os.path.dirname(os.path.abspath(__file__))
 
     #Specify the model parameters
-    par = fao.Parameters()
+    par = fao.Parameters(comment = '2013 Cotton Wet')
     par.Kcbmid = 1.20
     par.Kcbend = 0.573
     par.Lini = 31
     par.Ldev = 52
     par.Lmid = 50
     par.Lend = 21
+    par.hini = 0.05
+    par.hmax = 1.20
     par.thetaFC = 0.225
     par.thetaWP = 0.100
     par.theta0 = 0.100
@@ -42,13 +44,13 @@ def run():
     par.loadfile(os.path.join(module_dir,'cotton2013.par'))
 
     #Specify the weather data
-    wth = fao.Weather()
+    wth = fao.Weather(comment = '2013 Cotton Wet')
     wth.loadfile(os.path.join(module_dir,'cotton2013.wth'))
     wth.savefile(os.path.join(module_dir,'cotton2013.wth'))
     wth.loadfile(os.path.join(module_dir,'cotton2013.wth'))
 
     #Specify the irrigation schedule
-    irr = fao.Irrigation()
+    irr = fao.Irrigation(comment = '2013 Cotton Wet')
     irr.addevent(2013, 115, 33.0, 0.5)
     irr.addevent(2013, 120,108.0, 0.5)
     irr.addevent(2013, 145, 16.2, 0.2)
@@ -100,7 +102,8 @@ def run():
     irr.loadfile(os.path.join(module_dir,'cottonwet2013.irr'))
 
     #Run the model
-    mdl = fao.Model('2013-113','2013-312', par, wth, irr)
+    mdl = fao.Model('2013-113','2013-312', par, wth, irr=irr,
+                    comment = '2013 Cotton Wet')
     mdl.run()
     print(mdl)
     mdl.savefile(os.path.join(module_dir,'cottonwet2013.out'))

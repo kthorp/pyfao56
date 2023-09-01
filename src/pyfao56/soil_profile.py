@@ -19,24 +19,29 @@ The soil_profile.py module contains the following:
 """
 
 import pandas as pd
+import datetime
 
 class SoilProfile:
     """A class for managing layered soil profile data in pyfao56.
 
     Attributes
     ----------
+    comment : str, optional
+        User-defined file descriptions or metadata (default = '')
+    tmstmp : datetime
+        Time stamp for the class
     cnames : list
         Column names for sdata
     sdata : DataFrame
         Soil profile data as float
         index = Bottom depth of the layer as integer (cm)
         columns = ['thetaFC', 'thetaWP', 'theta0']
-            thetaFC - Volumetric Soil Water Content, Field Capacity 
-                      (cm^3/cm^3)
+            thetaFC - Volumetric Soil Water Content, Field Capacity
+                      (cm3/cm3)
             thetaWP - Volumetric Soil Water Content, Wilting Point
-                      (cm^3/cm^3)
+                      (cm3/cm3)
             theta0  - Volumetric Soil Water Content, Initial
-                      (cm^3/cm^3)
+                      (cm3/cm3)
 
     Methods
     -------
@@ -45,10 +50,10 @@ class SoilProfile:
     loadfile(filepath='pyfao56.sol')
         Load soil profile data from a file
     customload()
-        Override this function to customize loading soil data.
+        Users can override for custom loading of soil data.
     """
 
-    def __init__(self, filepath=None):
+    def __init__(self, filepath=None, comment=''):
         """Initialize the SoilProfile class attributes.
 
         If filepath is provided, soil data is loaded from the file.
@@ -57,8 +62,12 @@ class SoilProfile:
         ----------
         filepath : str, optional
             Any valid filepath string (default = None).
+        comment : str, optional
+            User-defined file descriptions or metadata (default = '')
         """
 
+        self.comment = 'Comments: ' + comment.strip()
+        self.tmstmp = datetime.datetime.now()
         self.cnames = ['thetaFC', 'thetaWP', 'theta0']
         self.sdata = pd.DataFrame(columns=self.cnames)
 
@@ -68,6 +77,8 @@ class SoilProfile:
     def __str__(self):
         """Represent the SoilProfile class as a string"""
 
+        self.tmstmp = datetime.datetime.now()
+        timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
         fmts = {'__index__':'{:5d}'.format,
                 'thetaFC'  :'{:7.3f}'.format,
                 'thetaWP'  :'{:7.3f}'.format,
@@ -76,14 +87,18 @@ class SoilProfile:
         s = ('{:s}\n'
              'pyfao56: FAO-56 Evapotranspiration in Python\n'
              'Soil Profile Data\n'
+             'Timestamp: {:s}\n'
              '{:s}\n'
-             'Depth').format(ast,ast)
+             '{:s}\n'
+             '{:s}\n'
+             'Depth').format(ast,timestamp,ast,self.comment,ast)
         for cname in self.cnames:
             s += '{:>8s}'.format(cname)
         s += '\n'
-        s += self.sdata.to_string(header=False,
-                                  na_rep='    NaN',
-                                  formatters=fmts)
+        if not self.sdata.empty:
+            s += self.sdata.to_string(header=False,
+                                      na_rep='    NaN',
+                                      formatters=fmts)
         return s
 
     def savefile(self, filepath='pyfao56.sol'):
@@ -129,7 +144,18 @@ class SoilProfile:
         else:
             lines = f.readlines()
             f.close()
-            for line in lines[5:]:
+            ast = '*' * 72
+            a = [i for i,line in enumerate(lines) if line.strip()==ast]
+            endast = a[-1] 
+            if endast == 3: #v1.1.0 and prior - no timestamps & metadata
+                self.comment = 'Comments: '
+            else:
+                self.comment = ''.join(lines[5:endast]).strip()
+            if endast >= 4:
+                ts = lines[3].strip().split('stamp:')[1].strip()
+                ts = datetime.datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
+                self.tmstmp = ts
+            for line in lines[endast+2:]:
                 line = line.strip().split()
                 depth = int(line[0])
                 data = list()

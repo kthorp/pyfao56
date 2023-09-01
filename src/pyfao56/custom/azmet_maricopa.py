@@ -16,7 +16,7 @@ import datetime
 import urllib3
 import math
 import pandas as pd
-from .forecast import Forecast
+from pyfao56.tools import Forecast
 
 class AzmetMaricopa(Weather):
     """A class for obtaining weather data for Maricopa, Arizona
@@ -197,7 +197,7 @@ class AzmetMaricopa(Weather):
 
         #If needed and wanted, update wdata with 7-day NDFD forecast
         if needfuture and usefc:
-            fc = Forecast(33.069,-111.972)
+            fc = Forecast(33.069,-111.972,wndht=self.wndht)
             fc.getforecast()
             for i in list(range(-1,10)):
                 day = today + datetime.timedelta(days=i)

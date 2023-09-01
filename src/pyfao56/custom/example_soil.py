@@ -29,11 +29,11 @@ class ExampleSoil(SoilProfile):
         index = Bottom depth of the layer as integer (cm)
         columns = ['thetaFC', 'thetaWP', 'theta0']
             thetaFC - Volumetric Soil Water Content, Field Capacity
-                      (cm^3/cm^3)
+                      (cm3/cm3)
             thetaWP - Volumetric Soil Water Content, Wilting Point
-                      (cm^3/cm^3)
+                      (cm3/cm3)
             theta0  - Volumetric Soil Water Content, Initial
-                      (cm^3/cm^3)
+                      (cm3/cm3)
 
     Methods
     -------
@@ -52,15 +52,15 @@ class ExampleSoil(SoilProfile):
             layers. Order the list from the shallowest layer to the
             deepest layer.
         fc : list
-            A list of field capacities (cm^3/cm^3) of assumed soil
+            A list of field capacities (cm3/cm3) of assumed soil
             layers. Order the list from the shallowest layer to the
             deepest layer.
         wp : list
-            A list of wilting points (cm^3/cm^3) of assumed soil layers.
+            A list of wilting points (cm3/cm3) of assumed soil layers.
             Order the list from the shallowest layer to the deepest
             layer.
         ini : list
-            A list of initial volumetric soil water content (cm^3/cm^3)
+            A list of initial volumetric soil water content (cm3/cm3)
             measurements of assumed soil layers. Order the list from the
             shallowest layer to the deepest layer.
 

@@ -12,6 +12,7 @@ The update.py module contains the following:
 """
 
 import pandas as pd
+import datetime
 
 class Update:
     """A class for managing update data for FAO-56 calculations.
@@ -21,6 +22,10 @@ class Update:
 
     Attributes
     ----------
+    comment : str, optional
+        User-defined file descriptions or metadata (default = '')
+    tmstmp : datetime
+        Time stamp for the class
     udata : DataFrame
         Update data as float
         index - Year and day of year as string ('yyyy-ddd')
@@ -41,7 +46,7 @@ class Update:
         Return a value from self.udata for model updating
     """
 
-    def __init__(self,filepath=None):
+    def __init__(self,filepath=None,comment=''):
         """Initialize the Update class attributes.
 
         If filepath is provided, update data is loaded from the file.
@@ -50,8 +55,12 @@ class Update:
         ----------
         filepath : str, optional
             Any valid filepath string (default = None)
+        comment : str, optional
+            User-defined file descriptions or metadata (default = '')
         """
 
+        self.comment = 'Comments: ' + comment.strip()
+        self.tmstmp = datetime.datetime.now()
         self.udata = pd.DataFrame(columns=['Kcb','h','fc'])
 
         if filepath is not None:
@@ -60,15 +69,21 @@ class Update:
     def __str__(self):
         """Represent the Update class variables as a string."""
 
+        self.tmstmp = datetime.datetime.now()
+        timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
         pd.options.display.float_format = '{:6.4f}'.format
         ast='*'*72
         s=('{:s}\n'
            'pyfao56: FAO-56 Evapotranspiration in Python\n'
            'Update Data\n'
+           'Timestamp: {:s}\n'
+           '{:s}\n'
+           '{:s}\n'
            '{:s}\n'
            'Year-DOY    Kcb      h     fc\n'
-          ).format(ast,ast)
-        s += self.udata.to_string(header=False, na_rep='   NaN')
+          ).format(ast,timestamp,ast,self.comment,ast)
+        if not self.udata.empty:
+            s += self.udata.to_string(header=False, na_rep='   NaN')
         return s
 
     def savefile(self,filepath='pyfao56.upd'):
@@ -114,8 +129,19 @@ class Update:
         else:
             lines = f.readlines()
             f.close()
+            ast = '*' * 72
+            a = [i for i,line in enumerate(lines) if line.strip()==ast]
+            endast = a[-1] 
+            if endast == 3: #v1.1.0 and prior - no timestamps & metadata
+                self.comment = 'Comments: '
+            else:
+                self.comment = ''.join(lines[5:endast]).strip()
+            if endast >= 4:
+                ts = lines[3].strip().split('stamp:')[1].strip()
+                ts = datetime.datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
+                self.tmstmp = ts
             self.udata = pd.DataFrame(columns=['Kcb','h','fc'])
-            for line in lines[5:]:
+            for line in lines[endast+2:]:
                 line = line.strip().split()
                 year = line[0][:4]
                 doy = line[0][-3:]

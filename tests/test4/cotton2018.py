@@ -2,7 +2,8 @@
 ########################################################################
 The cotton2018.py module contains a function to setup and run pyfao56
 for the 100%-100% and the 60-60% irrigation treatments in a 2018 cotton
-field study at Maricopa, Arizona.
+field study at Maricopa, Arizona. Simulation output was used in the
+first SoftwareX manuscript for pyfao56.
 
 The cotton2018.py module contains the following:
     run - function to setup and run pyfao56 for the 100%-100% and the
@@ -23,12 +24,14 @@ def run():
     module_dir = os.path.dirname(os.path.abspath(__file__))
 
     #Specify the model parameters
-    par = fao.Parameters()
+    par = fao.Parameters(comment = '2018 Cotton')
     par.Kcbmid = 1.225
     par.Lini = 35
     par.Ldev = 50
     par.Lmid = 46
     par.Lend = 39
+    par.hini = 0.05
+    par.hmax = 1.20
     par.thetaFC = 0.2050
     par.thetaWP = 0.0980
     par.theta0  = 0.1515
@@ -40,12 +43,13 @@ def run():
     par.savefile(os.path.join(module_dir,'cotton2018.par'))
 
     #Specify the weather data
-    wth = custom.AzmetMaricopa()
+    wth = custom.AzmetMaricopa(comment = '2018 Cotton')
     wth.customload('2018-108','2018-303')
     wth.savefile(os.path.join(module_dir,'cotton2018.wth'))
 
     #Specify the irrigation schedule for the 60%-60% treatment
-    irr060 = fao.Irrigation()
+    irr060 = fao.Irrigation(comment = '2018 Cotton, 60%-60% ' + 
+                            'irrigation treatment')
     irr060.addevent(2018, 110, 20.4, 1.0)
     irr060.addevent(2018, 114, 20.4, 1.0)
     irr060.addevent(2018, 117, 20.4, 1.0)
@@ -85,7 +89,8 @@ def run():
     irr060.savefile(os.path.join(module_dir,'cotton2018_060.irr'))
 
     #Specify the irrigation schedule for the 100%-100% treatment
-    irr100 = fao.Irrigation()
+    irr100 = fao.Irrigation(comment = '2018 Cotton, 100%-100% ' +
+                            'irrigation treatment')
     irr100.addevent(2018, 110, 20.4, 1.0)
     irr100.addevent(2018, 114, 20.4, 1.0)
     irr100.addevent(2018, 117, 20.4, 1.0)
@@ -125,7 +130,8 @@ def run():
     irr100.savefile(os.path.join(module_dir,'cotton2018_100.irr'))
 
     #Specify the irrigation schedule for the 120%-120% treatment
-    irr120 = fao.Irrigation()
+    irr120 = fao.Irrigation(comment = '2018 Cotton, 120%-120% ' +
+                            'irrigation treatment')
     irr120.addevent(2018, 110, 20.4, 1.0)
     irr120.addevent(2018, 114, 20.4, 1.0)
     irr120.addevent(2018, 117, 20.4, 1.0)
@@ -165,19 +171,25 @@ def run():
     irr120.savefile(os.path.join(module_dir,'cotton2018_120.irr'))
 
     #Run the 60%-60% model
-    mdl060 = fao.Model('2018-108','2018-303', par, wth, irr060)
+    mdl060 = fao.Model('2018-108','2018-303', par, wth, irr=irr060,
+                       comment = '2018 Cotton, 60%-60% ' +
+                            'irrigation treatment')
     mdl060.run()
     print(mdl060)
     mdl060.savefile(os.path.join(module_dir,'cotton2018_060.out'))
 
     #Run the 100%-100% model
-    mdl100 = fao.Model('2018-108','2018-303', par, wth, irr100)
+    mdl100 = fao.Model('2018-108','2018-303', par, wth, irr=irr100,
+                       comment = '2018 Cotton, 100%-100% ' + 
+                            'irrigation treatment')
     mdl100.run()
     print(mdl100)
     mdl100.savefile(os.path.join(module_dir,'cotton2018_100.out'))
 
     #Run the 120%-120% model
-    mdl120 = fao.Model('2018-108','2018-303', par, wth, irr120)
+    mdl120 = fao.Model('2018-108','2018-303', par, wth, irr=irr120,
+                       comment = '2018 Cotton, 120%-120% ' +
+                            'irrigation treatment')
     mdl120.run()
     print(mdl120)
     mdl120.savefile(os.path.join(module_dir,'cotton2018_120.out'))

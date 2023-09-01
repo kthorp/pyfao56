@@ -15,12 +15,17 @@ The weather.py module contains the following:
 
 import pandas as pd
 from pyfao56 import refet
+import datetime
 
 class Weather:
     """A class for managing weather data for FAO-56 calculations.
 
     Attributes
     ----------
+    comment : str, optional
+        User-defined file descriptions or metadata (default = '')
+    tmstmp : datetime
+        Time stamp for the class
     rfcrp : str
         Type of reference crop  - Short ('S') or Tall ('T')
     z : float
@@ -62,7 +67,7 @@ class Weather:
         index in self.wdata
     """
 
-    def __init__(self,filepath=None):
+    def __init__(self,filepath=None,comment=''):
         """Initialize the Weather class attributes.
 
         If filepath is provided, weather data is loaded from the file.
@@ -71,8 +76,12 @@ class Weather:
         ----------
         filepath : str, optional
             Any valid filepath string (default = None)
+        comment : str, optional
+            User-defined file descriptions or metadata (default = '')
         """
 
+        self.comment = 'Comments: ' + comment.strip()
+        self.tmstmp = datetime.datetime.now()
         self.rfcrp = 'S'
         self.z     = float('NaN')
         self.lat   = float('NaN')
@@ -87,6 +96,8 @@ class Weather:
     def __str__(self):
         """Represent the Weather class variables as a string."""
 
+        self.tmstmp = datetime.datetime.now()
+        timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
         fmts = {'Srad':'{:6.2f}'.format,'Tmax':'{:6.2f}'.format,
                 'Tmin':'{:6.2f}'.format,'Tdew':'{:6.2f}'.format,
                 'Vapr':'{:6.2f}'.format,'RHmax':'{:6.2f}'.format,
@@ -97,6 +108,9 @@ class Weather:
         s = ('{:s}\n'
              'pyfao56: FAO-56 Evapotranspiration in Python\n'
              'Weather Data\n'
+             'Timestamp: {:s}\n'
+             '{:s}\n'
+             '{:s}\n'
              '{:s}\n'
              '{:>12s} Reference crop - Short (\'S\') or Tall (\'T\')\n'
              '{:12.7f} Weather station elevation (z) (m)\n'
@@ -104,12 +118,14 @@ class Weather:
              '{:12.7f} Wind speed measurement height (m)\n\n'
              'Daily weather data:\n'
              'Year-DOY'
-             ).format(ast,ast,self.rfcrp,self.z,self.lat,self.wndht)
+             ).format(ast,timestamp,ast,self.comment,ast,self.rfcrp,
+                      self.z,self.lat,self.wndht)
         for cname in self.cnames:
             s += '{:>7s}'.format(cname)
         s += '\n'
-        s += self.wdata.to_string(header=False,na_rep='   NaN',
-                                  formatters=fmts)
+        if not self.wdata.empty:
+            s += self.wdata.to_string(header=False,na_rep='   NaN',
+                                      formatters=fmts)
         return s
 
     def savefile(self,filepath='pyfao56.wth'):
@@ -155,12 +171,23 @@ class Weather:
         else:
             lines = f.readlines()
             f.close()
-            self.rfcrp = lines[4][:12].strip()
-            self.z = float(lines[5][:12])
-            self.lat = float(lines[6][:12])
-            self.wndht = float(lines[7][:12])
+            ast = '*' * 72
+            a = [i for i,line in enumerate(lines) if line.strip()==ast]
+            endast = a[-1] 
+            if endast == 3: #v1.1.0 and prior - no timestamps & metadata
+                self.comment = 'Comments: '
+            else:
+                self.comment = ''.join(lines[5:endast]).strip()
+            if endast >= 4:
+                ts = lines[3].strip().split('stamp:')[1].strip()
+                ts = datetime.datetime.strptime(ts,'%m/%d/%Y %H:%M:%S')
+                self.tmstmp = ts
+            self.rfcrp = lines[endast+1][:12].strip()
+            self.z = float(lines[endast+2][:12])
+            self.lat = float(lines[endast+3][:12])
+            self.wndht = float(lines[endast+4][:12])
             self.wdata = pd.DataFrame(columns=self.cnames)
-            for line in lines[11:]:
+            for line in lines[endast+8:]:
                 line = line.strip().split()
                 year = line[0][:4]
                 doy = line[0][-3:]
