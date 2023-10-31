@@ -55,6 +55,10 @@ class Model:
     cons_p : boolean, optional
         If False, p follows FAO-56; if True, p is constant (=pbase)
         (default = False)
+    aq_ks : boolean, optional
+        If False, Ks follows FAO-56; if True, Ks follows the aquacrop
+        model and equation
+        (default = False)
     comment : str, optional
         User-defined file descriptions or metadata (default = '')
     tmstmp : datetime
@@ -125,7 +129,7 @@ class Model:
     """
 
     def __init__(self, start, end, par, wth, irr=None, sol=None,
-                 upd=None, cons_p=False, comment=''):
+                 upd=None, cons_p=False, aq_ks=False, comment=''):
         """Initialize the Model class attributes.
 
         Parameters
@@ -162,6 +166,7 @@ class Model:
         self.sol = sol
         self.upd = upd
         self.cons_p = cons_p
+        self.aq_ks = aq_ks
         self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
         self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
@@ -344,6 +349,7 @@ class Model:
         io.wndht = self.wth.wndht
         io.rfcrp = self.wth.rfcrp
         io.cons_p = self.cons_p
+        io.aq_ks = self.aq_ks
         self.odata = pd.DataFrame(columns=self.cnames)
 
         while tcurrent <= self.endDate:
@@ -528,8 +534,18 @@ class Model:
         #Readily available water (RAW, mm) - FAO-56 Equation 83
         io.RAW = io.p * io.TAW
 
-        #Transpiration reduction factor (Ks, 0.0-1.0) - FAO-56 Eq. 84
-        io.Ks = sorted([0.0, (io.TAW-io.Dr)/(io.TAW-io.RAW), 1.0])[1]
+        #Transpiration reduction factor (Ks, 0.0-1.0) - 
+        if io.aq_ks is True:
+            #Aquacrop Model Ks
+            rSWD = io.Dr/io.TAW
+            Drel = (rSWD-io.p)/(1-io.p)
+            sf = 1.5
+            io.Ks = sorted([0.0, (1 - (math.exp(sf*Drel) -1)/
+                                  (math.exp(sf)-1) ), 1.0])[1]
+        else:
+            #FAO-56 Eq. 84
+            io.Ks = sorted([0.0, (io.TAW-io.Dr)/
+                            (io.TAW-io.RAW), 1.0])[1]
 
         #Adjusted crop coefficient (Kcadj) - FAO-56 Eq. 80
         io.Kcadj = io.Ks * io.Kcb + io.Ke
