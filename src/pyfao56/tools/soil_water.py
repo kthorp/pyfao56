@@ -23,6 +23,7 @@ The soil_water.py module contains the following:
 
 import pandas as pd
 import datetime
+import numpy as np
 
 class SoilWaterSeries:
     """A class for managing a series of measured soil water content data
@@ -55,6 +56,14 @@ class SoilWaterSeries:
         soil water content data.
     summarize()
         Summarize the series of root zone soil water metrics
+    statistics(filepath='pyfao56.sts')
+        Save deficit modeled vs observed statistics to a file
+    calc_stats()
+        Calculates the statistics
+    all_identical()
+        Checks to see if the incoming data is identical
+    nse()
+        Nash Sutcliffe Model Efficiency Coefficient
     """
 
     def __init__(self,filepath=None,par=None,sol=None,comment=''):
@@ -241,6 +250,99 @@ class SoilWaterSeries:
             summary.loc[key,'mSWCrmax'] = self.swdata[key].mSWCrmax
             summary.loc[key,'mKs'] = self.swdata[key].mKs
         return summary
+    
+    def statistics(self, mdl, filepath='pyfao56.sts'):
+        """
+        Calculate RSME, bias, and R-squared and put into file
+        
+        Parameters
+        ----------
+        mdl : pyfao56 Model class
+            Provides the simulated data            
+        filepath : str, optional
+            Any valid filepath string (default = 'pyfao56.sts')
+
+        Raises
+        ------
+        FileNotFoundError
+            If filepath is not found.
+        """
+        meas=[]
+        modeled=[]
+        for key in sorted(self.swdata.keys()):
+            meas.append(self.swdata[key].mDrmax)
+            modeled.append(mdl.odata.loc[key, 'Drmax'])
+            
+        rmse, bias, rsquare, nse = self.calc_stats(meas, modeled)    
+        columns = ['RMSE', 'BIAS', 'RSquared', 'NSE']
+        data = [[rmse, bias, rsquare, nse]]
+        df = pd.DataFrame(data, columns=columns)
+        df_str = df.to_string(index=False)
+            
+        # Creating the file
+        ast = '*'*72
+        s = (f'{ast}\n'
+            f'pyfao56: FAO-56 Evapotranspiration in Python\n'
+            f'Statistics for Modeled vs Observed Dr\n'
+            f'{ast}\n'
+            f'{df_str}'
+            )
+        try:
+            f = open(filepath, 'w')
+        except FileNotFoundError:
+            print('The filepath for the summary data is not found.')
+        else:
+            f.write(s)
+            f.close()
+                
+    def calc_stats(self, meas, modeled):
+        """
+        Calculate RSME, bias, and R-squared.
+        
+        Returns
+        -------
+        rmse : Root Mean Square Error, float
+        bias : Bias between measured and simulated, float
+        rsquare : The R-Squared value, float
+        nse : Nash-Sutcliffe model efficiency coefficient, float
+        """            
+        meas_check = self.all_identical(meas)
+        modeled_check = self.all_identical(modeled)
+        if meas_check == True:
+            print('Measured values: ', meas)
+        if modeled_check == True:
+            print('Modeled values: ', modeled)
+        if meas != modeled and meas_check==False and modeled_check==False:
+            rmse = np.sqrt(np.square(np.subtract(meas, modeled)).mean())
+            bias = (np.mean(modeled) - np.mean(meas))/np.mean(meas) * 100
+            rsquare = np.corrcoef(modeled, meas)[0][1]              
+            nse = self.nse(modeled, meas)
+        else:
+            rmse = 0
+            bias = 0
+            rsquare = 1
+            nse = 1
+        rmse = round(rmse, 3)
+        bias = round(bias, 3)
+        rsquare = round(rsquare, 3)
+        nse = round(nse, 3)
+        return rmse, bias, rsquare, nse
+        
+    
+    def all_identical(self, listx):
+        """Returns True if all of the elements in the list are identical, 
+        False otherwise."""
+        for i in range(1, len(listx)):
+            if listx[i] != listx[i - 1]:
+                return False
+        return True
+           
+    def nse(self, meas, modeled):
+        meas_mean = sum(meas)/len(meas)
+        sse = sum([(meas[i] - modeled[i])**2 for i in range(len(meas))])
+        sst = sum([(meas[i] - meas_mean)**2 for i in range(len(meas))])
+        nse = 1 - (sse/sst)
+        return nse
 
     class SoilWaterProfile:
         """Manage a single soil water content measurement profile
