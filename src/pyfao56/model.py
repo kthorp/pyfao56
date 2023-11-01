@@ -613,3 +613,63 @@ class Model:
                 io.fDb = 1.0 - ((io.TAWb - io.Db) / io.TAWb)
             else:
                 io.fDb = 0.0
+    def seasonsumm(self, filepath='pyfao56.sum'):
+        """Write a summary file containing cumulative values
+
+        Parameters
+        ----------
+        filepath : str, optional
+            Any valid filepath string (default = 'pyfao56.sum')
+
+        Raises
+        ------
+        FileNotFoundError
+            If filepath is not found.
+        """
+        startdoy = self.startDate.strftime("%Y-%j")
+        enddoy = self.endDate.strftime("%Y-%j")
+        sdate = self.startDate.strftime('%m/%d/%Y')
+        edate = self.endDate.strftime('%m/%d/%Y')
+        
+        # The cumulative sums collected from odata
+        cum_etcadj = sum(self.odata['ETcadj'])
+        cum_etcadj = round(cum_etcadj,1)
+        cum_irr = sum(self.odata['Irrig'])
+        cum_rain = sum(self.odata['Rain'])
+        cum_rain = round(cum_rain, 1)
+        cum_dp = sum(self.odata['DP'])
+        cum_dp = round(cum_dp, 1)
+        start_dr = self.odata.loc[startdoy,'Drmax']
+        start_dr = round(start_dr, 1)
+        end_dr = self.odata.loc[enddoy,'Drmax']
+        end_dr = round(end_dr, 1)
+        
+        # Making a dataframe for organization
+        columns = ['Irr', 'Precip', 'ETc_adj',
+                   'DP', 'Drmax_ini', 
+                   'Drmax_end']
+        data  = [[cum_irr, cum_rain, cum_etcadj, cum_dp,
+                 start_dr, end_dr]]
+        df = pd.DataFrame(data, columns=columns)
+        df_str = df.to_string(index=False)
+        
+        # Creating the file
+        ast = '*'*72
+        s = (f'{ast}\n'
+            f'pyfao56: FAO-56 Evapotranspiration in Python\n'
+            f'Season Summary\n'
+            f'Simulation time period:'
+            f' {sdate}'
+            f' to {edate}\n'
+            f'All units in mm\n'
+            f'{ast}\n'
+            f'{df_str}'
+            )
+        
+        try:
+            f = open(filepath, 'w')
+        except FileNotFoundError:
+            print('The filepath for the summary data is not found.')
+        else:
+            f.write(s)
+            f.close()
