@@ -431,7 +431,7 @@ class Visualization:
 
         #Create crop coefficient plot
         if Kc:
-            kc_c = 'dimgray'
+            kc_c = 'dimgrey'
             ax.plot(x, d['Kcadj'], color=kc_c, label='Kc_adj')
 
         if Ke:
@@ -444,7 +444,8 @@ class Visualization:
 
         if tKcb:
             tkcb_c = 'mediumseagreen'
-            ax.plot(x, d['tKcb'], color=tkcb_c, label='Tabular Kcb')
+            ax.plot(x, d['tKcb'], linestyle='--', color=tkcb_c,
+                    label='Tabular Kcb')
 
         ax.set_xlim([xticks[0]-5., xticks[-1]+5.])
         ax.set_xticks(xticks)
