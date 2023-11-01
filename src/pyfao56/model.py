@@ -21,6 +21,7 @@ The model.py module contains the following:
 11/30/2022 Incorporated Fort Collins ARS water balance approach
 08/17/2023 Improved logic for case of missing rhmin data
 10/31/2023 Added AquaCrop Ks option
+11/01/2023 Added reports of the cumulative seasonal water balance
 ########################################################################
 """
 

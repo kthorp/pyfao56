@@ -10,6 +10,7 @@ The visualization.py module contains the following:
 11/09/2022 Initial Python functions developed by Josh Brekel, USDA-ARS
 07/27/2023 Separated utility functions into their own classes, JB
 08/28/2023 Major overhaul for pyfao56 release
+10/31/2023 Added crop coefficient plot
 ########################################################################
 """
 
