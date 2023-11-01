@@ -57,6 +57,7 @@ def run():
     mdl.run()
     print(mdl)
     mdl.savefile(os.path.join(module_dir,'E12FF2022_default.out'))
+    mdl.savesums(os.path.join(module_dir,'E12FF2022_default.sum'))
 
     #Running the model with SoilProfile class
     mdl_sol = fao.Model('2022-129', '2022-299', par, wth, irr=irr,
@@ -64,6 +65,7 @@ def run():
     mdl_sol.run()
     print(mdl_sol)
     mdl_sol.savefile(os.path.join(module_dir,'E12FF2022_Soil.out'))
+    mdl_sol.savesums(os.path.join(module_dir,'E12FF2022_Soil.sum'))
 
     #Running the model with Update class
     mdl_kcb = fao.Model('2022-129', '2022-299', par, wth, irr=irr,
@@ -71,6 +73,7 @@ def run():
     mdl_kcb.run()
     print(mdl_kcb)
     mdl_kcb.savefile(os.path.join(module_dir,'E12FF2022_CCKcb.out'))
+    mdl_kcb.savesums(os.path.join(module_dir,'E12FF2022_CCKcb.sum'))
 
     #Running the model with Update and SoilProfile classes
     mdl_all = fao.Model('2022-129', '2022-299', par, wth, irr=irr,
@@ -78,6 +81,7 @@ def run():
     mdl_all.run()
     print(mdl_all)
     mdl_all.savefile(os.path.join(module_dir,'E12FF2022.out'))
+    mdl_all.savesums(os.path.join(module_dir,'E12FF2022.sum'))
 
 if __name__ == '__main__':
     run()

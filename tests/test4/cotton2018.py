@@ -177,6 +177,7 @@ def run():
     mdl060.run()
     print(mdl060)
     mdl060.savefile(os.path.join(module_dir,'cotton2018_060.out'))
+    mdl060.savesums(os.path.join(module_dir,'cotton2018_060.sum'))
 
     #Run the 100%-100% model
     mdl100 = fao.Model('2018-108','2018-303', par, wth, irr=irr100,
@@ -185,6 +186,7 @@ def run():
     mdl100.run()
     print(mdl100)
     mdl100.savefile(os.path.join(module_dir,'cotton2018_100.out'))
+    mdl100.savesums(os.path.join(module_dir,'cotton2018_100.sum'))
 
     #Run the 120%-120% model
     mdl120 = fao.Model('2018-108','2018-303', par, wth, irr=irr120,
@@ -193,6 +195,7 @@ def run():
     mdl120.run()
     print(mdl120)
     mdl120.savefile(os.path.join(module_dir,'cotton2018_120.out'))
+    mdl120.savesums(os.path.join(module_dir,'cotton2018_120.sum'))
 
 if __name__ == '__main__':
     run()

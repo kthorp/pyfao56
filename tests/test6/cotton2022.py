@@ -105,6 +105,7 @@ def run():
     mdl.run()
     print(mdl)
     mdl.savefile(os.path.join(module_dir,'cotton2022p10-2.out'))
+    mdl.savesums(os.path.join(module_dir,'cotton2022p10-2.sum'))
 
     #Analyze measured soil water data
     sws = tools.SoilWaterSeries(filepath='./cotton2022p10-2.sws',

@@ -50,6 +50,7 @@ def run():
     mdl.run()
     print(mdl)
     mdl.savefile(os.path.join(module_dir,'E42FF2023.out'))
+    mdl.savesums(os.path.join(module_dir,'E42FF2023.sum'))
 
     #Analyze measured soil water data
     #Need to update soil water data with remainder of 2023 season.
@@ -70,6 +71,8 @@ def run():
                 filepath=pngpath)
     pngpath = os.path.join(module_dir, 'E42FF2023_ET.png')
     vis.plot_ET(title='2023 Corn E42FF ET', show=True, filepath=pngpath)
+    pngpath = os.path.join(module_dir, 'E42FF2023_Kc.png')
+    vis.plot_Kc(title='2023 Corn E42FF Kc', show=True, filepath=pngpath)
 
 if __name__ == '__main__':
     run()

@@ -452,9 +452,10 @@ class Visualization:
         ax.set_xticklabels(xlabels, fontsize=font)
         ax.set_xlabel('Day of Year (DOY)', fontsize=font)
         ax.set_ylim([0.0, 1.2])
-        ax.set_yticks([0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
+        ax.set_yticks([0.0, 0.1, 0.2, 0.3, 0.4, 0.5,
+                       0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2])
         ax.set_yticklabels(['0.0','0.1','0.2','0.3','0.4','0.5',
-                            '0.6','0.7','0.8','0.9','1.0'],
+                            '0.6','0.7','0.8','0.9','1.0','1.1','1.2'],
                             fontsize=font)
         ax.set_ylabel('Crop Coefficients', fontsize=font)
         ax.grid(ls=':')

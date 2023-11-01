@@ -104,6 +104,7 @@ def run():
     mdl.run()
     print(mdl)
     mdl.savefile(os.path.join(module_dir,'cotton2019.out'))
+    mdl.savesums(os.path.join(module_dir,'cotton2019.sum'))
 
 if __name__ == '__main__':
     run()
