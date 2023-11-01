@@ -56,7 +56,7 @@ class Model:
     cons_p : boolean, optional
         If False, p follows FAO-56; if True, p is constant (=pbase)
         (default = False)
-    aq_ks : boolean, optional
+    aq_Ks : boolean, optional
         If False, Ks follows FAO-56; if True, Ks via AquaCrop equation
         (default = False)
     comment : str, optional
@@ -129,7 +129,7 @@ class Model:
     """
 
     def __init__(self, start, end, par, wth, irr=None, sol=None,
-                 upd=None, cons_p=False, aq_ks=False, comment=''):
+                 upd=None, cons_p=False, aq_Ks=False, comment=''):
         """Initialize the Model class attributes.
 
         Parameters
@@ -154,7 +154,7 @@ class Model:
         cons_p : boolean, optional
             If False, p follows FAO-56; if True, p is constant (=pbase)
             (default = False)
-        aq_ks : boolean, optional
+        aq_Ks : boolean, optional
             If False, Ks follows FAO-56; if True, Ks via AquaCrop Eqn
             (default = False)
         comment : str, optional
@@ -169,7 +169,7 @@ class Model:
         self.sol = sol
         self.upd = upd
         self.cons_p = cons_p
-        self.aq_ks = aq_ks
+        self.aq_Ks = aq_Ks
         self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
         self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
@@ -352,7 +352,7 @@ class Model:
         io.wndht = self.wth.wndht
         io.rfcrp = self.wth.rfcrp
         io.cons_p = self.cons_p
-        io.aq_ks = self.aq_ks
+        io.aq_Ks = self.aq_Ks
         self.odata = pd.DataFrame(columns=self.cnames)
 
         while tcurrent <= self.endDate:
@@ -538,7 +538,7 @@ class Model:
         io.RAW = io.p * io.TAW
 
         #Transpiration reduction factor (Ks, 0.0-1.0)
-        if io.aq_ks is True:
+        if io.aq_Ks is True:
             #Ks method from AquaCrop
             rSWD = io.Dr/io.TAW
             Drel = (rSWD-io.p)/(1.0-io.p)

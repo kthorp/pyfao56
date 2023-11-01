@@ -37,9 +37,12 @@ class Visualization:
     plot_Dr(drmax=False, raw=False, events=False, obs=False, ks=False,
             dp=False, title='', show=True, filepath=None)
         Create a plot of simulated soil water depletion
-    plot_ET(refET=True, etc=True, etcadj=True, events=False, title='',
+    plot_ET(refET=True, ETc=True, ETcadj=True, events=False, title='',
             show=True, filepath=None)
         Create a plot of simulated evapotranspiration
+    plot_Kc(Kc=True, Ke=True, tKcb=True, Kcb=True, title='',
+            show=True, filepath=None)
+        Create a plot of simulated crop coefficient data
     """
 
     def __init__(self, mdl, sws=None, dayline=False):
@@ -270,7 +273,7 @@ class Visualization:
         else:
             plt.close(fig)
 
-    def plot_ET(self, refET=True, etc=True, etcadj=True, events=False,
+    def plot_ET(self, refET=True, ETc=True, ETcadj=True, events=False,
                 title='', show=True, filepath=None):
         """Plot evapotranspiration data versus time.
 
@@ -279,10 +282,10 @@ class Visualization:
         refET : boolean, optional
             If True, include a lineplot for reference ET
             (default = True)
-        etc : boolean, optional
+        ETc : boolean, optional
             If True, include a lineplot for crop ET
             (default = True)
-        etcadj : boolean, optional
+        ETcadj : boolean, optional
             If True, include a lineplot for adjusted crop ET
             (default = True)
         events : boolean, optional
@@ -335,10 +338,10 @@ class Visualization:
         if refET:
             ax.plot(x, d['ETref'], color='darkred',
                     label='Reference ET (ETref)')
-        if etc:
+        if ETc:
             ax.plot(x, d['ETc'], color='deepskyblue',
                     label='Crop ET (ETc)')
-        if etcadj:
+        if ETcadj:
             ax.plot(x, d['ETcadj'], linestyle='-.', color='navy',
                     label='Adjusted Crop ET (ETcadj)')
         if events:
@@ -372,25 +375,25 @@ class Visualization:
             plt.show()
         else:
             plt.close(fig)
-            
-    def Kcgraph(self, kc=True, ke=False, tKcb=False, kcb=False,
-                title='', show=False, filepath=None):
-        """Plot soil water depletion (Dr) and related water data.
+
+    def plot_Kc(self, Kc=True, Ke=True, tKcb=True, Kcb=True,
+                title='', show=True, filepath=None):
+        """Plot crop coeffient data versus time.
 
         Parameters
         ----------
-        kc : boolean, optional
-            If True, include a line for Kc
-            (default = False)
-        ke : boolean, optional
-            If True, include a line for Ke
-            (default = False)
+        Kc : boolean, optional
+            If True, include a plot of Kc
+            (default = True)
+        Ke : boolean, optional
+            If True, include a plot of Ke
+            (default = True)
         tKcb : boolean, optional
-            If True, include a line for tabular Kcb
-            (default = False)
-        kcb : boolean, optional
-            If True, include a line for Kcb
-            (default = False)    
+            If True, include a plot of tabular (trapezoidal) Kcb
+            (default = True)
+        Kcb : boolean, optional
+            If True, include a plot of Kcb
+            (default = True)
         title : str, optional
             Specify the title as the provided string
             (default = '')
@@ -401,12 +404,14 @@ class Visualization:
             Provide a filepath string to save the figure
             (default = None)
         """
+
+        #Create the figure
         fig, ax = plt.subplots()
         fig.set_size_inches(9.0,6.0)
         plt.subplots_adjust(left=0.06, right=0.99, bottom=0.07,
                             top=0.95, hspace=0.00, wspace=0.00)
         font = 8
-        
+
         # Define x from 0 to n days to permit spanning years
         d = self.vdata
         x = range(len(d.index))
@@ -423,88 +428,42 @@ class Visualization:
                     xlabels.append('')
             if idx == self.todayidx:
                 vline = i
-                
-        #Create the Kc plot
-        if kc:
+
+        #Create crop coefficient plot
+        if Kc:
             kc_c = 'dimgray'
             ax.plot(x, d['Kcadj'], color=kc_c, label='Kc_adj')
-            ax.set_xlim([xticks[0]-5, xticks[-1]+5])
-            ax.set_xticks(xticks)
-            ax.set_xticklabels(xlabels, fontsize=font)
-            ax.set_xlabel('Day of Year (DOY)', fontsize=font)
-            ax.set_ylim([0.0, 1.2])
-            ax.set_yticks([0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
-            ax.set_yticklabels(['0.0','0.1','0.2','0.3','0.4','0.5',
-                                '0.6','0.7','0.8','0.9','1.0'], 
-                               fontsize=font)
-            ax.set_ylabel('Crop Coefficients', fontsize=font)
-            ax.grid(ls=':')
-            ax.set_facecolor('whitesmoke')
-            ax.legend(fontsize=font,loc='upper right',frameon=False)
-            if vline is not float('NaN'):
-                ax.axvline(x=vline, color='red', linestyle='--',
-                            linewidth=0.5)
-        if ke:
+
+        if Ke:
             ke_c = 'lightskyblue'
             ax.plot(x, d['Ke'], color=ke_c, label='Ke')
-            ax.set_xlim([xticks[0]-5, xticks[-1]+5])
-            ax.set_xticks(xticks)
-            ax.set_xticklabels(xlabels, fontsize=font)
-            ax.set_xlabel('Day of Year (DOY)', fontsize=font)
-            ax.set_ylim([0.0, 1.2])
-            ax.set_yticks([0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
-            ax.set_yticklabels(['0.0','0.1','0.2','0.3','0.4','0.5',
-                                '0.6','0.7','0.8','0.9','1.0'], 
-                               fontsize=font)
-            ax.set_ylabel('Crop Coefficients', fontsize=font)
-            ax.grid(ls=':')
-            ax.set_facecolor('whitesmoke')
-            ax.legend(fontsize=font,loc='upper right',frameon=False)
-            if vline is not float('NaN'):
-                ax.axvline(x=vline, color='red', linestyle='--',
-                            linewidth=0.5)
-        if kcb:
+
+        if Kcb:
             kcb_c = 'seagreen'
             ax.plot(x, d['Kcb'], color=kcb_c, label='Kcb')
-            ax.set_xlim([xticks[0]-5, xticks[-1]+5])
-            ax.set_xticks(xticks)
-            ax.set_xticklabels(xlabels, fontsize=font)
-            ax.set_xlabel('Day of Year (DOY)', fontsize=font)
-            ax.set_ylim([0.0, 1.2])
-            ax.set_yticks([0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
-            ax.set_yticklabels(['0.0','0.1','0.2','0.3','0.4','0.5',
-                                '0.6','0.7','0.8','0.9','1.0'], 
-                               fontsize=font)
-            ax.set_ylabel('Crop Coefficients', fontsize=font)
-            ax.grid(ls=':')
-            ax.set_facecolor('whitesmoke')
-            ax.legend(fontsize=font,loc='upper right',frameon=False)
-            if vline is not float('NaN'):
-                ax.axvline(x=vline, color='red', linestyle='--',
-                            linewidth=0.5)
 
         if tKcb:
             tkcb_c = 'mediumseagreen'
             ax.plot(x, d['tKcb'], color=tkcb_c, label='Tabular Kcb')
-            ax.set_xlim([xticks[0]-5, xticks[-1]+5])
-            ax.set_xticks(xticks)
-            ax.set_xticklabels(xlabels, fontsize=font)
-            ax.set_xlabel('Day of Year (DOY)', fontsize=font)
-            ax.set_ylim([0.0, 1.2])
-            ax.set_yticks([0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
-            ax.set_yticklabels(['0.0','0.1','0.2','0.3','0.4','0.5',
-                                '0.6','0.7','0.8','0.9','1.0'], 
-                               fontsize=font)
-            ax.set_ylabel('Crop Coefficients', fontsize=font)
-            ax.grid(ls=':')
-            ax.set_facecolor('whitesmoke')
-            ax.legend(fontsize=font,loc='upper right',frameon=False)
-            if vline is not float('NaN'):
-                ax.axvline(x=vline, color='red', linestyle='--',
-                            linewidth=0.5)
-                
+
+        ax.set_xlim([xticks[0]-5., xticks[-1]+5.])
+        ax.set_xticks(xticks)
+        ax.set_xticklabels(xlabels, fontsize=font)
+        ax.set_xlabel('Day of Year (DOY)', fontsize=font)
+        ax.set_ylim([0.0, 1.2])
+        ax.set_yticks([0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
+        ax.set_yticklabels(['0.0','0.1','0.2','0.3','0.4','0.5',
+                            '0.6','0.7','0.8','0.9','1.0'],
+                            fontsize=font)
+        ax.set_ylabel('Crop Coefficients', fontsize=font)
+        ax.grid(ls=':')
+        ax.set_facecolor('whitesmoke')
+        ax.legend(fontsize=font,loc='upper right',frameon=False)
+        if vline is not float('NaN'):
+            ax.axvline(x=vline, color='red', linestyle='--',
+                       linewidth=0.5)
         plt.suptitle(title, fontsize=10)
-        
+
         #Save and show the plot if requested
         if filepath is not None:
             plt.savefig(filepath)
