@@ -64,12 +64,16 @@ class Visualization:
         self.mdl = mdl
         self.sws = sws
 
+        #Remove duplicated odata columns: Year, DOY, DOW, Date
+        columns=['Year','DOY','DOW','Date']
+        odatasub = mdl.odata.drop(columns=columns)
+
         #Add measured data if available
         if self.sws is not None:
-            self.vdata = self.vdata.merge(self.sws.summarize(),
-                                          right_index=True,
-                                          left_index=True,
-                                          how='outer')
+            self.vdata = odatasub.merge(self.sws.summarize(),
+                                        right_index=True,
+                                        left_index=True,
+                                        how='outer')
 
         #Set zero rain and irrigation to NaN
         NaN = float('NaN')
