@@ -210,7 +210,20 @@ class SoilWaterSeries:
                                             par = self.par,
                                             sol = self.sol,
                                             Zr = Zr)
-                self.swdata.update({mdate:swp})
+                self.addprofile(mdate,swp)
+
+    def addprofile(self,mdate,swp):
+        """Add a SoilWaterProfile object to self.swdata
+
+        Parameters
+        ----------
+        mdate : str
+            Measurement date as string ('yyyy-ddd')
+        swp : SoilWaterProfile object
+            Measured soil water profile data on mdate
+        """
+
+        self.swdata.update({mdate:swp})
 
     def customload(self):
         """Override this function to customize loading measured
