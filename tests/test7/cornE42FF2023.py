@@ -16,6 +16,7 @@ The cornE42FF2023.py module contains the following:
 import pyfao56 as fao
 import pyfao56.tools as tools
 import os
+import numpy as np
 
 def run():
     """Setup and run pyfao56 for a 2023 corn field study"""
@@ -84,8 +85,14 @@ def run():
         mDr.append(sws.swdata[key].mDr)
         sDrmax.append(mdl.odata.loc[key,'Drmax'])
         mDrmax.append(sws.swdata[key].mDrmax)
-    statsDr = tools.Statistics(sDr,mDr)
-    statsDrmax = tools.Statistics(sDrmax,mDrmax)
+    statsDr = tools.Statistics(sDr,mDr,comment='Dr')
+    statsDrmax = tools.Statistics(sDrmax,mDrmax,comment='Drmax')
+    print(statsDr)
+    statsDr.savefile(os.path.join(module_dir,'E42FF2023_Dr.fit'))
+    print(statsDrmax)
+    statsDrmax.savefile(os.path.join(module_dir,'E42FF2023_Drmax.fit'))
+    data = np.array((sDr,mDr,sDrmax,mDrmax)).transpose()
+    np.savetxt('E42FF2023_fitdata.csv',data,delimiter=',')
 
 if __name__ == '__main__':
     run()
