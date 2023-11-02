@@ -117,5 +117,36 @@ def run():
         sws.swdata[key].computeKs(mdl)
     sws.savefile(os.path.join(module_dir,'cotton2022p10-2.sws'))
 
+    #Compute fit statistics
+    sDr = []
+    mDr = []
+    sDrmax = []
+    mDrmax = []
+    for key in sorted(sws.swdata.keys()):
+        sDr.append(mdl.odata.loc[key,'Dr'])
+        mDr.append(sws.swdata[key].mDr)
+        sDrmax.append(mdl.odata.loc[key,'Drmax'])
+        mDrmax.append(sws.swdata[key].mDrmax)
+    statsDr = tools.Statistics(sDr,mDr)
+    statsDrmax = tools.Statistics(sDrmax,mDrmax)
+    print('Stats for measured and simulated Dr:')
+    print(statsDr)
+    statsDr.savefile(os.path.join(module_dir,'cotton2022p10-2_Dr.fit'))
+    print('Stats for measured and simulated Drmax:')
+    print(statsDrmax)
+    statsDrmax.savefile(os.path.join(module_dir,
+                                     'cotton2022p10-2_Drmax.fit'))
+
+    #Plot measured and simulated data
+    vis = tools.Visualization(mdl, sws=sws, dayline=True)
+    pngpath = os.path.join(module_dir, 'cotton2022p10-2_Dr.png')
+    vis.plot_Dr(drmax=True,raw=True,events=True,obs=True,ks=True,
+                dp=True,title='2022 Cotton p10-2 Dr',
+                filepath=pngpath)
+    pngpath = os.path.join(module_dir, 'cotton2022p10-2_ET.png')
+    vis.plot_ET(title='2023 Cotton p10-2 ET',show=True,filepath=pngpath)
+    pngpath = os.path.join(module_dir, 'cotton2022p10-2_Kc.png')
+    vis.plot_Kc(title='2023 Cotton p10-2 Kc',show=True,filepath=pngpath)
+
 if __name__ == '__main__':
     run()
