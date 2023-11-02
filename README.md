@@ -107,9 +107,9 @@ Further example scripts for setting up and running the model are [here](https://
 
 [test5](https://github.com/kthorp/pyfao56/tree/main/tests/test5) - The cornE12FF2022.py module contains code to setup and run several pyfao56 scenarios (including instances that use the SoilProfile class, the Update class, and both together) for a full-irrigation treatment in a 2022 maize study at Greeley, Colorado.
 
-[test6](https://github.com/kthorp/pyfao56/tree/main/tests/test6) - The cotton2022.py module contains code to setup and run pyfao56 for a full-irrigation treatment in a 2022 cotton study at Maricopa, Arizona and to demonstrate the SoilWaterSeries class for computing root zone soil water depletion from  measured soil water content data.
+[test6](https://github.com/kthorp/pyfao56/tree/main/tests/test6) - The cotton2022.py module contains code to setup and run pyfao56 for a full-irrigation treatment in a 2022 cotton study at Maricopa, Arizona and to demonstrate the SoilWaterSeries class for computing root zone soil water depletion from  measured soil water content data. The Visualization and Statistics classes are also demonstrated.
 
-[test7](https://github.com/kthorp/pyfao56/tree/main/tests/test7) - The cornE42FF2023.py module contains code to setup and run pyfao56 for a full-irrigation treatment in a 2023 maize study at Greeley, Colorado and to demonstrate the Visualization class for visualizing root zone soil water depletion and evapotranspiration time series.
+[test7](https://github.com/kthorp/pyfao56/tree/main/tests/test7) - The cornE42FF2023.py module contains code to setup and run pyfao56 for a full-irrigation treatment in a 2023 maize study at Greeley, Colorado and to demonstrate the Visualization class for visualizing root zone soil water depletion and evapotranspiration time series. The SoilWaterSeries and Statistics classes are also demonstrated.
 
 ## Detailed Startup Information
 ### Core Functionality
