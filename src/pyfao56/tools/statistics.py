@@ -155,19 +155,18 @@ class Statistics:
 
     def _r(self,s,m):
         """Compute the Pearson correlation coefficient (r)."""
-        a = np.sum(s-np.mean(s))
-        b = np.sum(m-np.mean(m))
-        c = np.sum(np.square(s-np.mean(s)))
-        d = np.sum(np.square(m-np.mean(m)))
-        return a*b/np.sqrt(c*d)
+        a = np.sum((s-np.mean(s))*(m-np.mean(m)))
+        b = np.sum(np.square(s-np.mean(s)))
+        c = np.sum(np.square(m-np.mean(m)))
+        return a/np.sqrt(b*c)
+        #return np.corrcoef(s,m)[0][1]
 
     def _r2(self,s,m):
         """Compute the coefficient of determination (r^2)."""
-        a = np.sum(s-np.mean(s))
-        b = np.sum(m-np.mean(m))
-        c = np.sum(np.square(s-np.mean(s)))
-        d = np.sum(np.square(m-np.mean(m)))
-        return (a*b/np.sqrt(c*d))**2.0
+        a = np.sum((s-np.mean(s))*(m-np.mean(m)))
+        b = np.sum(np.square(s-np.mean(s)))
+        c = np.sum(np.square(m-np.mean(m)))
+        return (a/np.sqrt(b*c))**2.0
 
     def _rmse(self,s,m):
         """Compute the root mean squared error."""
@@ -183,7 +182,7 @@ class Statistics:
 
     def _crm(self,s,m):
         """Compute the coefficient of residual mass."""
-        return (np.sum(m)-np.sum(s))/np.sum(m)
+        return (np.sum(s)-np.sum(m))/np.sum(m)
 
     def _nse(self,s,m):
         """Compute the Nash & Sutcliffe (1970) model efficiency."""
