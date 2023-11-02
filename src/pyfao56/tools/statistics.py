@@ -23,54 +23,107 @@ between measured and simulated data, including
 """
 
 import numpy as np
+import datetime
 
 class Statistics:
     """A class for computing goodness-of-fit statistics
 
     Attributes
     ----------
-    simulated : Numpy array
-        An array of simulated data
-    measured : Numpy array
-        An array of measured data
+    simulated : numpy array
+        A 1d array of simulated data
+    measured : numpy array
+        A 1d array of measured data
     stats - dict
         Container for goodness-of-fit statistics
         keys - ['bias','rbias','pbias','maxerr','meanerr','mae','sse',
                 'r','r2','rmse','rrmse','prmse','crm','nse','d']
         value - Computed value of the statistic
+
+    Methods
+    -------
+    savefile(filepath='pyfao56.fit')
+        Save goodness-of-fit statistics to a file
     """
 
-    def __init__(self, simulated, measured):
+    def __init__(self, simulated, measured, comment=''):
         """Initialize the Statistics class attributes.
 
         Parameters
         ----------
         simulated : list
-            An array of simulated data
+            A list of simulated data
         measured : list
-            An array of measured data
+            A list of measured data
         """
 
+        self.comment = 'Comments: ' + comment.strip()
         self.simulated = np.array(simulated).flatten()
         self.measured = np.array(measured).flatten()
         s = self.simulated
         m = self.measured
         self.stats = {}
-        self.stats.update('bias'   :self._bias(s,m))
-        self.stats.update('rbias'  :self._rbias(s,m))
-        self.stats.update('pbias'  :self._pbias(s,m))
-        self.stats.update('maxerr' :self._maxerr(s,m))
-        self.stats.update('meanerr':self._meanerr(s,m))
-        self.stats.update('mae'    :self._mae(s,m))
-        self.stats.update('sse'    :self._sse(s,m))
-        self.stats.update('r'      :self._r(s,m))
-        self.stats.update('r2'     :self._r2(s,m))
-        self.stats.update('rmse'   :self._rmse(s,m))
-        self.stats.update('rrmse'  :self._rrmse(s,m))
-        self.stats.update('prmse'  :self._prmse(s,m))
-        self.stats.update('crm'    :self._crm(s,m))
-        self.stats.update('nse'    :self._nse(s,m))
-        self.stats.update('d'      :self._d(s,m))
+        self.stats.update({'bias'   :self._bias(s,m)})
+        self.stats.update({'rbias'  :self._rbias(s,m)})
+        self.stats.update({'pbias'  :self._pbias(s,m)})
+        self.stats.update({'maxerr' :self._maxerr(s,m)})
+        self.stats.update({'meanerr':self._meanerr(s,m)})
+        self.stats.update({'mae'    :self._mae(s,m)})
+        self.stats.update({'sse'    :self._sse(s,m)})
+        self.stats.update({'r'      :self._r(s,m)})
+        self.stats.update({'r2'     :self._r2(s,m)})
+        self.stats.update({'rmse'   :self._rmse(s,m)})
+        self.stats.update({'rrmse'  :self._rrmse(s,m)})
+        self.stats.update({'prmse'  :self._prmse(s,m)})
+        self.stats.update({'crm'    :self._crm(s,m)})
+        self.stats.update({'nse'    :self._nse(s,m)})
+        self.stats.update({'d'      :self._d(s,m)})
+
+    def __str__(self):
+        """Represent the Statistics class variables as a string."""
+
+        self.tmstmp = datetime.datetime.now()
+        timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
+        ast='*'*72
+        s = ('{:s}\n'
+             'pyfao56: FAO-56 Evapotranspiration in Python\n'
+             'Goodness-of-fit Statistics\n'
+             'Timestamp: {:s}\n'
+             '{:s}\n'
+             '{:s}\n'
+             '{:s}\n'
+             ).format(ast,
+                      timestamp,
+                      ast,
+                      self.comment,
+                      ast)
+        keys = ['bias','rbias','pbias','maxerr','meanerr','mae','sse',
+                'r','r2','rmse','rrmse','prmse','crm','nse','d']
+        for key in keys:
+            s += '{:s} : {:f}\n'.format(key, self.stats[key])
+        return s
+
+    def savefile(self,filepath='pyfao56.fit'):
+        """Save goodness-of-fit statistics to a file.
+
+        Parameters
+        ----------
+        filepath : str, optional
+            Any valid filepath string (default = 'pyfao56.fit')
+
+        Raises
+        ------
+        FileNotFoundError
+            If filepath is not found.
+        """
+
+        try:
+            f = open(filepath, 'w')
+        except FileNotFoundError:
+            print('The filepath for output data is not found.')
+        else:
+            f.write(self.__str__())
+            f.close()
 
     def _bias(self,s,m):
         """Compute the bias."""
@@ -100,7 +153,7 @@ class Statistics:
         """Compute the sum of squared error."""
         return np.sum(np.square(s-m))
 
-    def _r(self,s,m)
+    def _r(self,s,m):
         """Compute the Pearson correlation coefficient (r)."""
         a = np.sum(s-np.mean(s))
         b = np.sum(m-np.mean(m))
@@ -108,7 +161,7 @@ class Statistics:
         d = np.sum(np.square(m-np.mean(m)))
         return a*b/np.sqrt(c*d)
 
-    def _r2(self,s,m)
+    def _r2(self,s,m):
         """Compute the coefficient of determination (r^2)."""
         a = np.sum(s-np.mean(s))
         b = np.sum(m-np.mean(m))
@@ -135,7 +188,7 @@ class Statistics:
     def _nse(self,s,m):
         """Compute the Nash & Sutcliffe (1970) model efficiency."""
         a = np.sum(np.square(s-m))
-        b = np.sum(np.square(m-np.mean(m))
+        b = np.sum(np.square(m-np.mean(m)))
         return 1.0-a/b
 
     def _d(self,s,m):
