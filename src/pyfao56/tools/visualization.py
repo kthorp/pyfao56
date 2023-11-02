@@ -432,33 +432,42 @@ class Visualization:
                 vline = i
 
         #Create crop coefficient plot
+        maxkc = 1.2
         if Kc:
             kc_c = 'dimgrey'
             ax.plot(x, d['Kcadj'], color=kc_c, label='Kc_adj')
+            maxkc = round(max([maxkc,d['Kcadj'].max()])+0.05,1)
 
         if Ke:
             ke_c = 'lightskyblue'
             ax.plot(x, d['Ke'], color=ke_c, label='Ke')
+            maxkc = round(max([maxkc,d['Ke'].max()])+0.05,1)
 
         if Kcb:
             kcb_c = 'seagreen'
             ax.plot(x, d['Kcb'], color=kcb_c, label='Kcb')
+            maxkc = round(max([maxkc,d['Kcb'].max()])+0.05,1)
 
         if tKcb:
             tkcb_c = 'mediumseagreen'
             ax.plot(x, d['tKcb'], linestyle='--', color=tkcb_c,
                     label='Tabular Kcb')
+            maxkc = round(max([maxkc,d['tKcb'].max()])+0.05,1)
+        yticks=[]
+        ylabels=[]
+        for i in range(int(maxkc*10.)+1):
+            yticks.append(float(i)/10.)
+            ylabels.append(str(float(i)/10.))
+        print(yticks)
+        print(ylabels)
 
         ax.set_xlim([xticks[0]-5., xticks[-1]+5.])
         ax.set_xticks(xticks)
         ax.set_xticklabels(xlabels, fontsize=font)
         ax.set_xlabel('Day of Year (DOY)', fontsize=font)
-        ax.set_ylim([0.0, 1.2])
-        ax.set_yticks([0.0, 0.1, 0.2, 0.3, 0.4, 0.5,
-                       0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2])
-        ax.set_yticklabels(['0.0','0.1','0.2','0.3','0.4','0.5',
-                            '0.6','0.7','0.8','0.9','1.0','1.1','1.2'],
-                            fontsize=font)
+        ax.set_ylim([0.0, maxkc])
+        ax.set_yticks(yticks)
+        ax.set_yticklabels(ylabels, fontsize=font)
         ax.set_ylabel('Crop Coefficients', fontsize=font)
         ax.grid(ls=':')
         ax.set_facecolor('whitesmoke')
