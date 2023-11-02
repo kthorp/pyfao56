@@ -64,9 +64,6 @@ class Visualization:
         self.mdl = mdl
         self.sws = sws
 
-        #Remove duplicate columns in mdl.odata
-        self.vdata = mdl.odata.T.drop_duplicates().T
-
         #Add measured data if available
         if self.sws is not None:
             self.vdata = self.vdata.merge(self.sws.summarize(),
