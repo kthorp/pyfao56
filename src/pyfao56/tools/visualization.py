@@ -458,8 +458,6 @@ class Visualization:
         for i in range(int(maxkc*10.)+1):
             yticks.append(float(i)/10.)
             ylabels.append(str(float(i)/10.))
-        print(yticks)
-        print(ylabels)
 
         ax.set_xlim([xticks[0]-5., xticks[-1]+5.])
         ax.set_xticks(xticks)
