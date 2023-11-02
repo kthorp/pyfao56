@@ -74,5 +74,18 @@ def run():
     pngpath = os.path.join(module_dir, 'E42FF2023_Kc.png')
     vis.plot_Kc(title='2023 Corn E42FF Kc', show=True, filepath=pngpath)
 
+    #Compute fit statistics
+    sDr = []
+    mDr = []
+    sDrmax = []
+    mDrmax = []
+    for key in sorted(sws.swdata.keys()):
+        sDr.append(mdl.odata.loc[key,'Dr'])
+        mDr.append(sws.swdata[key].mDr)
+        sDrmax.append(mdl.odata.loc[key,'Drmax'])
+        mDrmax.append(sws.swdata[key].mDrmax)
+    statsDr = tools.Statistics(sDr,mDr)
+    statsDrmax = tools.Statistics(sDrmax,mDrmax)
+
 if __name__ == '__main__':
     run()

@@ -18,6 +18,7 @@ import pyfao56 as fao
 import pyfao56.custom as custom
 import pyfao56.tools as tools
 import os
+import numpy as np
 
 def run():
     """Setup and run pyfao56 for a 2022 cotton field study"""
@@ -134,6 +135,8 @@ def run():
     print(statsDrmax)
     statsDrmax.savefile(os.path.join(module_dir,
                                      'cotton2022p10-2_Drmax.fit'))
+    data = np.array((sDr,mDr,sDrmax,mDrmax)).transpose()
+    np.savetxt("cotton2022p10-2_fitdata.csv",data,delimiter=',')
 
     #Plot measured and simulated data
     vis = tools.Visualization(mdl, sws=sws, dayline=True)
