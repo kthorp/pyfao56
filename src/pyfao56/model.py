@@ -415,7 +415,7 @@ class Model:
 
             #Five days rain mean calculation AMC condition for runoff using NRCS SCS 1972 method
             if io.roff is True and io.roff_mthd == 'SCS':
-                avg_5day_rain_df = self.wth.wdata['Rain'].rolling(5,min_periods=1).mean()
+                avg_5day_rain_df = self.wth.wdata['Rain'].rolling(5,min_periods=1).mean() #This line could be out of loop as well but will make more chunks for SCS runoff method
                 avg_5day_rain = avg_5day_rain_df.loc[mykey]
                 io.avg_5day_rain = avg_5day_rain
 
