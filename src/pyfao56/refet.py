@@ -17,6 +17,7 @@ American Society of Civil Engineers, Reston, VA.
 
 The refet.py module contains the following:
     ascedaily - function to compute daily ASCE Standardized Reference ET
+    ascehourly - function to compute hourly ASCE Std. Reference ET
 
 01/07/2016 Initial Python script by Kelly Thorp
 11/04/2021 Finalized updates for inclusion in pyfao56 Python package

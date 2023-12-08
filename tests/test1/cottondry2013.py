@@ -111,6 +111,7 @@ def run():
     mdl.run()
     print(mdl)
     mdl.savefile(os.path.join(module_dir,'cottondry2013.out'))
+    mdl.savesums(os.path.join(module_dir,'cottondry2013.sum'))
 
 if __name__ == '__main__':
     run()

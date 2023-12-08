@@ -25,6 +25,7 @@ The pyfao56 package contains a new subpackage called [tools](https://github.com/
 * forecast.py - Obtain a seven-day weather forecast from the National Digital Forecast Database ([NDFD](https://graphical.weather.gov/xml/rest.php))
 * soil_water.py - I/O tools for managing measured volumetric soil water content data and computing root zone soil water metrics from those measurements
 * visualization.py - Develop plots to visualize measured and simulated data for root zone soil water depletion and evapotranspiration
+* statistics.py - Compute 15 goodness-of-fit statistics between measured and simulated data
 
 The pyfao56 package also contains a subpackage called [custom](https://github.com/kthorp/pyfao56/tree/main/src/pyfao56/custom). Here, users can add customized scripts to improve their personal pyfao56 workflows. For example, the [custom](https://github.com/kthorp/pyfao56/tree/main/src/pyfao56/custom) subpackage contains modules for development of customized weather files using data from the Arizona Meteorological Network ([AZMET](https://ag.arizona.edu/azmet/)) station at Maricopa, Arizona and from the National Digital Forecast Database ([NDFD](https://graphical.weather.gov/xml/rest.php)). These modules were developed to facilitate irrigation management for field studies conducted at the Maricopa Agricultural Center. Users can follow this example to create customized weather tools for other weather data sources. Additionally, the [custom](https://github.com/kthorp/pyfao56/tree/main/src/pyfao56/custom) subpackage contains a module for customizing the creation of soil files using ordered lists of soil water holding limits and initial soil water content data.
 
@@ -106,9 +107,9 @@ Further example scripts for setting up and running the model are [here](https://
 
 [test5](https://github.com/kthorp/pyfao56/tree/main/tests/test5) - The cornE12FF2022.py module contains code to setup and run several pyfao56 scenarios (including instances that use the SoilProfile class, the Update class, and both together) for a full-irrigation treatment in a 2022 maize study at Greeley, Colorado.
 
-[test6](https://github.com/kthorp/pyfao56/tree/main/tests/test6) - The cotton2022.py module contains code to setup and run pyfao56 for a full-irrigation treatment in a 2022 cotton study at Maricopa, Arizona and to demonstrate the SoilWaterSeries class for computing root zone soil water depletion from  measured soil water content data.
+[test6](https://github.com/kthorp/pyfao56/tree/main/tests/test6) - The cotton2022.py module contains code to setup and run pyfao56 for a full-irrigation treatment in a 2022 cotton study at Maricopa, Arizona and to demonstrate the SoilWaterSeries class for computing root zone soil water depletion from  measured soil water content data. The Visualization and Statistics classes are also demonstrated.
 
-[test7](https://github.com/kthorp/pyfao56/tree/main/tests/test7) - The cornE42FF2023.py module contains code to setup and run pyfao56 for a full-irrigation treatment in a 2023 maize study at Greeley, Colorado and to demonstrate the Visualization class for visualizing root zone soil water depletion and evapotranspiration time series.
+[test7](https://github.com/kthorp/pyfao56/tree/main/tests/test7) - The cornE42FF2023.py module contains code to setup and run pyfao56 for a full-irrigation treatment in a 2023 maize study at Greeley, Colorado and to demonstrate the Visualization class for visualizing root zone soil water depletion and evapotranspiration time series. The SoilWaterSeries and Statistics classes are also demonstrated.
 
 ## Detailed Startup Information
 ### Core Functionality
@@ -137,10 +138,15 @@ The Forecast class is used to retrieve seven-day weather forecasts from the Nati
 The SoilWaterSeries class provides I/O tools for processing measured volumetric soil water content (SWC, cm3/cm3) data in the pyfao56 environment. The SoilWaterSeries class manages SWC data collected at one location over time (e.g., at one access tube over a growing season). A subclass called SoilWaterProfile handles data storage and computations for one soil water profile measurement event (i.e., measurements of the soil water profile on a single date). The SoilWaterProfile class computes root zone soil water metrics, especially the root zone soil water depletion (SWD, mm), given estimates of root depth.
 
 * #### Visualization Class
-The Visualization class provides tools for visualizing pyfao56 Model output with measured soil water data represented in the SoilWaterSeries class. The methods use Python's matplotlib library to format time series plots of soil water depletion and evapotranspiration data.
+The Visualization class provides tools for visualizing pyfao56 Model output with measured soil water data represented in the SoilWaterSeries class. The methods use Python's matplotlib library to format time series plots of soil water depletion, evapotranspiration, and crop coefficient data.
+
+* #### Statistics Class
+The Statistics class provides computations of 15 goodness-of-fit statistics when provided arrays of simulated and measured data. Computed statistics include bias, relative bias, percent bias, maximum error, mean error, mean absolute error, sum of squared error, Pearson's correlation coefficient, coefficient of determination, root mean squared error, relative root mean squared error, percent root mean squared error, coefficient of residual mass, the Nash & Sutcliffe (1970) model efficiency, and the Willmott (1981) index of agreement.
 
 ## Further information
 The pyfao56 package is further described in the following articles:
+
+Thorp, K. R., Brekel, J., DeJonge, K. C., 2023. Version 1.2.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 24, 101518. [doi.10.1016/j.softx.2023.101518](https://doi.org/10.1016/j.softx.2023.101518).
 
 Brekel, J., Thorp, K. R., DeJonge, K. C., Trout, T. J., 2023. Version 1.1.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 22, 101336. [doi.10.1016/j.softx.2023.101336](https://doi.org/10.1016/j.softx.2023.101336).
 
