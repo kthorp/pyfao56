@@ -44,6 +44,7 @@ The pyfao56 package contains the following modules:
 ########################################################################
 """
 
+from .autoirrigate import AutoIrrigate
 from .irrigation import Irrigation
 from .model import Model
 from .parameters import Parameters
