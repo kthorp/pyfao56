@@ -55,14 +55,10 @@ class Model:
     cons_p : boolean, optional
         If False, p follows FAO-56; if True, p is constant (=pbase)
         (default = False)
-    roff   : boolean, optional
-        If False, roff follows FAO-56 i.e runoff will be zero;
-        if True, runoff follows either ASCE MOP 70 or NRCS SCS 72
-        (default = False)
-    roff_mthd   : str, MOP70 or SCS, optional
+    roff   : str, MOP70 or SCS, optional
         If MOP70, roff_mthd (runoff method) follows ASCE MOP 70 method;
         if SCS, roff_mthd follows NRCS, SCS 1972 method
-        (default = MOP70)
+        (default = None)
     comment : str, optional
         User-defined file descriptions or metadata (default = '')
     tmstmp : datetime
@@ -134,7 +130,7 @@ class Model:
     """
 
     def __init__(self, start, end, par, wth, irr=None, sol=None,
-                 upd=None, cons_p=False, roff=False, roff_mthd='MOP70',comment=''):
+                 upd=None, cons_p=False, roff=None,comment=''):
         """Initialize the Model class attributes.
 
         Parameters
@@ -159,14 +155,10 @@ class Model:
         cons_p : boolean, optional
             If False, p follows FAO-56; if True, p is constant (=pbase)
             (default = False)
-        roff : boolean, optional
-            If False, roff follows FAO-56 i.e runoff will be zero;
-            if True, runoff follows either ASCE MOP 70 or NRCS SCS 72
-            (default = False)
-        roff_mthd : MOP70 or SCS, optional
+        roff : MOP70 or SCS, optional
             If MOP70, roff_mthd (runoff method) follows ASCE MOP 70 method;
             if SCS, roff_mthd follows NRCS, SCS 1972 method
-            (default = MOP70)
+            (default = None)
         comment : str, optional
             User-defined file descriptions or metadata (default = '')
         """
@@ -179,8 +171,7 @@ class Model:
         self.sol = sol
         self.upd = upd
         self.cons_p = cons_p
-        self.roff = roff
-        self.roff_mthd = str(roff_mthd).strip().upper()
+        self.roff= roff
         self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
         self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
@@ -369,7 +360,6 @@ class Model:
         io.rfcrp = self.wth.rfcrp
         io.cons_p = self.cons_p
         io.roff = self.roff
-        io.roff_mthd = self.roff_mthd
         self.odata = pd.DataFrame(columns=self.cnames)
 
         while tcurrent <= self.endDate:
@@ -414,7 +404,7 @@ class Model:
                 io.updfc = self.upd.getdata(mykey,'fc')
 
             #Five days rain mean calculation AMC condition for runoff using NRCS SCS 1972 method
-            if io.roff is True and io.roff_mthd == 'SCS':
+            if io.roff == 'SCS':
                 avg_5day_rain_df = self.wth.wdata['Rain'].rolling(5,min_periods=1).mean() #This line could be out of loop as well but will make more chunks for SCS runoff method
                 avg_5day_rain = avg_5day_rain_df.loc[mykey]
                 io.avg_5day_rain = avg_5day_rain
@@ -521,9 +511,9 @@ class Model:
 
         # Runoff (runoff, mm)
         io.runoff = 0.0
-        if io.roff is True:
+        if io.roff is not None:
             # AMC conditions as per ASCE MOP 70 Eq. 14-12 to 14-20 Page 451-54
-            if io.roff_mthd == 'MOP70':
+            if io.roff == 'MOP70':
                 if io.De <= 0.5*io.REW:
                     CN = io.CN3 #ASCE MOP 70 Eq. 14-18
                 elif io.De >= 0.7*io.REW+0.3*io.TEW:
@@ -531,7 +521,7 @@ class Model:
                 else:
                     CN = ((io.De-0.5*io.REW)*io.CN1+(0.7*io.REW+0.3*io.TEW-io.De)*io.CN3)/(0.2*io.REW+0.3*io.TEW) #ASCE MOP 70 Eq. 14-20
             # AMC conditions as per NRCS SCS 1972
-            elif io.roff_mthd == 'SCS':
+            elif io.roff == 'SCS':
                 if io.avg_5day_rain < 36:
                     CN = io.CN1
                 elif io.avg_5day_rain > 53:
