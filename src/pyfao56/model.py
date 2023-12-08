@@ -51,6 +51,9 @@ class Model:
     sol : pyfao56 SoilProfile class, optional
         Provides data for modeling with stratified soil layers
         (default = None)
+    autoirr : pyfao56 AutoIrrigate class, optional
+        Provides data for automatic irrigation scheduling
+        (default = None)
     upd : pyfao56 Update class, optional
         Provides data and methods for state variable updating
         (default = None)
@@ -136,8 +139,9 @@ class Model:
         Conduct the FAO-56 calculations from startDate to endDate
     """
 
-    def __init__(self, start, end, par, wth, irr=None, sol=None,
-                 upd=None, cons_p=False, aq_Ks=False, comment=''):
+    def __init__(self, start, end, par, wth, irr=None, autoirr=None,
+                 sol=None, upd=None, cons_p=False, aq_Ks=False,
+                 comment=''):
         """Initialize the Model class attributes.
 
         Parameters
@@ -155,6 +159,9 @@ class Model:
             (default = None)
         sol : pyfao56 SoilProfile object, optional
             Provides data for modeling with stratified soil layers
+            (default = None)
+        autoirr : pyfao56 AutoIrrigate object, optional
+            Provides data for automatic irrigation scheduling
             (default = None)
         upd : pyfao56 Update object, optional
             Provides data and methods for state variable updating
@@ -406,6 +413,7 @@ class Model:
         io.rfcrp = self.wth.rfcrp
         io.cons_p = self.cons_p
         io.aq_Ks = self.aq_Ks
+        #TODO:  Initialize automatic irrigation parameters in io.
         self.odata = pd.DataFrame(columns=self.cnames)
 
         while tcurrent <= self.endDate:
@@ -542,6 +550,8 @@ class Model:
                         (1.0+0.5*io.h),0.99])[1]
         #Overwrite fc if updates are available
         if io.updfc > 0: io.fc = io.updfc
+
+        #TODO: Add logic to update io.idep with automatic scheduling
 
         #Fraction soil surface wetted (fw) - FAO-56 Table 20, page 149
         if io.idep > 0.0 and io.rain > 0.0:
