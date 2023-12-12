@@ -20,6 +20,8 @@ The model.py module contains the following:
 10/27/2022 Incorporated Fort Collins ARS stratified soil layers approach
 11/30/2022 Incorporated Fort Collins ARS water balance approach
 08/17/2023 Improved logic for case of missing rhmin data
+10/31/2023 Added AquaCrop Ks option
+11/01/2023 Added reports of the cumulative seasonal water balance
 ########################################################################
 """
 
@@ -49,16 +51,22 @@ class Model:
     sol : pyfao56 SoilProfile class, optional
         Provides data for modeling with stratified soil layers
         (default = None)
+    autoirr : pyfao56 AutoIrrigate class, optional
+        Provides data for automatic irrigation scheduling
+        (default = None)
     upd : pyfao56 Update class, optional
         Provides data and methods for state variable updating
+        (default = None)
+    roff : str, MOP70 or SCS, optional
+        If MOP70, roff_mthd (runoff method) follows ASCE MOP 70 method;
+        if SCS, roff_mthd follows NRCS, SCS 1972 method
         (default = None)
     cons_p : boolean, optional
         If False, p follows FAO-56; if True, p is constant (=pbase)
         (default = False)
-    roff   : str, MOP70 or SCS, optional
-        If MOP70, roff_mthd (runoff method) follows ASCE MOP 70 method;
-        if SCS, roff_mthd follows NRCS, SCS 1972 method
-        (default = None)
+    aq_Ks : boolean, optional
+        If False, Ks follows FAO-56; if True, Ks via AquaCrop equation
+        (default = False)
     comment : str, optional
         User-defined file descriptions or metadata (default = '')
     tmstmp : datetime
@@ -120,17 +128,25 @@ class Model:
             DOY     - Day of year (ddd)
             DOW     - Day of week
             Date    - Month/Day/Year (mm/dd/yy)
+    swbdata : dict
+        Container for cumulative seasonal water balance data
+        keys - ['ETref','ETc','ETcadj','E','T','DP','Irrig','Rain',
+                'Dr_ini','Dr_end','Drmax_ini','Drmax_end']
+        value - Cumulative water balance data in mm
 
     Methods
     -------
     savefile(filepath='pyfao56.out')
         Save pyfao56 output data to a file
+    savesums(filepath='pyfao56.sum')
+        Save seasonal water balance data to a file
     run()
         Conduct the FAO-56 calculations from startDate to endDate
     """
 
-    def __init__(self, start, end, par, wth, irr=None, sol=None,
-                 upd=None, cons_p=False, roff=None,comment=''):
+    def __init__(self, start, end, par, wth, irr=None, autoirr=None,
+                 sol=None, upd=None, roff=None, cons_p=False, aq_Ks=False,
+                 comment=''):
         """Initialize the Model class attributes.
 
         Parameters
@@ -149,16 +165,22 @@ class Model:
         sol : pyfao56 SoilProfile object, optional
             Provides data for modeling with stratified soil layers
             (default = None)
+        autoirr : pyfao56 AutoIrrigate object, optional
+            Provides data for automatic irrigation scheduling
+            (default = None)
         upd : pyfao56 Update object, optional
             Provides data and methods for state variable updating
             (default = None)
-        cons_p : boolean, optional
-            If False, p follows FAO-56; if True, p is constant (=pbase)
-            (default = False)
         roff : MOP70 or SCS, optional
             If MOP70, roff_mthd (runoff method) follows ASCE MOP 70 method;
             if SCS, roff_mthd follows NRCS, SCS 1972 method
             (default = None)
+        cons_p : boolean, optional
+            If False, p follows FAO-56; if True, p is constant (=pbase)
+            (default = False)
+        aq_Ks : boolean, optional
+            If False, Ks follows FAO-56; if True, Ks via AquaCrop Eqn
+            (default = False)
         comment : str, optional
             User-defined file descriptions or metadata (default = '')
         """
@@ -170,8 +192,9 @@ class Model:
         self.irr = irr
         self.sol = sol
         self.upd = upd
-        self.cons_p = cons_p
         self.roff= roff
+        self.cons_p = cons_p
+        self.aq_Ks = aq_Ks
         self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
         self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
@@ -266,6 +289,51 @@ class Model:
             f.write(self.__str__())
             f.close()
 
+    def savesums(self, filepath='pyfao56.sum'):
+        """Save a summary file with cumulative water balance values.
+
+        Parameters
+        ----------
+        filepath : str, optional
+            Any valid filepath string (default = 'pyfao56.sum')
+
+        Raises
+        ------
+        FileNotFoundError
+            If filepath is not found.
+        """
+
+        self.tmstmp = datetime.datetime.now()
+        timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
+        sdate = self.startDate.strftime('%m/%d/%Y')
+        edate = self.endDate.strftime('%m/%d/%Y')
+
+        ast = '*'*72
+        s = ('{:s}\n'
+            'pyfao56: FAO-56 Evapotranspiration in Python\n'
+            'Seasonal Water Balance Summary\n'
+            'Timestamp: {:s}\n'
+            'Simulation start date: {:s}\n'
+            'Simulation end date: {:s}\n'
+            'All values expressed in mm.\n'
+            '{:s}\n'
+            '{:s}\n'
+            '{:s}\n'
+            ).format(ast,timestamp,sdate,edate,ast,self.comment,ast)
+        if not self.odata.empty:
+            keys = ['ETref','ETc','ETcadj','E','T','DP','Irrig','Rain',
+                    'Dr_ini','Dr_end','Drmax_ini','Drmax_end']
+            for key in keys:
+                s += '{:8.3f} : {:s}\n'.format(self.swbdata[key],key)
+
+        try:
+            f = open(filepath, 'w')
+        except FileNotFoundError:
+            print('The filepath for summary data is not found.')
+        else:
+            f.write(s)
+            f.close()
+
     class ModelState:
         """Contain parameters and states for a single timestep."""
 
@@ -358,8 +426,10 @@ class Model:
         io.fw = 1.0
         io.wndht = self.wth.wndht
         io.rfcrp = self.wth.rfcrp
-        io.cons_p = self.cons_p
         io.roff = self.roff
+        io.cons_p = self.cons_p
+        io.aq_Ks = self.aq_Ks
+        #TODO:  Initialize automatic irrigation parameters in io.
         self.odata = pd.DataFrame(columns=self.cnames)
 
         while tcurrent <= self.endDate:
@@ -429,6 +499,22 @@ class Model:
             tcurrent = tcurrent + tdelta
             io.i+=1
 
+        #Save seasonal water balance data to self.swbdata dictionary
+        sdoy = self.startDate.strftime("%Y-%j")
+        edoy = self.endDate.strftime("%Y-%j")
+        self.swbdata = {'ETref'    :sum(self.odata['ETref']),
+                        'ETc'      :sum(self.odata['ETc']),
+                        'ETcadj'   :sum(self.odata['ETcadj']),
+                        'E'        :sum(self.odata['E']),
+                        'T'        :sum(self.odata['T']),
+                        'DP'       :sum(self.odata['DP']),
+                        'Irrig'    :sum(self.odata['Irrig']),
+                        'Rain'     :sum(self.odata['Rain']),
+                        'Dr_ini'   :self.odata.loc[sdoy,'Dr'],
+                        'Dr_end'   :self.odata.loc[edoy,'Dr'],
+                        'Drmax_ini':self.odata.loc[sdoy,'Drmax'],
+                        'Drmax_end':self.odata.loc[edoy,'Drmax']}
+
     def _advance(self, io):
         """Advance the model by one daily timestep.
 
@@ -486,6 +572,8 @@ class Model:
                         (1.0+0.5*io.h),0.99])[1]
         #Overwrite fc if updates are available
         if io.updfc > 0: io.fc = io.updfc
+
+        #TODO: Add logic to update io.idep with automatic scheduling
 
         #Fraction soil surface wetted (fw) - FAO-56 Table 20, page 149
         if io.idep > 0.0 and io.rain > 0.0:
@@ -572,8 +660,17 @@ class Model:
         #Readily available water (RAW, mm) - FAO-56 Equation 83
         io.RAW = io.p * io.TAW
 
-        #Transpiration reduction factor (Ks, 0.0-1.0) - FAO-56 Eq. 84
-        io.Ks = sorted([0.0, (io.TAW-io.Dr)/(io.TAW-io.RAW), 1.0])[1]
+        #Transpiration reduction factor (Ks, 0.0-1.0)
+        if io.aq_Ks is True:
+            #Ks method from AquaCrop
+            rSWD = io.Dr/io.TAW
+            Drel = (rSWD-io.p)/(1.0-io.p)
+            sf = 1.5
+            aqKs = 1.0-(math.exp(sf*Drel)-1.0)/(math.exp(sf)-1.0)
+            io.Ks = sorted([0.0, aqKs, 1.0])[1]
+        else:
+            #FAO-56 Eq. 84
+            io.Ks = sorted([0.0,(io.TAW-io.Dr)/(io.TAW-io.RAW),1.0])[1]
 
         #Adjusted crop coefficient (Kcadj) - FAO-56 Eq. 80
         io.Kcadj = io.Ks * io.Kcb + io.Ke

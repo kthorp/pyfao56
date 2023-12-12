@@ -1,0 +1,22 @@
+************************************************************************
+pyfao56: FAO-56 Evapotranspiration in Python
+Seasonal Water Balance Summary
+Timestamp: 11/01/2023 11:29:15
+Simulation start date: 04/18/2019
+Simulation end date: 10/01/2019
+All values expressed in mm.
+************************************************************************
+Comments: 2019 Cotton
+************************************************************************
+1254.710 : ETref
+1099.623 : ETc
+1061.869 : ETcadj
+ 147.672 : E
+ 914.197 : T
+   0.000 : DP
+ 903.200 : Irrig
+  43.180 : Rain
+  23.397 : Dr_ini
+ 138.039 : Dr_end
+ -99.999 : Drmax_ini
+ -99.999 : Drmax_end

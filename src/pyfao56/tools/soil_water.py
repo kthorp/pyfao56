@@ -50,6 +50,8 @@ class SoilWaterSeries:
         Save soil water series data to a file
     loadfile(filepath='pyfao56.sws')
         Load soil water series data from a file
+    addprofile(mdate,swp)
+        Add a SoilWaterProfile object to self.swdata
     customload()
         Override this function to customize loading measured volumetric
         soil water content data.
@@ -210,7 +212,20 @@ class SoilWaterSeries:
                                             par = self.par,
                                             sol = self.sol,
                                             Zr = Zr)
-                self.swdata.update({mdate:swp})
+                self.addprofile(mdate,swp)
+
+    def addprofile(self,mdate,swp):
+        """Add a SoilWaterProfile object to self.swdata
+
+        Parameters
+        ----------
+        mdate : str
+            Measurement date as string ('yyyy-ddd')
+        swp : SoilWaterProfile object
+            Measured soil water profile data on mdate
+        """
+
+        self.swdata.update({mdate:swp})
 
     def customload(self):
         """Override this function to customize loading measured

@@ -18,6 +18,7 @@ import pyfao56 as fao
 import pyfao56.custom as custom
 import pyfao56.tools as tools
 import os
+import numpy as np
 
 def run():
     """Setup and run pyfao56 for a 2022 cotton field study"""
@@ -105,6 +106,7 @@ def run():
     mdl.run()
     print(mdl)
     mdl.savefile(os.path.join(module_dir,'cotton2022p10-2.out'))
+    mdl.savesums(os.path.join(module_dir,'cotton2022p10-2.sum'))
 
     #Analyze measured soil water data
     sws = tools.SoilWaterSeries(filepath='./cotton2022p10-2.sws',
@@ -115,6 +117,37 @@ def run():
         sws.swdata[key].computeDr()
         sws.swdata[key].computeKs(mdl)
     sws.savefile(os.path.join(module_dir,'cotton2022p10-2.sws'))
+
+    #Compute fit statistics
+    sDr = []
+    mDr = []
+    sDrmax = []
+    mDrmax = []
+    for key in sorted(sws.swdata.keys()):
+        sDr.append(mdl.odata.loc[key,'Dr'])
+        mDr.append(sws.swdata[key].mDr)
+        sDrmax.append(mdl.odata.loc[key,'Drmax'])
+        mDrmax.append(sws.swdata[key].mDrmax)
+    statsDr = tools.Statistics(sDr,mDr,comment='Dr')
+    statsDrmax = tools.Statistics(sDrmax,mDrmax,comment='Drmax')
+    print(statsDr)
+    statsDr.savefile(os.path.join(module_dir,'cotton2022p10-2_Dr.fit'))
+    print(statsDrmax)
+    statsDrmax.savefile(os.path.join(module_dir,
+                                     'cotton2022p10-2_Drmax.fit'))
+    data = np.array((sDr,mDr,sDrmax,mDrmax)).transpose()
+    np.savetxt('cotton2022p10-2_fitdata.csv',data,delimiter=',')
+
+    #Plot measured and simulated data
+    vis = tools.Visualization(mdl, sws=sws, dayline=True)
+    pngpath = os.path.join(module_dir, 'cotton2022p10-2_Dr.png')
+    vis.plot_Dr(drmax=True,raw=True,events=True,obs=True,ks=True,
+                dp=True,title='2022 Cotton p10-2 Dr',
+                filepath=pngpath)
+    pngpath = os.path.join(module_dir, 'cotton2022p10-2_ET.png')
+    vis.plot_ET(title='2023 Cotton p10-2 ET',show=True,filepath=pngpath)
+    pngpath = os.path.join(module_dir, 'cotton2022p10-2_Kc.png')
+    vis.plot_Kc(title='2023 Cotton p10-2 Kc',show=True,filepath=pngpath)
 
 if __name__ == '__main__':
     run()
