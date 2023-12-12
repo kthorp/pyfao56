@@ -57,6 +57,10 @@ class Model:
     upd : pyfao56 Update class, optional
         Provides data and methods for state variable updating
         (default = None)
+    roff : str, MOP70 or SCS, optional
+        If MOP70, roff_mthd (runoff method) follows ASCE MOP 70 method;
+        if SCS, roff_mthd follows NRCS, SCS 1972 method
+        (default = None)
     cons_p : boolean, optional
         If False, p follows FAO-56; if True, p is constant (=pbase)
         (default = False)
@@ -78,8 +82,8 @@ class Model:
                    'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
                    'Kc','ETc','TAW','TAWrmax','TAWb','Zr','p','RAW',
                    'Ks','Kcadj','ETcadj','T','DP','Dinc','Dr','fDr',
-                   'Drmax','fDrmax','Db','fDb','Irrig','Rain','Year',
-                   'DOY','DOW','Date']
+                   'Drmax','fDrmax','Db','fDb','Irrig','Rain','Runoff',
+                   'Year','DOY','DOW','Date']
             Year    - 4-digit year (yyyy)
             DOY     - Day of year (ddd)
             DOW     - Day of week
@@ -119,6 +123,7 @@ class Model:
             fDb     - Fractional depletion in the bottom layer (mm/mm)
             Irrig   - Depth of irrigation (mm)
             Rain    - Depth of precipitation (mm)
+            Runoff  - Surface runoff (mm)
             Year    - 4-digit year (yyyy)
             DOY     - Day of year (ddd)
             DOW     - Day of week
@@ -140,7 +145,7 @@ class Model:
     """
 
     def __init__(self, start, end, par, wth, irr=None, autoirr=None,
-                 sol=None, upd=None, cons_p=False, aq_Ks=False,
+                 sol=None, upd=None, roff=None, cons_p=False, aq_Ks=False,
                  comment=''):
         """Initialize the Model class attributes.
 
@@ -166,6 +171,10 @@ class Model:
         upd : pyfao56 Update object, optional
             Provides data and methods for state variable updating
             (default = None)
+        roff : MOP70 or SCS, optional
+            If MOP70, roff_mthd (runoff method) follows ASCE MOP 70 method;
+            if SCS, roff_mthd follows NRCS, SCS 1972 method
+            (default = None)
         cons_p : boolean, optional
             If False, p follows FAO-56; if True, p is constant (=pbase)
             (default = False)
@@ -183,6 +192,7 @@ class Model:
         self.irr = irr
         self.sol = sol
         self.upd = upd
+        self.roff= roff
         self.cons_p = cons_p
         self.aq_Ks = aq_Ks
         self.comment = 'Comments: ' + comment.strip()
@@ -192,7 +202,7 @@ class Model:
                        'DPe','Kc','ETc','TAW','TAWrmax','TAWb','Zr','p',
                        'RAW','Ks','Kcadj','ETcadj','T','DP','Dinc','Dr',
                        'fDr','Drmax','fDrmax','Db','fDb','Irrig','Rain',
-                       'Year','DOY','DOW','Date']
+                       'Runoff','Year','DOY','DOW','Date']
         self.odata = pd.DataFrame(columns=self.cnames)
 
     def __str__(self):
@@ -227,7 +237,7 @@ class Model:
                 'fDr':'{:7.3f}'.format,'Drmax':'{:7.3f}'.format,
                 'fDrmax':'{:7.3f}'.format,'Db':'{:7.3f}'.format,
                 'fDb':'{:7.3f}'.format,'Irrig':'{:7.3f}'.format,
-                'Rain':'{:7.3f}'.format}
+                'Rain':'{:7.3f}'.format,'Runoff':'{:7.3f}'.format}
         ast='*'*72
         s = ('{:s}\n'
              'pyfao56: FAO-56 Evapotranspiration in Python\n'
@@ -244,7 +254,7 @@ class Model:
              '     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p'
              '     RAW    Ks Kcadj ETcadj      T      DP    Dinc'
              '      Dr     fDr   Drmax  fDrmax      Db     fDb'
-             '   Irrig    Rain  Year  DOY  DOW      Date\n'
+             '   Irrig    Rain    Runoff  Year  DOY  DOW      Date\n'
              ).format(ast,
                       timestamp,
                       sdate,
@@ -355,6 +365,11 @@ class Model:
         io.pbase   = self.par.pbase
         io.Ze      = self.par.Ze
         io.REW     = self.par.REW
+        io.CN2     = self.par.CN2
+        # CN1 for AWCI - ASCE MOP 70 Equation 14 Page 453
+        io.CN1 = io.CN2/(2.281-0.01281*io.CN2)
+        # CN3 for AWCIII - ASCE MOP 70 Equation 15 Page 453
+        io.CN3 = io.CN2/(0.427+0.00573*io.CN2)
         #Total evaporable water (TEW, mm) - FAO-56 Equation 73
         io.TEW = 1000. * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
         #Initial depth of evaporation (De, mm) - FAO-56 page 153
@@ -411,6 +426,7 @@ class Model:
         io.fw = 1.0
         io.wndht = self.wth.wndht
         io.rfcrp = self.wth.rfcrp
+        io.roff = self.roff
         io.cons_p = self.cons_p
         io.aq_Ks = self.aq_Ks
         #TODO:  Initialize automatic irrigation parameters in io.
@@ -457,6 +473,12 @@ class Model:
                 io.updh = self.upd.getdata(mykey,'h')
                 io.updfc = self.upd.getdata(mykey,'fc')
 
+            #Five days rain mean calculation AMC condition for runoff using NRCS SCS 1972 method
+            if io.roff == 'SCS':
+                avg_5day_rain_df = self.wth.wdata['Rain'].rolling(5,min_periods=1).mean() #This line could be out of loop as well but will make more chunks for SCS runoff method
+                avg_5day_rain = avg_5day_rain_df.loc[mykey]
+                io.avg_5day_rain = avg_5day_rain
+
             #Advance timestep
             self._advance(io)
 
@@ -471,7 +493,7 @@ class Model:
                     io.TAWrmax, io.TAWb, io.Zr, io.p, io.RAW, io.Ks,
                     io.Kcadj, io.ETcadj, io.T, io.DP, io.Dinc, io.Dr,
                     io.fDr, io.Drmax, io.fDrmax, io.Db, io.fDb, io.idep,
-                    io.rain, year, doy, dow, dat]
+                    io.rain,io.runoff, year, doy, dow, dat]
             self.odata.loc[mykey] = data
 
             tcurrent = tcurrent + tdelta
@@ -575,12 +597,34 @@ class Model:
         #Soil water evaporation (E, mm) - FAO-56 Eq. 69
         io.E = io.Ke * io.ETref
 
+        # Runoff (runoff, mm)
+        io.runoff = 0.0
+        if io.roff is not None:
+            # AMC conditions as per ASCE MOP 70 Eq. 14-12 to 14-20 Page 451-54
+            if io.roff == 'MOP70':
+                if io.De <= 0.5*io.REW:
+                    CN = io.CN3 #ASCE MOP 70 Eq. 14-18
+                elif io.De >= 0.7*io.REW+0.3*io.TEW:
+                    CN = io.CN1 #ASCE MOP 70 Eq. 14-19
+                else:
+                    CN = ((io.De-0.5*io.REW)*io.CN1+(0.7*io.REW+0.3*io.TEW-io.De)*io.CN3)/(0.2*io.REW+0.3*io.TEW) #ASCE MOP 70 Eq. 14-20
+            # AMC conditions as per NRCS SCS 1972
+            elif io.roff == 'SCS':
+                if io.avg_5day_rain < 36:
+                    CN = io.CN1
+                elif io.avg_5day_rain > 53:
+                    CN = io.CN3
+                else:
+                    CN = io.CN2
+            storage = 250*((100/CN)-1) #ASCE MOP 70 Eq. 14-12
+            if io.rain > 0.2*storage:
+                io.runoff = min([((io.rain-0.2*storage)**2)/(io.rain+0.8*storage),io.rain]) #ASCE MOP 70 Eq. 14-13
+
         #Deep percolation under exposed soil (DPe, mm) - FAO-56 Eq. 79
-        runoff = 0.0
-        io.DPe = max([io.rain - runoff + io.idep/io.fw - io.De,0.0])
+        io.DPe = max([io.rain - io.runoff + io.idep/io.fw - io.De,0.0])
 
         #Cumulative depth of evaporation (De, mm) - FAO-56 Eqs. 77 & 78
-        De = io.De-(io.rain-runoff)-io.idep/io.fw+io.E/io.few+io.DPe
+        De = io.De-(io.rain-io.runoff)-io.idep/io.fw+io.E/io.few+io.DPe
         io.De = sorted([0.0,De,io.TEW])[1]
 
         #Crop coefficient (Kc) - FAO-56 Eq. 69
@@ -641,10 +685,10 @@ class Model:
         if io.solmthd == 'D':
             #Deep percolation (DP, mm) - FAO-56 Eq. 88
             #Boundary layer is considered at the root zone depth (Zr)
-            io.DP = max([io.rain-runoff+io.idep-io.ETcadj-io.Dr,0.0])
+            io.DP = max([io.rain-io.runoff+io.idep-io.ETcadj-io.Dr,0.0])
 
             #Root zone soil water depletion (Dr,mm) - FAO-56 Eqs.85 & 86
-            Dr = io.Dr - (io.rain-runoff) - io.idep + io.ETcadj + io.DP
+            Dr = io.Dr - (io.rain-io.runoff) - io.idep + io.ETcadj + io.DP
             io.Dr = sorted([0.0, Dr, io.TAW])[1]
 
             #Root zone soil water depletion fraction (fDr, mm/mm)
@@ -660,7 +704,7 @@ class Model:
         elif io.solmthd == 'L':
             #Deep percolation (DP, mm)
             #Boundary layer is at the max root depth (Zrmax)
-            io.DP = max([io.rain-runoff+io.idep-io.ETcadj-io.Drmax,0.0])
+            io.DP = max([io.rain-io.runoff+io.idep-io.ETcadj-io.Drmax,0.0])
 
             #Depletion increment due to root growth (Dinc, mm)
             #Computed from Db based on the incremental change in TAWb
@@ -670,14 +714,14 @@ class Model:
                 io.Dinc = 0.0
 
             #Root zone soil water depletion (Dr, mm)
-            Dr = io.Dr - (io.rain-runoff)-io.idep+io.ETcadj+io.Dinc
+            Dr = io.Dr - (io.rain-io.runoff)-io.idep+io.ETcadj+io.Dinc
             io.Dr = sorted([0.0, Dr, io.TAW])[1]
 
             #Root zone soil water depletion fraction (fDr, mm/mm)
             io.fDr = 1.0 - ((io.TAW - io.Dr) / io.TAW)
 
             #Soil water depletion at max root depth (Drmax, mm)
-            Drmax = io.Drmax - (io.rain-runoff)-io.idep+io.ETcadj+io.DP
+            Drmax = io.Drmax - (io.rain-io.runoff)-io.idep+io.ETcadj+io.DP
             io.Drmax = sorted([0.0, Drmax, io.TAWrmax])[1]
 
             #Soil water depletion fraction at Zrmax (fDrmax, mm/mm)

@@ -54,6 +54,9 @@ class Parameters:
         Depth of surface evaporation layer (m) (FAO-56 Table 19 & p144)
     REW : float
         Total depth Stage 1 evaporation (mm) (FAO-56 Table 19)
+    CN2 : int
+        Curve Number (CNII) for general crops for AWC II (ASCE MOP 70 Table 14-3 & p452)
+        or NRCS SCS 1972
     comment : str, optional
         User-defined file descriptions or metadata (default = '')
     tmstmp : datetime
@@ -70,7 +73,7 @@ class Parameters:
     def __init__(self, Kcbini=0.15, Kcbmid=1.10, Kcbend=0.50, Lini=25,
                  Ldev=50, Lmid=50, Lend=25, hini=0.010, hmax=1.20,
                  thetaFC=0.250, thetaWP=0.100, theta0=0.100, Zrini=0.20,
-                 Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0, comment=''):
+                 Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0, CN2=70, comment=''):
         """Initialize the Parameters class attributes.
 
         Default parameter values are given below. Users should update
@@ -97,6 +100,7 @@ class Parameters:
         pbase   : float, optional, default = 0.50
         Ze      : float, optional, default = 0.10
         REW     : float, optional, default = 8.0
+        CN2     : int  , optional, default = 70
         comment : str  , optional, default = ''
         """
 
@@ -117,6 +121,7 @@ class Parameters:
         self.pbase   = pbase
         self.Ze      = Ze
         self.REW     = REW
+        self.CN2     = CN2
         self.comment = 'Comments: ' + comment.strip()
         self.tmstmp  = datetime.datetime.now()
 
@@ -157,11 +162,13 @@ class Parameters:
            '(FAO-56 Table 19 and Page 144)\n'
            '{:9.4f} REW, Total depth Stage 1 evaporation (mm) '
            '(FAO-56 Table 19)\n'
+           '{:9d} CN2, Curve Number for general crops for AWC II'
+           '(ASCE MOP 70 Table 14-3 Page 452 or NRCS SCS 1972)\n'
           ).format(ast,timestamp,ast,self.comment,ast,self.Kcbini,
                    self.Kcbmid,self.Kcbend,self.Lini,self.Ldev,
                    self.Lmid,self.Lend,self.hini,self.hmax,self.thetaFC,
                    self.thetaWP,self.theta0,self.Zrini,self.Zrmax,
-                   self.pbase,self.Ze,self.REW)
+                   self.pbase,self.Ze,self.REW,self.CN2)
         return s
 
     def savefile(self,filepath='pyfao56.par'):
@@ -254,3 +261,5 @@ class Parameters:
                     self.Ze = float(line[0])
                 elif line[1].lower() == 'rew':
                     self.REW = float(line[0])
+                elif line[1].lower() == 'CN2':
+                    self.CN2 = int(line[0])
