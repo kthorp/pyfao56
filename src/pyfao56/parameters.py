@@ -10,6 +10,7 @@ The parameters.py module contains the following:
 
 01/07/2016 Initial Python functions developed by Kelly Thorp
 11/04/2021 Finalized updates for inclusion in the pyfao56 Python package
+12/12/2023 Added CN2 parameter for runoff method
 ########################################################################
 """
 
@@ -55,8 +56,7 @@ class Parameters:
     REW : float
         Total depth Stage 1 evaporation (mm) (FAO-56 Table 19)
     CN2 : int
-        Curve Number (CNII) for general crops for AWC II (ASCE MOP 70 Table 14-3 & p452)
-        or NRCS SCS 1972
+        Curve Number for AWC II (ASCE (2016), Table 14-3, p452)
     comment : str, optional
         User-defined file descriptions or metadata (default = '')
     tmstmp : datetime
@@ -73,7 +73,8 @@ class Parameters:
     def __init__(self, Kcbini=0.15, Kcbmid=1.10, Kcbend=0.50, Lini=25,
                  Ldev=50, Lmid=50, Lend=25, hini=0.010, hmax=1.20,
                  thetaFC=0.250, thetaWP=0.100, theta0=0.100, Zrini=0.20,
-                 Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0, CN2=70, comment=''):
+                 Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0, CN2=70,
+                 comment=''):
         """Initialize the Parameters class attributes.
 
         Default parameter values are given below. Users should update
@@ -162,8 +163,8 @@ class Parameters:
            '(FAO-56 Table 19 and Page 144)\n'
            '{:9.4f} REW, Total depth Stage 1 evaporation (mm) '
            '(FAO-56 Table 19)\n'
-           '{:9d} CN2, Curve Number for general crops for AWC II'
-           '(ASCE MOP 70 Table 14-3 Page 452 or NRCS SCS 1972)\n'
+           '{:9d} CN2, Curve Number for AWCII '
+           '(ASCE (2016) Table 14-3 or SCS (1972))\n'
           ).format(ast,timestamp,ast,self.comment,ast,self.Kcbini,
                    self.Kcbmid,self.Kcbend,self.Lini,self.Ldev,
                    self.Lmid,self.Lend,self.hini,self.hmax,self.thetaFC,
