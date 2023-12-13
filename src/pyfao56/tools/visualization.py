@@ -36,7 +36,7 @@ class Visualization:
     Methods
     -------
     plot_Dr(drmax=False, raw=False, events=False, obs=False, ks=False,
-            dp=False, title='', show=True, filepath=None)
+            dpro=False, title='', show=True, filepath=None)
         Create a plot of simulated soil water depletion
     plot_ET(refET=True, ETc=True, ETcadj=True, events=False, title='',
             show=True, filepath=None)
@@ -87,7 +87,7 @@ class Visualization:
             self.todayidx = now.strftime('%Y-%j')
 
     def plot_Dr(self, drmax=False, raw=False, events=False, obs=False,
-                ks=False, dp=False, title='', show=True, filepath=None):
+                ks=False,dpro=False,title='',show=True,filepath=None):
         """Plot soil water depletion (Dr) and related water data.
 
         Parameters
@@ -107,8 +107,8 @@ class Visualization:
         ks : boolean, optional
             If True, include a plot of Ks and mKs at top
             (default = False)
-        dp : boolean, optional
-            If True, include a scatter plot of simulated DP at bottom
+        dpro : boolean, optional
+            If True, include a scatter plot of simulated DP & runoff
             (default = False)
         title : str, optional
             Specify the title as the provided string
@@ -122,32 +122,32 @@ class Visualization:
         """
 
         #Check plotting conditions to determine axes
-        dp_max = round(self.vdata['DP'].max())
-        if dp and ks and dp_max > 0.0:
+        dpro_max = round(self.vdata[['DP','Runoff']].max())
+        if dpro and ks and dpro_max > 0.0:
             htrat = {'height_ratios':[4, 32, 6]}
             fig, (ax2,ax,ax3) = plt.subplots(3, sharex='all',
                                              gridspec_kw=htrat)
             ax3.yaxis.set_major_locator(plt.MaxNLocator(5))
-        elif dp and ks and dp_max <= 0.0:
+        elif dpro and ks and dpro_max <= 0.0:
             htrat = {'height_ratios':[2, 16, 1]}
             fig, (ax2,ax,ax3) = plt.subplots(3, sharex='all',
                                              gridspec_kw=htrat)
             ax3.yaxis.set_major_locator(plt.MaxNLocator(2))
-        elif dp and not ks and dp_max > 0.0:
+        elif dpro and not ks and dpro_max > 0.0:
             htrat = {'height_ratios':[16, 3]}
             fig, (ax,ax3) = plt.subplots(2, sharex='all',
                                          gridspec_kw=htrat)
             ax3.yaxis.set_major_locator(plt.MaxNLocator(5))
-        elif dp and not ks and dp_max <= 0.0:
+        elif dpro and not ks and dpro_max <= 0.0:
             htrat = {'height_ratios':[16, 1]}
             fig, (ax,ax3) = plt.subplots(2, sharex='all',
                                          gridspec_kw=htrat)
             ax3.yaxis.set_major_locator(plt.MaxNLocator(2))
-        elif not dp and ks:
+        elif not dpro and ks:
             htrat = {'height_ratios': [1, 8]}
             fig, (ax2,ax) = plt.subplots(2, sharex='all',
                                          gridspec_kw=htrat)
-        else: #not dp and not ks
+        else: #not dpro and not ks
             fig, ax = plt.subplots()
 
         #Continue setting up the figure
@@ -208,19 +208,21 @@ class Visualization:
                             linewidth=0.5)
 
         #Create the DP plot
-        if dp:
+        if dpro:
             ax3.scatter(x, d['DP'], color='crimson', marker=10,
                        s=60, label='Deep Percolation (DP)')
+            ax3.scatter(x, d['Runoff'], color='blue', marker="o",
+                       s=60, label='Runoff (RO)')
             ax3.set_xlim([xticks[0]-5, xticks[-1]+5])
             ax3.set_xticks(xticks)
             ax3.set_xticklabels(xlabels,fontsize=font)
             ax3.set_xlabel('Day of Year (DOY)', fontsize=font)
-            ax3.set_ylim([0.0, dp_max + 5.])
+            ax3.set_ylim([0.0, dpro_max + 5.])
             yticks = [round(i) for i in ax3.get_yticks()][1:]
             ax3.set_yticks(yticks)
             yticklabels = [str(i) for i in yticks]
             ax3.set_yticklabels(yticklabels, fontsize=font)
-            ax3.set_ylabel('DP (mm)', fontsize=font)
+            ax3.set_ylabel('DP & RO (mm)', fontsize=font)
             ax3.invert_yaxis()
             ax3.grid(ls=':')
             ax3.set_facecolor('whitesmoke')
