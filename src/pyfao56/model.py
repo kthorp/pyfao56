@@ -460,10 +460,12 @@ class Model:
             if math.isnan(io.rhmin):
                 io.rhmin = 45.
             io.idep = 0.0
+            io.ieff = 0.0
             if self.irr is not None:
                 if mykey in self.irr.idata.index:
                     io.idep = self.irr.idata.loc[mykey,'Depth']
                     io.fw = self.irr.idata.loc[mykey,'fw']
+                    io.ieff = self.irr.idata.loc[mykey,'ieff']
 
             #Obtain updates for Kcb, h, and fc, if available
             io.updKcb = float('NaN')
@@ -569,6 +571,7 @@ class Model:
         #Overwrite fc if updates are available
         if io.updfc > 0: io.fc = io.updfc
 
+        io.idep = io.idep * (io.ieff / 100.0)
         #TODO: Add logic to update io.idep with automatic scheduling
 
         #Fraction soil surface wetted (fw) - FAO-56 Table 20, page 149
