@@ -19,40 +19,10 @@ class AutoIrrigate:
 
     Attributes
     ----------
-    Kcbini : float
-        Kcb Initial (FAO-56 Table 17)
-    Kcbmid : float
-        Kcb Mid (FAO-56 Table 17)
-    Kcbend : float
-        Kcb End (FAO-56 Table 17)
-    Lini : int
-        Length Stage Initial (days) (FAO-56 Table 11)
-    Ldev : int
-        Length Stage Development (days) (FAO-56 Table 11)
-    Lmid : int
-        Length Stage Mid (days) (FAO-56 Table 11)
-    Lend : int
-        Length Stage End (days) (FAO-56 Table 11)
-    hini : float
-        Plant Height Initial (m)
-    hmax : float
-        Plant Height Maximum (m) (FAO-56 Table 12)
-    thetaFC : float
-        Volumetric Soil Water Content, Field Capacity (cm3/cm3)
-    thetaWP : float
-        Volumetric Soil Water Content, Wilting Point (cm3/cm3)
-    theta0 : float
-        Volumetric Soil Water Content, Initial (cm3/cm3)
-    Zrini : float
-        Rooting Depth Initial (m)
-    Zrmax : float
-        Rooting Depth Maximum (m) (FAO-56 Table 22)
-    pbase : float
-        Depletion Fraction (p) (FAO-56 Table 22)
-    Ze : float
-        Depth of surface evaporation layer (m) (FAO-56 Table 19 & p144)
-    REW : float
-        Total depth Stage 1 evaporation (mm) (FAO-56 Table 19)
+    mad : float
+        maximum allowable depletion
+    irrEfficiency : float
+        irrigation efficiency (between 0 and 1)
     comment : str, optional
         User-defined file descriptions or metadata (default = '')
     tmstmp : datetime
@@ -66,63 +36,34 @@ class AutoIrrigate:
         Load the parameter data from a file
     """
 
-    def __init__(self, Kcbini=0.15, Kcbmid=1.10, Kcbend=0.50, Lini=25,
-                 Ldev=50, Lmid=50, Lend=25, hini=0.010, hmax=1.20,
-                 thetaFC=0.250, thetaWP=0.100, theta0=0.100, Zrini=0.20,
-                 Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0, comment=''):
-        """Initialize the Parameters class attributes.
-
-        Default parameter values are given below. Users should update
-        the parameters with values for their specific crop and field
-        conditions based on FAO-56 documentation.
+    def __init__(self, mad=0.4, irrEfficiency=1.0, comment=""):
+        """Initialize the AutoIrrigate class attributes.
 
         Parameters
         ----------
-        See Parameters class docstring for parameter definitions.
-        Kcbini  : float, optional, default = 0.15
-        Kcbmid  : float, optional, default = 1.10
-        Kcbend  : float, optional, default = 0.50
-        Lini    : int  , optional, default = 25
-        Ldev    : int  , optional, default = 50
-        Lmid    : int  , optional, default = 50
-        Lend    : int  , optional, default = 25
-        hini    : float, optional, default = 0.010
-        hmax    : float, optional, default = 1.20
-        thetaFC : float, optional, default = 0.250
-        thetaWP : float, optional, default = 0.100
-        theta0  : float, optional, default = 0.100
-        Zrini   : float, optional, default = 0.20
-        Zrmax   : float, optional, default = 1.40
-        pbase   : float, optional, default = 0.50
-        Ze      : float, optional, default = 0.10
-        REW     : float, optional, default = 8.0
-        comment : str  , optional, default = ''
+        mad            : float, optional, default = 0.4
+        irrEfficiency  : float, optional, default = 1.0
+        comment        : str  , optional, default = ''
         """
 
-        self.Kcbini  = Kcbini
-        self.Kcbmid  = Kcbmid
-        self.Kcbend  = Kcbend
-        self.Lini    = Lini
-        self.Ldev    = Ldev
-        self.Lmid    = Lmid
-        self.Lend    = Lend
-        self.hini    = hini
-        self.hmax    = hmax
-        self.thetaFC = thetaFC
-        self.thetaWP = thetaWP
-        self.theta0  = theta0
-        self.Zrini   = Zrini
-        self.Zrmax   = Zrmax
-        self.pbase   = pbase
-        self.Ze      = Ze
-        self.REW     = REW
-        self.comment = 'Comments: ' + comment.strip()
-        self.tmstmp  = datetime.datetime.now()
+        if mad < 0.0:
+            raise ValueError("mad must be a positive number")
+        if not 0.0 <= irrEfficiency <= 1.0:
+            raise ValueError("irrEfficiency must be between 0.0 and 1.0")
+
+        self.mad = float(mad)
+        self.irrEfficiency = float(irrEfficiency)
+        self.comment = "Comments: " + comment.strip()
+        self.tmstmp = datetime.datetime.now()
+
+    def run():
+        pass
 
     def __str__(self):
         """Represent the Parameter class variables as a string."""
 
         self.tmstmp = datetime.datetime.now()
+
         timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
         ast='*'*72
         s=('{:s}\n'
@@ -164,6 +105,7 @@ class AutoIrrigate:
         return s
 
     def savefile(self,filepath='pyfao56.par'):
+
         """Save pyfao56 parameters to a file.
 
         Parameters
