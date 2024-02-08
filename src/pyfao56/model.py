@@ -205,16 +205,7 @@ class Model:
         self.aq_Ks = aq_Ks
         self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
-        if self.autoirr:
-            self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
-                        'h','Kcmax','fc','fw','few','De','Kr','Ke','E',
-                        'DPe','Kc','ETc','TAW','TAWrmax','TAWb','Zr','p',
-                        'RAW','Ks','Kcadj','ETcadj','T','DP','Dinc','Dr',
-                        'fDr','Drmax','fDrmax','Db','fDb','Irrig', 
-                        "EffectiveIrrig","AppliedIrrig",'Rain',
-                        'Runoff','Year','DOY','DOW','Date']
-        else:
-            self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
+        self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
                        'h','Kcmax','fc','fw','few','De','Kr','Ke','E',
                        'DPe','Kc','ETc','TAW','TAWrmax','TAWb','Zr','p',
                        'RAW','Ks','Kcadj','ETcadj','T','DP','Dinc','Dr',
@@ -442,33 +433,13 @@ class Model:
         io.roff   = self.roff
         io.cons_p = self.cons_p
         io.aq_Ks  = self.aq_Ks
-
         #TODO:  Initialize automatic irrigation parameters in io.
-
         self.odata = pd.DataFrame(columns=self.cnames)
 
         while tcurrent <= self.endDate:
             mykey = tcurrent.strftime('%Y-%j')
 
             #Update ModelState object
-            if self.autoirr:
-                io.effectiveIrrig = 0.0
-                io.appliedIrrig = 0.0
-
-                # if it's the first iteration, there is no previous irrigation (assign to 0) 
-                if io.i == 0:
-                    io.prevIrrig = 0.0
-
-                # else, get the effective irrigation of the previous day
-                else:
-                    io.prevIrrig = self.odata.loc[
-                        (
-                            datetime.datetime.strptime(mykey, "%Y-%j")
-                            - datetime.timedelta(1)
-                        ).strftime("%Y-%j"),
-                        "EffectiveIrrig",
-                    ]
-
             io.ETref = self.wth.wdata.loc[mykey,'ETref']
             if math.isnan(io.ETref):
                 io.ETref = self.wth.compute_etref(mykey)
@@ -514,18 +485,7 @@ class Model:
             doy = tcurrent.strftime('%j') #Day of Year
             dow = tcurrent.strftime('%a') #Day of Week
             dat = tcurrent.strftime('%m/%d/%y') #Date mm/dd/yy
-
-            if self.autoirr:
-                data = [year, doy, dow, dat, io.ETref, io.tKcb, io.Kcb,
-                        io.h, io.Kcmax, io.fc, io.fw, io.few, io.De, io.Kr,
-                        io.Ke, io.E, io.DPe, io.Kc, io.ETc, io.TAW,
-                        io.TAWrmax, io.TAWb, io.Zr, io.p, io.RAW, io.Ks,
-                        io.Kcadj, io.ETcadj, io.T, io.DP, io.Dinc, io.Dr,
-                        io.fDr, io.Drmax, io.fDrmax, io.Db, io.fDb, io.idep,
-                        io.effectiveIrrig, io.appliedIrrig, io.rain, 
-                        io.runoff, year, doy, dow, dat]
-            else:
-                data = [year, doy, dow, dat, io.ETref, io.tKcb, io.Kcb,
+            data = [year, doy, dow, dat, io.ETref, io.tKcb, io.Kcb,
                     io.h, io.Kcmax, io.fc, io.fw, io.few, io.De, io.Kr,
                     io.Ke, io.E, io.DPe, io.Kc, io.ETc, io.TAW,
                     io.TAWrmax, io.TAWb, io.Zr, io.p, io.RAW, io.Ks,
@@ -613,7 +573,6 @@ class Model:
         if io.updfc > 0: io.fc = io.updfc
 
         io.idep = io.idep * (io.ieff / 100.0)
-
         #TODO: Add logic to update io.idep with automatic scheduling
 
         #Fraction soil surface wetted (fw) - FAO-56 Table 20, page 149
@@ -779,68 +738,3 @@ class Model:
                 io.fDb = 1.0 - ((io.TAWb - io.Db) / io.TAWb)
             else:
                 io.fDb = 0.0
-
-        if self.autoirr:
-            # add an irrigation event if the fraction depletion surpassed the mad
-            if io.fDr > self.autoirr.mad:
-                io.effectiveIrrig = io.Dr
-                io.appliedIrrig = io.effectiveIrrig / self.autoirr.irrEfficiency
-
-                # recalculate Dr, fDr, and their related parameters using the current
-                # effective irrigation (which was taken from io.Dr) 
-                if io.solmthd == 'D':
-                    #Deep percolation (DP, mm) - FAO-56 Eq. 88
-                    #Boundary layer is considered at the root zone depth (Zr)
-                    DP = io.rain - io.runoff + io.effectiveIrrig - io.ETcadj - io.Dr
-                    io.DP = max([DP,0.0])
-
-                    #Root zone soil water depletion (Dr,mm) - FAO-56 Eqs.85 & 86
-                    Dr = io.Dr - (io.rain-io.runoff)-io.effectiveIrrig+io.ETcadj+io.DP
-                    io.Dr = sorted([0.0, Dr, io.TAW])[1]
-
-                    #Root zone soil water depletion fraction (fDr, mm/mm)
-                    io.fDr = 1.0 - ((io.TAW - io.Dr) / io.TAW)
-
-                    #By default, FAO-56 doesn't consider the following variables
-                    io.Dinc = -99.999
-                    io.Drmax = -99.999
-                    io.fDrmax = -99.999
-                    io.Db = -99.999
-                    io.fDb = -99.999
-
-                elif io.solmthd == 'L':
-                    #Deep percolation (DP, mm)
-                    #Boundary layer is at the max root depth (Zrmax)
-                    DP = io.rain - io.runoff + io.effectiveIrrig - io.ETcadj - io.Drmax
-                    io.DP = max([DP,0.0])
-
-                    #Depletion increment due to root growth (Dinc, mm)
-                    #Computed from Db based on the incremental change in TAWb
-                    if io.TAWb_prev > 0.0:
-                        io.Dinc = io.Db * (1.0 - (io.TAWb / io.TAWb_prev))
-                    else: #handle zero divide issue
-                        io.Dinc = 0.0
-
-                    #Root zone soil water depletion (Dr, mm)
-                    Dr = io.Dr - (io.rain-io.runoff)-io.effectiveIrrig+io.ETcadj+io.Dinc
-                    io.Dr = sorted([0.0, Dr, io.TAW])[1]
-
-                    #Root zone soil water depletion fraction (fDr, mm/mm)
-                    io.fDr = 1.0 - ((io.TAW - io.Dr) / io.TAW)
-
-                    #Soil water depletion at max root depth (Drmax, mm)
-                    Drmax = io.Drmax-(io.rain-io.runoff)-io.effectiveIrrig+io.ETcadj+io.DP
-                    io.Drmax = sorted([0.0, Drmax, io.TAWrmax])[1]
-
-                    #Soil water depletion fraction at Zrmax (fDrmax, mm/mm)
-                    io.fDrmax = 1.0 - ((io.TAWrmax - io.Drmax) / io.TAWrmax)
-
-                    #Soil water depletion in the bottom layer (Db, mm)
-                    Db = io.Drmax - io.Dr
-                    io.Db = sorted([0.0, Db, io.TAWb])[1]
-
-                    #Bottom layer soil water depletion fraction (fDb, mm/mm)
-                    if io.TAWb > 0.0:
-                        io.fDb = 1.0 - ((io.TAWb - io.Db) / io.TAWb)
-                    else:
-                        io.fDb = 0.0

@@ -9,6 +9,7 @@ The autoirrigate.py module contains the following:
         irrigation calculations
 
 12/08/2023 Initial Python framework established for auto irrigation
+02/08/2024 Further development of definitions with Fared Farag
 ########################################################################
 """
 
@@ -19,10 +20,54 @@ class AutoIrrigate:
 
     Attributes
     ----------
-    mad : float
-        maximum allowable depletion
-    irrEfficiency : float
-        irrigation efficiency (between 0 and 1)
+
+    Whether or not to consider autoirrigation
+    alre : boolean
+        Autoirrigate only after last reported irrigation event
+    idow : list
+        Autoirrigate only on specified days of the week
+    idoy : list
+        Autoirrigate only on specified days of the year
+    fpdep : float
+        Threshold forcasted precipitation depth (mm)
+    fpday : int
+        Number of days to consider forecasted precipitation (days)
+    fpact : str
+        'none' - Do not autoirrigate
+        'reduce' - Deduct forecasted precip from irrigation amounts
+
+    Irrigation Triggering
+    cmad : float
+        Constant maximum allowable depletion (cm3/cm3)
+    vmad : list
+        Variable maximum allowable depletion (cm3/cm3)
+    cksc : float
+        Constant critical transpiration reduction factor, Ks (0-1)
+    vksc : list
+        Variable critical transpiration reduction factor, Ks (0-1)
+    dsli : int
+        Days since last irrigation event (days)
+    dsle : int
+        Days since last watering event, including precipitation (days)
+    evnt : int
+        Depth of water to be considered a watering event (mm)
+
+    Irrigation Amount
+    icon : float
+        Constant irrigation amount (mm)
+    imin : float
+        Minimum irrigation amount (mm)
+    imax : float
+        Maximum irrigation amount (mm)
+    itdr : float
+        Target root-zone depletion following irrigation (mm)
+    itfdr : float
+        Target root-zone fractional depletion following irrigation (mm)
+    ietr : boolean
+        Replace (ETcadj-Rain) since last irrigation from past X number of days (days)
+    ieff : float
+        Irrigation application efficiency (%)
+
     comment : str, optional
         User-defined file descriptions or metadata (default = '')
     tmstmp : datetime
@@ -30,10 +75,10 @@ class AutoIrrigate:
 
     Methods
     -------
-    savefile(filepath='pyfao56.par')
-        Save the parameter data to a file
-    loadfile(filepath='pyfao56.par')
-        Load the parameter data from a file
+    savefile(filepath='pyfao56.ati')
+        Save the autoirrigate parameters to a file
+    loadfile(filepath='pyfao56.ati')
+        Load the autoirrigate parameters from a file
     """
 
     def __init__(self, mad=0.4, irrEfficiency=1.0, comment=""):
@@ -56,62 +101,29 @@ class AutoIrrigate:
         self.comment = "Comments: " + comment.strip()
         self.tmstmp = datetime.datetime.now()
 
-    def run():
-        pass
-
     def __str__(self):
-        """Represent the Parameter class variables as a string."""
+        """Represent the AutoIrrigate class variables as a string."""
 
         self.tmstmp = datetime.datetime.now()
-
         timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
         ast='*'*72
         s=('{:s}\n'
            'pyfao56: FAO-56 Evapotranspiration in Python\n'
-           'Parameter Data\n'
+           'AutoIrrigate Data\n'
            'Timestamp: {:s}\n'
            '{:s}\n'
            '{:s}\n'
            '{:s}\n'
-           '{:9.4f} Kcbini, Kcb Initial (FAO-56 Table 17)\n'
-           '{:9.4f} Kcbmid, Kcb Mid (FAO-56 Table 17)\n'
-           '{:9.4f} Kcbend, Kcb End (FAO-56 Table 17)\n'
-           '{:9d} Lini, Length Stage Initial (days) (FAO-56 Table 11)\n'
-           '{:9d} Ldev, Length Stage Development (days) '
-           '(FAO-56 Table 11)\n'
-           '{:9d} Lmid, Length Stage Mid (days) (FAO-56 Table 11)\n'
-           '{:9d} Lend, Length Stage End (days) (FAO-56 Table 11)\n'
-           '{:9.4f} hini, Plant Height Initial (m)\n'
-           '{:9.4f} hmax, Plant Height Maximum (m) (FAO-56 Table 12)\n'
-           '{:9.4f} thetaFC, Vol. Soil Water Content, Field Capacity '
-           '(cm3/cm3)\n'
-           '{:9.4f} thetaWP, Vol. Soil Water Content, Wilting Point '
-           '(cm3/cm3)\n'
-           '{:9.4f} theta0, Vol. Soil Water Content, Initial '
-           '(cm3/cm3)\n'
-           '{:9.4f} Zrini, Rooting Depth Initial (m)\n'
-           '{:9.4f} Zrmax, Rooting Depth Maximum (m) '
-           '(FAO-56 Table 22)\n'
-           '{:9.4f} pbase, Depletion Fraction (p) (FAO-56 Table 22)\n'
-           '{:9.4f} Ze, Depth of surface evaporation layer (m) '
-           '(FAO-56 Table 19 and Page 144)\n'
-           '{:9.4f} REW, Total depth Stage 1 evaporation (mm) '
-           '(FAO-56 Table 19)\n'
-          ).format(ast,timestamp,ast,self.comment,ast,self.Kcbini,
-                   self.Kcbmid,self.Kcbend,self.Lini,self.Ldev,
-                   self.Lmid,self.Lend,self.hini,self.hmax,self.thetaFC,
-                   self.thetaWP,self.theta0,self.Zrini,self.Zrmax,
-                   self.pbase,self.Ze,self.REW)
+          ).format(ast,timestamp,ast,self.comment,ast)
         return s
 
-    def savefile(self,filepath='pyfao56.par'):
-
-        """Save pyfao56 parameters to a file.
+    def savefile(self,filepath='pyfao56.ati'):
+        """Save pyfao56 autoirrigate parameters to a file.
 
         Parameters
         ----------
         filepath : str, optional
-            Any valid filepath string (default = 'pyfao56.par')
+            Any valid filepath string (default = 'pyfao56.ati')
 
         Raises
         ------
@@ -122,18 +134,18 @@ class AutoIrrigate:
         try:
             f = open(filepath, 'w')
         except FileNotFoundError:
-            print('The filepath for parameter data is not found.')
+            print('The filepath for autoirrigate data is not found.')
         else:
             f.write(self.__str__())
             f.close()
 
-    def loadfile(self, filepath='pyfao56.par'):
-        """Load pyfao56 parameters from a file.
+    def loadfile(self, filepath='pyfao56.ati'):
+        """Load pyfao56 autoirrigate parameters from a file.
 
         Parameters
         ----------
         filepath : str, optional
-            Any valid filepath string (default = 'pyfao56.par')
+            Any valid filepath string (default = 'pyfao56.ati')
 
         Raises
         ------
@@ -144,13 +156,13 @@ class AutoIrrigate:
         try:
             f = open(filepath, 'r')
         except FileNotFoundError:
-            print('The filepath for parameter data is not found.')
+            print('The filepath for autoirrigate data is not found.')
         else:
             lines = f.readlines()
             f.close()
             ast = '*' * 72
             a = [i for i,line in enumerate(lines) if line.strip()==ast]
-            endast = a[-1] 
+            endast = a[-1]
             if endast == 3: #v1.1.0 and prior - no timestamps & metadata
                 self.comment = 'Comments: '
             else:
@@ -163,35 +175,3 @@ class AutoIrrigate:
                 line = line.strip().split(',')[0].split()
                 if line[1].lower() == 'kcbini':
                     self.Kcbini = float(line[0])
-                elif line[1].lower() == 'kcbmid':
-                    self.Kcbmid = float(line[0])
-                elif line[1].lower() == 'kcbend':
-                    self.Kcbend = float(line[0])
-                elif line[1].lower() == 'lini':
-                    self.Lini = int(line[0])
-                elif line[1].lower() == 'ldev':
-                    self.Ldev = int(line[0])
-                elif line[1].lower() == 'lmid':
-                    self.Lmid = int(line[0])
-                elif line[1].lower() == 'lend':
-                    self.Lend = int(line[0])
-                elif line[1].lower() == 'hini':
-                    self.hini = float(line[0])
-                elif line[1].lower() == 'hmax':
-                    self.hmax = float(line[0])
-                elif line[1].lower() == 'thetafc':
-                    self.thetaFC = float(line[0])
-                elif line[1].lower() == 'thetawp':
-                    self.thetaWP = float(line[0])
-                elif line[1].lower() == 'theta0':
-                    self.theta0 = float(line[0])
-                elif line[1].lower() == 'zrini':
-                    self.Zrini = float(line[0])
-                elif line[1].lower() == 'zrmax':
-                    self.Zrmax = float(line[0])
-                elif line[1].lower() == 'pbase':
-                    self.pbase = float(line[0])
-                elif line[1].lower() == 'ze':
-                    self.Ze = float(line[0])
-                elif line[1].lower() == 'rew':
-                    self.REW = float(line[0])
