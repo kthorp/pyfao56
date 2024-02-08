@@ -443,6 +443,8 @@ class Model:
         io.cons_p = self.cons_p
         io.aq_Ks  = self.aq_Ks
 
+        #TODO:  Initialize automatic irrigation parameters in io.
+
         self.odata = pd.DataFrame(columns=self.cnames)
 
         while tcurrent <= self.endDate:
@@ -611,6 +613,8 @@ class Model:
         if io.updfc > 0: io.fc = io.updfc
 
         io.idep = io.idep * (io.ieff / 100.0)
+
+        #TODO: Add logic to update io.idep with automatic scheduling
 
         #Fraction soil surface wetted (fw) - FAO-56 Table 20, page 149
         if io.idep > 0.0 and io.rain > 0.0:
