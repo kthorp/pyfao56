@@ -41,8 +41,8 @@ class AutoIrrigate:
             alre  - Autoirrigate only after last reported irrigation
                     event (boolean)
             idow  - Autoirrigate only on specified days of the week
-                    (str, '1234567')
-                    (1:sun, 2:mon, 3:tue, 4:wed, 5:thu, 6:fri, 7:sat)
+                    (str, '0123456')
+                    (0:sun, 1:mon, 2:tue, 3:wed, 4:thu, 5:fri, 6:sat)
             fpdep - Threshold for forcasted precipitation depth
                     (float, mm)
             fpday : Number of days to consider forecasted precipitation
@@ -102,8 +102,8 @@ class AutoIrrigate:
         Save the autoirrigate parameters to a file
     loadfile(filepath='pyfao56.ati')
         Load the autoirrigate parameters from a file
-    addset(start,end,alre=True,idow='1234567',fpdep=25.,fpday=3,
-           fpact='proceed',mad=0.5,madDr=NaN,ksc=NaN,dsli=NaN,dsle=NaN,
+    addset(start,end,alre=True,idow='0123456',fpdep=25.,fpday=3,
+           fpact='proceed',mad=NaN,madDr=NaN,ksc=NaN,dsli=NaN,dsle=NaN,
            evnt=6.,icon=NaN,iper=100.,itdr=NaN,itfdr=NaN,ietrd=NaN,
            ietri=NaN,ietre=NaN,ieff=100.,imin=NaN,imax=NaN,fw=1.0)
         Add a set of autoirrigation parameters to self.aidata
@@ -263,12 +263,12 @@ class AutoIrrigate:
                 data.append(float(line[24]))  #fw
                 self.aidata.loc[i] = data
 
-    def addset(self,start,end,alre=True,idow='1234567',fpdep=25.,
-               fpday=3,fpact='proceed',mad=0.5,madDr=float('NaN'),
-               ksc=float('NaN'),dsli=float('NaN'),dsle=float('NaN'),
-               evnt=10.,icon=float('NaN'),itdr=float('NaN'),
-               itfdr=float('NaN'),ietrd=float('NaN'),ietri=False,
-               ietre=False,iper=100.,ieff=100.,imin=0.,
+    def addset(self,start,end,alre=True,idow='0123456',fpdep=25.,
+               fpday=3,fpact='proceed',mad=float('NaN'),
+               madDr=float('NaN'),ksc=float('NaN'),dsli=float('NaN'),
+               dsle=float('NaN'),evnt=10.,icon=float('NaN'),
+               itdr=float('NaN'),itfdr=float('NaN'),ietrd=float('NaN'),
+               ietri=False,ietre=False,iper=100.,ieff=100.,imin=0.,
                imax=float('NaN'),fw=1.):
         """Add a set of autoirrigation parameters to aidata
 
@@ -282,11 +282,11 @@ class AutoIrrigate:
         start : str, start year and doy for parameter set ('yyyy-ddd')
         end   : str, end year and doy for parameter set ('yyy-ddd')
         alre  : boolean, optional, default=True
-        idow  : str    , optional, default='1234567'
+        idow  : str    , optional, default='0123456'
         fpdep : float  , optional, default=25.
         fpday : float  , optional, default=3
         fpact : str    , optional, default='proceed'
-        mad   : float  , optional, default=0.5
+        mad   : float  , optional, default=NaN
         madDr : float  , optional, default=NaN
         ksc   : float  , optional, default=NaN
         dsli  : float  , optional, default=NaN

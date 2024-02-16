@@ -470,7 +470,7 @@ class Model:
             if math.isnan(io.rhmin):
                 io.rhmin = 45.
             io.idep = 0.0
-            io.ieff = 0.0
+            io.ieff = 100.0
             if self.irr is not None:
                 if mykey in self.irr.idata.index:
                     io.idep = self.irr.idata.loc[mykey,'Depth']
@@ -494,7 +494,7 @@ class Model:
                             if tcurrent <= lastirr:
                                 continue
                     #Evaluate day of the week condition
-                    dnow = str(tcurrent.strftime('%w')+1)
+                    dnow = tcurrent.strftime('%w')
                     if dnow not in self.autoirr.aidata.loc[i,'idow']:
                         continue
                     #Evaluate forecasted precipitation condition
@@ -521,42 +521,28 @@ class Model:
                     if io.Dr <= self.autoirr.aidata.loc[i,'madDr']:
                         continue
                     #Evaluate critical Ks
-                    if io.Ks >= self.autoirr.aidata.loc[i,'kcs']:
+                    if io.Ks >= self.autoirr.aidata.loc[i,'ksc']:
                         continue
                     #Evaluate days since last irrigation (dsli)
-                    dsli = 1
-                    etri = 0.
-                    tmpdate = tcurrent
-                    while True:
-                        tmpdate = tmpdate - tdelta
-                        if tmpdate < self.StartDate: break
-                        tmpkey = tmpdate.strftime('%Y-%j')
-                        p1 = self.odata.loc[tmpkey,'Rain']
-                        p2 = self.odata.loc[tmpkey,'Runoff']
-                        i1 = self.odata.loc[tmpkey,'Irrig']
-                        et = self.odata.loc[tmpkey,'ETcadj']
-                        etri+=(et-p1+p2)
-                        if i1 > 0.: break
-                        dsli+=1
+                    idays = self.odata[self.odata['Irrig']>0.]
+                    idays = pd.to_datetime(idays.index,format='%Y-%j')
+                    if idays.size > 0:
+                        dsli = (tcurrent-max(idays)).days
+                    else:
+                        dsli = ((tcurrent-self.startDate).days)+1
                     if dsli < self.autoirr.aidata.loc[i,'dsli']:
                         continue
                     #Evaluate days since last watering event
-                    dsle = 1
-                    etre = 0.
-                    tmpdate = tcurrent
                     evnt = self.autoirr.aidata.loc[i,'evnt']
-                    while True:
-                        tmpdate = tmpdate - tdelta
-                        if tmpdate < self.StartDate: break
-                        tmpkey = tmpdate.strftime('%Y-%j')
-                        p1 = self.odata.loc[tmpkey,'Rain']
-                        p2 = self.odata.loc[tmpkey,'Runoff']
-                        i1 = self.odata.loc[tmpkey,'Irrig']
-                        i2 = self.odata.loc[tmpkey,'IrrLoss']
-                        et = self.odata.loc[tmpkey,'ETcadj']
-                        etre+=(et-p1+p2-i1+i2)
-                        if (p1-p2+i1-i2) >= evnt: break
-                        dsle+=1
+                    edays = self.odata[(self.odata['Irrig']-
+                                        self.odata['IrrLoss']+
+                                        self.odata['Rain']-
+                                        self.odata['Runoff'])>=evnt]
+                    edays = pd.to_datetime(edays.index,format='%Y-%j')
+                    if edays.size > 0:
+                        dsle = (tcurrent-max(edays)).days
+                    else:
+                        dsle = ((tcurrent-self.startDate).days)+1
                     if dsle < self.autoirr.aidata.loc[i,'dsle']:
                         continue
 
@@ -578,29 +564,42 @@ class Model:
                     if not math.isnan(itfdr):
                         itdr2 = io.TAW-io.TAW*(1.0-itfdr)
                         rate = max([0.0,io.Dr - reduceirr - itdr2])
-                    #Use ETcadj less eff. precip for past number of days
+                    #Use ETcadj less inputs for past X number of days
                     ietrd = self.autoirr.aidata.loc[i,'ietrd']
                     if not math.isnan(ietrd):
-                        etrd = 0.
-                        for j in range(ietrd):
-                            tmpdate = tcurrent - (j+1)*tdelta
-                            if tmpdate < self.StartDate: break
-                            tmpkey = tmpdate.strftime('%Y-%j')
-                            p1 = self.odata.loc[tmpkey,'Rain']
-                            p2 = self.odata.loc[tmpkey,'Runoff']
-                            i1 = self.odata.loc[tmpkey,'Irrig']
-                            i2 = self.odata.loc[tmpkey,'IrrLoss']
-                            et = self.odata.loc[tmpkey,'ETcadj']
-                            etrd+=(et-p1+p2-i1+i2)
-                        rate = max(0.0,etrd - reduceirr)
+                        dsss = (tcurrent-self.startDate).days
+                        recent = self.odata.tail(min([dsss,int(ietrd)]))
+                        p1 = recent['Rain'].sum()
+                        p2 = recent['Runoff'].sum()
+                        i1 = recent['Irrig'].sum()
+                        i2 = recent['IrrLoss'].sum()
+                        et = recent['ETcadj'].sum()
+                        etrd=(et-p1+p2-i1+i2)
+                        rate = max([0.0,etrd - reduceirr])
                     #Use ETcadj less inputs since last irrigation
                     ietri = self.autoirr.aidata.loc[i,'ietri']
                     if ietri:
-                        rate = max(0.0,etri - reduceirr)
+                        dsss = (tcurrent-self.startDate).days
+                        recent = self.odata.tail(min([dsss,dsli]))
+                        p1 = recent['Rain'].sum()
+                        p2 = recent['Runoff'].sum()
+                        i1 = recent['Irrig'].sum()
+                        i2 = recent['IrrLoss'].sum()
+                        et = recent['ETcadj'].sum()
+                        etri=(et-p1+p2-i1+i2)
+                        rate = max([0.0,etri - reduceirr])
                     #Use ETcadj less inputs since last watering event
                     ietre = self.autoirr.aidata.loc[i,'ietre']
                     if ietre:
-                        rate = max(0.0,etre - reduceirr)
+                        dsss = (tcurrent-self.startDate).days
+                        recent = self.odata.tail(min([dsss,dsle]))
+                        p1 = recent['Rain'].sum()
+                        p2 = recent['Runoff'].sum()
+                        i1 = recent['Irrig'].sum()
+                        i2 = recent['IrrLoss'].sum()
+                        et = recent['ETcadj'].sum()
+                        etre=(et-p1+p2-i1+i2)
+                        rate = max([0.0,etre - reduceirr])
 
                     #Furthermore, adjustments to the rate can be made
                     #Adjust rate by a fixed percentage
@@ -611,14 +610,15 @@ class Model:
                     ieff  = self.autoirr.aidata.loc[i,'ieff']
                     if not math.isnan(ieff):
                         rate = rate/(ieff/100.)
-                        io.eff = ieff
+                        io.ieff = ieff
                     #Adjust rate for minimum irrigation amount
                     imin  = self.autoirr.aidata.loc[i,'imin']
                     if not math.isnan(imin):
-                        rate = max(imin, rate)
+                        rate = max([imin, rate])
                     #Adjust rate for maximum irrigation amount
+                    imax  = self.autoirr.aidata.loc[i,'imax']
                     if not math.isnan(imax):
-                        rate = min(imax,rate)
+                        rate = min([imax,rate])
 
                     #Update fraction wetted (fw) for autoirrigation
                     io.fw=self.autoirr.aidata.loc[i,'fw']

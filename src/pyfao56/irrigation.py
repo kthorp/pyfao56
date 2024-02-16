@@ -195,9 +195,5 @@ class Irrigation:
             The date of the last irrigation in the record
         """
 
-        lastirr = datetime.strptime('1800-001','%Y-%j')
-        for date in self.idata.index:
-            dtdate = datetime.strptime(date,'%Y-%j')
-            if dtdate > lastirr:
-                lastirr = dtdate
-        return lastirr
+        dates = pd.to_datetime(self.idata.index,format='%Y-%j')
+        return max(dates)
