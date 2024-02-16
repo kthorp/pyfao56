@@ -32,7 +32,7 @@ class AutoIrrigate:
         columns - ['start','end','alre','idow','fpdep','fpday','fpact',
                    'mad','madDr','ksc','dsli','dsle','evnt','icon',
                    'iper','itdr','itfdr','ietrd','ietri','ietre','ieff',
-                   'imin','imax']
+                   'imin','imax','fw']
             Variables to determine if autoirrigation occurs or not:
             start - Autoirrigate only on start date or later
                     (str, 'yyyy-ddd')
@@ -54,43 +54,47 @@ class AutoIrrigate:
                                 autoirrigation amount
             mad   - Management allowed depletion (float, mm/mm)
                     Autoirrigate if fractional root-zone soil water
-                    depletion (fDr) > mad
+                    depletion (fDr) >= mad
             madDr - Management allowed depletion (float, mm)
                     Autoirrigate if root-zone soil water depletion (Dr)
-                    > madDr
+                    >= madDr
             ksc   - Critical value for transpiration reduction factor Ks
                     (float, 0-1, 1:full transpiration, 0:no trans.)
-                    Autoirrigate if Ks < ksc
+                    Autoirrigate if Ks <= ksc
             dsli  - Critical days since last irrigation event
                     (float, days)
-                    Autoirrigate if days since last irrigation > dsli
-            dsle  - Days since last watering event, including
-                    precipitation (float, days)
-                    Autoirrigate if days since last watering event >dsle
-            evnt  - Minimum depth to be considered a watering event
-                    (float, mm)
+                    Autoirrigate if days since last irrigation >= dsli
+            dsle  - Days since last watering event, considering both
+                    eff. precip and eff. irrigation (float, days)
+                    Autoirrigate if days since last watering event
+                    >= dsle
+            evnt  - Minimum depth of effective precipitation and
+                    effective irrigation to be considered a watering
+                    event (float, mm)
 
             The default autoirrigation amount is root-zone soil water
             depletion (Dr, mm). Variables to alter this irrigation
             amount are as follows:
 
             icon  - Apply a constant autoirrigation amount (float, mm)
-            iper  - Apply a percentage of root-zone soil water depletion
-                    (Dr) (float, %)
             itdr  - Target a specfic root-zone soil water depletion (Dr)
                     following autoirrigation (float, mm)
             itfdr - Target a specific fractional root-zone soil water
                     depletion following autoirrigation (float, mm/mm)
-            ietrd - Replace ETcadj minus precipitation from the past
-                    given number of days (float, days)
-            ietri - Replace ETcadj minus precipitation since the last
-                    irrigation event (boolean)
-            ierte - Replace ETcadj minus precipitation since the last
-                    watering event (boolean)
+            ietrd - Replace ETcadj minus eff. precip and eff. irrig from
+                    the past given number of days (float, days)
+            ietri - Replace ETcadj minus effective precipitation since
+                    the last irrigation event (boolean)
+            ierte - Replace ETcadj minus eff. precip and eff. irrig
+                    since the last watering event (boolean)
+            iper  - Adjust the autoirrigation amount by a fixed
+                    percentage (float, %)
             ieff  - Consider an application efficiency for
                     autoirrigation (float, %)
             imin  - Limit autoirrigation to > minimum amount (float, mm)
             imax  - Limit autoirrigation to < maximum amount (float, mm)
+
+            fw    - Fraction of soil surface wetted (FAO-56 Table 20)
 
     Methods
     -------
@@ -98,11 +102,10 @@ class AutoIrrigate:
         Save the autoirrigate parameters to a file
     loadfile(filepath='pyfao56.ati')
         Load the autoirrigate parameters from a file
-    addset(start='yyyy-ddd',end='yyyy-ddd',alre=True,idow='1234567',
-           fpdep=25.,fpday=3,fpact='proceed',mad=0.5,madDr=NaN,ksc=NaN,
-           dsli=NaN,dsle=NaN,evnt=6.,icon=NaN,iper=100.,itdr=NaN,
-           itfdr=NaN,ietrd=NaN,ietri=NaN,ietre=NaN,ieff=100.,imin=NaN,
-           imax=NaN)
+    addset(start,end,alre=True,idow='1234567',fpdep=25.,fpday=3,
+           fpact='proceed',mad=0.5,madDr=NaN,ksc=NaN,dsli=NaN,dsle=NaN,
+           evnt=6.,icon=NaN,iper=100.,itdr=NaN,itfdr=NaN,ietrd=NaN,
+           ietri=NaN,ietre=NaN,ieff=100.,imin=NaN,imax=NaN,fw=1.0)
         Add a set of autoirrigation parameters to self.aidata
     removeset(index)
         Remove a set of autoirrigation parameters from self.aidata
@@ -128,8 +131,8 @@ class AutoIrrigate:
         self.tmstmp = datetime.datetime.now()
         self.cnames = ['start','end','alre','idow','fpdep','fpday',
                        'fpact','mad','madDr','ksc','dsli','dsle','evnt',
-                       'icon','iper','itdr','itfdr','ietrd','ietri',
-                       'ietre','ieff','imin','imax']
+                       'icon','itdr','itfdr','ietrd','ietri','ietre',
+                       'iper','ieff','imin','imax','fw']
         self.aidata = pd.DataFrame(columns=self.cnames)
 
         if filepath is not None:
@@ -147,17 +150,17 @@ class AutoIrrigate:
                 'madDr':'{:6.2f}'.format,'ksc'  :'{:6.3f}'.format,
                 'dsli' :'{:6.0f}'.format,'dsle' :'{:6.0f}'.format,
                 'evnt' :'{:6.2f}'.format,'icon' :'{:6.2f}'.format,
-                'iper' :'{:6.2f}'.format,'itdr' :'{:6.2f}'.format,
-                'itfdr':'{:6.3f}'.format,'ietrd':'{:6.0f}'.format,
-                'ietri':'{!s:>5}'.format,'ietre':'{!s:>5}'.format,
+                'itdr' :'{:6.2f}'.format,'itfdr':'{:6.3f}'.format,
+                'ietrd':'{:6.0f}'.format,'ietri':'{!s:>5}'.format,
+                'ietre':'{!s:>5}'.format,'iper' :'{:6.2f}'.format,
                 'ieff' :'{:6.2f}'.format,'imin' :'{:6.2f}'.format,
-                'imax' :'{:6.2f}'.format}
+                'imax' :'{:6.2f}'.format,'fw'   :'{:6.2f}'.format}
         fmthead = ['  {:>8s}','  {:>8s}','  {:>5s}','  {:>7s}',
                     ' {:>6s}', ' {:>6s}','  {:>7s}', ' {:>6s}',
                     ' {:>6s}', ' {:>6s}', ' {:>6s}', ' {:>6s}',
                     ' {:>6s}', ' {:>6s}', ' {:>6s}', ' {:>6s}',
-                    ' {:>6s}', ' {:>6s}','  {:>5s}','  {:>5s}',
-                    ' {:>6s}', ' {:>6s}', ' {:>6s}']
+                    ' {:>6s}','  {:>5s}','  {:>5s}', ' {:>6s}',
+                    ' {:>6s}', ' {:>6s}', ' {:>6s}', ' {:>6s}']
         ast='*'*72
         s=('{:s}\n'
            'pyfao56: FAO-56 Evapotranspiration in Python\n'
@@ -248,24 +251,25 @@ class AutoIrrigate:
                 data.append(float(line[12]))  #dsle
                 data.append(float(line[13]))  #evnt
                 data.append(float(line[14]))  #icon
-                data.append(float(line[15]))  #iper
-                data.append(float(line[16]))  #itdr
-                data.append(float(line[17]))  #itfdr
-                data.append(float(line[18]))  #ietrd
-                data.append(line[19]=='True') #ietri
-                data.append(line[20]=='True') #ietre
+                data.append(float(line[15]))  #itdr
+                data.append(float(line[16]))  #itfdr
+                data.append(float(line[17]))  #ietrd
+                data.append(line[18]=='True') #ietri
+                data.append(line[19]=='True') #ietre
+                data.append(float(line[20]))  #iper
                 data.append(float(line[21]))  #ieff
                 data.append(float(line[22]))  #imax
                 data.append(float(line[23]))  #imin
+                data.append(float(line[24]))  #fw
                 self.aidata.loc[i] = data
 
-    def addset(self,start='yyyy-ddd',end='yyyy-ddd',alre=True,
-               idow='1234567',fpdep=25.,fpday=3,fpact='proceed',mad=0.5,
-               madDr=float('NaN'),ksc=float('NaN'),dsli=float('NaN'),
-               dsle=float('NaN'),evnt=10.,icon=float('NaN'),iper=100.,
-               itdr=float('NaN'),itfdr=float('NaN'),ietrd=float('NaN'),
-               ietri=False,ietre=False,ieff=100.,imin=0.,
-               imax=float('NaN')):
+    def addset(self,start,end,alre=True,idow='1234567',fpdep=25.,
+               fpday=3,fpact='proceed',mad=0.5,madDr=float('NaN'),
+               ksc=float('NaN'),dsli=float('NaN'),dsle=float('NaN'),
+               evnt=10.,icon=float('NaN'),itdr=float('NaN'),
+               itfdr=float('NaN'),ietrd=float('NaN'),ietri=False,
+               ietre=False,iper=100.,ieff=100.,imin=0.,
+               imax=float('NaN'),fw=1.):
         """Add a set of autoirrigation parameters to aidata
 
         Default parameter values are given below. Users should update
@@ -275,8 +279,8 @@ class AutoIrrigate:
         Parameters
         ----------
         See AutoIrrigate class docstring for parameter definitions.
-        start : str    , optional, default='yyyy-ddd'
-        end   : str    , optional, default='yyyy-ddd'
+        start : str, start year and doy for parameter set ('yyyy-ddd')
+        end   : str, end year and doy for parameter set ('yyy-ddd')
         alre  : boolean, optional, default=True
         idow  : str    , optional, default='1234567'
         fpdep : float  , optional, default=25.
@@ -289,24 +293,25 @@ class AutoIrrigate:
         dsle  : float  , optional, default=NaN
         evnt  : float  , optional, default=10.
         icon  : float  , optional, default=NaN
-        iper  : float  , optional, default=100.
         itdr  : float  , optional, default=NaN
         itfdr : float  , optional, default=NaN
         ietrd : float  , optional, default=NaN
         ietri : boolean, optional, default=False
         ietre : boolean, optional, default=False
+        iper  : float  , optional, default=100.
         ieff  : float  , optional, default=100.
         imin  : float  , optional, default=0.
         imax  : float  , optional, default=NaN
+        fw    : float  , optional, default=1.
         """
 
         i = len(self.aidata)
         data = [str(start),str(end),bool(alre),str(idow),float(fpdep),
                 float(fpday),str(fpact),float(mad),float(madDr),
                 float(ksc),float(dsli),float(dsle),float(evnt),
-                float(icon),float(iper),float(itdr),float(itfdr),
-                float(ietrd),bool(ietri),bool(ietre),float(ieff),
-                float(imin),float(imax)]
+                float(icon),float(itdr),float(itfdr),float(ietrd),
+                bool(ietri),bool(ietre),float(iper),float(ieff),
+                float(imin),float(imax),float(fw)]
         self.aidata.loc[i] = data
 
     def removeset(self,index):

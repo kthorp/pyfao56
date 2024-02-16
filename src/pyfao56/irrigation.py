@@ -11,6 +11,7 @@ The irrigation.py module contains the following:
 01/07/2016 Initial Python functions developed by Kelly Thorp
 11/04/2021 Finalized updates for inclusion in the pyfao56 Python package
 12/13/2023 Added irrigation efficiency term for each irrigation event
+02/14/2024 Added function to return date of the latest irrigation record
 ########################################################################
 """
 
@@ -44,6 +45,8 @@ class Irrigation:
         Add an irrigation event to self.idata
     customload()
         Users can override for custom loading of irrigation data.
+    getlastdate()
+        Return the last irrigation date in the record.
     """
 
     def __init__(self,filepath=None,comment=''):
@@ -182,3 +185,19 @@ class Irrigation:
         data."""
 
         pass
+
+    def getlastdate(self):
+        """Return the last irrigation date in the record.
+
+        Returns
+        -------
+        lastirr : datetime
+            The date of the last irrigation in the record
+        """
+
+        lastirr = datetime.strptime('1800-001','%Y-%j')
+        for date in self.idata.index:
+            dtdate = datetime.strptime(date,'%Y-%j')
+            if dtdate > lastirr:
+                lastirr = dtdate
+        return lastirr
