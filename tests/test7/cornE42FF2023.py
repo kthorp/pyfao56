@@ -68,7 +68,7 @@ def run():
     vis = tools.Visualization(mdl, sws=sws, dayline=True)
     pngpath = os.path.join(module_dir, 'E42FF2023_Dr.png')
     vis.plot_Dr(drmax=True,raw=True,events=True,obs=True,ks=True,
-                dp=True,title='2023 Corn E42FF Dr',
+                dpro=True,title='2023 Corn E42FF Dr',
                 filepath=pngpath)
     pngpath = os.path.join(module_dir, 'E42FF2023_ET.png')
     vis.plot_ET(title='2023 Corn E42FF ET', show=True, filepath=pngpath)

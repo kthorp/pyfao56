@@ -122,7 +122,7 @@ class Visualization:
         """
 
         #Check plotting conditions to determine axes
-        dpro_max = round(self.vdata[['DP','Runoff']].max())
+        dpro_max = round(self.vdata[['DP','Runoff']].to_numpy().max())
         if dpro and ks and dpro_max > 0.0:
             htrat = {'height_ratios':[4, 32, 6]}
             fig, (ax2,ax,ax3) = plt.subplots(3, sharex='all',

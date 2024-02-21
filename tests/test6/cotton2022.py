@@ -142,7 +142,7 @@ def run():
     vis = tools.Visualization(mdl, sws=sws, dayline=True)
     pngpath = os.path.join(module_dir, 'cotton2022p10-2_Dr.png')
     vis.plot_Dr(drmax=True,raw=True,events=True,obs=True,ks=True,
-                dp=True,title='2022 Cotton p10-2 Dr',
+                dpro=True,title='2022 Cotton p10-2 Dr',
                 filepath=pngpath)
     pngpath = os.path.join(module_dir, 'cotton2022p10-2_ET.png')
     vis.plot_ET(title='2023 Cotton p10-2 ET',show=True,filepath=pngpath)
