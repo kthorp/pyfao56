@@ -31,7 +31,7 @@ class AutoIrrigate:
         index - counter as int
         columns - ['start','end','alre','idow','fpdep','fpday','fpact',
                    'mad','madDr','ksc','dsli','dsle','evnt','icon',
-                   'iper','itdr','itfdr','ietrd','ietri','ietre','ieff',
+                   'itdr','itfdr','ietrd','ietri','ietre','iper','ieff',
                    'imin','imax','fw']
             Variables to determine if autoirrigation occurs or not:
             start - Autoirrigate only on start date or later
@@ -81,12 +81,12 @@ class AutoIrrigate:
                     following autoirrigation (float, mm)
             itfdr - Target a specific fractional root-zone soil water
                     depletion following autoirrigation (float, mm/mm)
-            ietrd - Replace ETcadj minus eff. precip and eff. irrig from
+            ietrd - Replace ETcadj minus effective precipitaiton from
                     the past given number of days (float, days)
             ietri - Replace ETcadj minus effective precipitation since
                     the last irrigation event (boolean)
-            ierte - Replace ETcadj minus eff. precip and eff. irrig
-                    since the last watering event (boolean)
+            ierte - Replace ETcadj minus effffective precipitation since
+                    the last watering event (boolean)
             iper  - Adjust the autoirrigation amount by a fixed
                     percentage (float, %)
             ieff  - Consider an application efficiency for

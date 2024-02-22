@@ -564,41 +564,35 @@ class Model:
                     if not math.isnan(itfdr):
                         itdr2 = io.TAW-io.TAW*(1.0-itfdr)
                         rate = max([0.0,io.Dr - reduceirr - itdr2])
-                    #Use ETcadj less inputs for past X number of days
+                    #Use ETcadj less precip for past X number of days
                     ietrd = self.autoirr.aidata.loc[i,'ietrd']
                     if not math.isnan(ietrd):
                         dsss = (tcurrent-self.startDate).days
                         recent = self.odata.tail(min([dsss,int(ietrd)]))
                         p1 = recent['Rain'].sum()
                         p2 = recent['Runoff'].sum()
-                        i1 = recent['Irrig'].sum()
-                        i2 = recent['IrrLoss'].sum()
                         et = recent['ETcadj'].sum()
-                        etrd=(et-p1+p2-i1+i2)
+                        etrd=(et-p1+p2)
                         rate = max([0.0,etrd - reduceirr])
-                    #Use ETcadj less inputs since last irrigation
+                    #Use ETcadj less precip since last irrigation
                     ietri = self.autoirr.aidata.loc[i,'ietri']
                     if ietri:
                         dsss = (tcurrent-self.startDate).days
                         recent = self.odata.tail(min([dsss,dsli]))
                         p1 = recent['Rain'].sum()
                         p2 = recent['Runoff'].sum()
-                        i1 = recent['Irrig'].sum()
-                        i2 = recent['IrrLoss'].sum()
                         et = recent['ETcadj'].sum()
-                        etri=(et-p1+p2-i1+i2)
+                        etri=(et-p1+p2)
                         rate = max([0.0,etri - reduceirr])
-                    #Use ETcadj less inputs since last watering event
+                    #Use ETcadj less precip since last watering event
                     ietre = self.autoirr.aidata.loc[i,'ietre']
                     if ietre:
                         dsss = (tcurrent-self.startDate).days
                         recent = self.odata.tail(min([dsss,dsle]))
                         p1 = recent['Rain'].sum()
                         p2 = recent['Runoff'].sum()
-                        i1 = recent['Irrig'].sum()
-                        i2 = recent['IrrLoss'].sum()
                         et = recent['ETcadj'].sum()
-                        etre=(et-p1+p2-i1+i2)
+                        etre=(et-p1+p2)
                         rate = max([0.0,etre - reduceirr])
 
                     #Furthermore, adjustments to the rate can be made
