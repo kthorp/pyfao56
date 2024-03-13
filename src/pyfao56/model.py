@@ -381,12 +381,12 @@ class Model:
         io.Ze      = self.par.Ze
         io.REW     = self.par.REW
         io.CN2     = float(self.par.CN2)
-        #Total evaporable water (TEW, mm) - FAO-56 Eq. 73
-        io.TEW = 1000. * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
-        #Initial depth of evaporation (De, mm) - FAO-56 page 153
-        io.De = 1000. * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
         if self.sol is None:
             io.solmthd = 'D' #Default homogeneous soil from Parameters
+            #Total evaporable water (TEW, mm) - FAO-56 Eq. 73
+            io.TEW = 1000. * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
+            #Initial depth of evaporation (De, mm) - FAO-56 page 153
+            io.De = 1000. * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
             #Initial root zone depletion (Dr, mm) - FAO-56 Eq. 87
             io.Dr = 1000. * (io.thetaFC - io.theta0) * io.Zrini
             #Initial soil depletion for max root depth (Drmax, mm)
@@ -403,6 +403,8 @@ class Model:
             io.lyr_thFC  = list(self.sol.sdata['thetaFC'])
             io.lyr_thWP  = list(self.sol.sdata['thetaWP'])
             io.lyr_th0   = list(self.sol.sdata['theta0'])
+            io.TEW = 0.
+            io.De = 0.
             io.Dr = 0.
             io.Drmax = 0.
             io.TAW = 0.
@@ -412,6 +414,14 @@ class Model:
                 #Find soil layer index that contains dpthmm
                 lyr_idx = [idx for (idx, dpth) in
                           enumerate(io.lyr_dpths) if dpthmm<=dpth*10][0]
+                #Total evaporable water (TEW, mm) - FAO-56 Eq. 73
+                if dpthmm <= io.Ze * 1000.: #mm
+                    diff=io.lyr_thFC[lyr_idx]-0.50*io.lyr_thWP[lyr_idx]
+                    io.TEW += diff #mm
+                #Initial depth of evaporation (De, mm) - FAO-56 page 153
+                if dpthmm <= io.Ze * 1000.: #mm
+                    diff=io.lyr_thFC[lyr_idx]-0.50*io.lyr_thWP[lyr_idx]
+                    io.De += diff #mm
                 #Initial root zone depletion (Dr, mm)
                 if dpthmm <= io.Zrini * 1000.: #mm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_th0[lyr_idx])
