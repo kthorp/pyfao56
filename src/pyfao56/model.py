@@ -575,33 +575,36 @@ class Model:
                         itdr2 = io.TAW-io.TAW*(1.0-itfdr)
                         rate = max([0.0,io.Dr - reduceirr - itdr2])
                     #Use ETcadj less precip for past X number of days
+                    ettyp = self.autoirr.aidata.loc[i,'ettyp']
                     ietrd = self.autoirr.aidata.loc[i,'ietrd']
                     if not math.isnan(ietrd):
                         dsss = (tcurrent-self.startDate).days
                         recent = self.odata.tail(min([dsss,int(ietrd)]))
                         p1 = recent['Rain'].sum()
                         p2 = recent['Runoff'].sum()
-                        et = recent['ETcadj'].sum()
+                        et = recent[ettyp].sum()
                         etrd=(et-p1+p2)
                         rate = max([0.0,etrd - reduceirr])
                     #Use ETcadj less precip since last irrigation
+                    ettyp = self.autoirr.aidata.loc[i,'ettyp']
                     ietri = self.autoirr.aidata.loc[i,'ietri']
                     if ietri:
                         dsss = (tcurrent-self.startDate).days
                         recent = self.odata.tail(min([dsss,dsli]))
                         p1 = recent['Rain'].sum()
                         p2 = recent['Runoff'].sum()
-                        et = recent['ETcadj'].sum()
+                        et = recent[ettyp].sum()
                         etri=(et-p1+p2)
                         rate = max([0.0,etri - reduceirr])
                     #Use ETcadj less precip since last watering event
+                    ettyp = self.autoirr.aidata.loc[i,'ettyp']
                     ietre = self.autoirr.aidata.loc[i,'ietre']
                     if ietre:
                         dsss = (tcurrent-self.startDate).days
                         recent = self.odata.tail(min([dsss,dsle]))
                         p1 = recent['Rain'].sum()
                         p2 = recent['Runoff'].sum()
-                        et = recent['ETcadj'].sum()
+                        et = recent[ettyp].sum()
                         etre=(et-p1+p2)
                         rate = max([0.0,etre - reduceirr])
 
