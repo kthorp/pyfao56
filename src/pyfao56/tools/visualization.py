@@ -74,6 +74,8 @@ class Visualization:
                                         right_index=True,
                                         left_index=True,
                                         how='outer')
+        else:
+            self.vdata = odatasub
 
         #Set zero rain and irrigation to NaN
         NaN = float('NaN')
