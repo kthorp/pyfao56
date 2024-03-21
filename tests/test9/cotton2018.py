@@ -202,47 +202,58 @@ def run(case=0):
         airr.addset('2018-108','2018-250',mad=0.5,itfdr=0.1)
         mdl = fao.Model('2018-108','2018-303', par, wth, autoirr=airr)
     #Case 16: Autoirrigate every 5 days with 5-day ET replacement
-    #         less precipitation
+    #         less precipitation. Default ET is ETcadj.
     elif case==16:
         airr.addset('2018-108','2018-250',dsli=5,ietrd=5)
         mdl = fao.Model('2018-108','2018-303', par, wth, autoirr=airr)
     #Case 17: Autoirrigate with mad=0.4 and replace ET less
-    #         precipitation since last irrigation event
+    #         precipitation since last irrigation event. Default ET is
+    #         ETcadj.
     elif case==17:
         airr.addset('2018-108','2018-250',mad=0.4,ietri=True)
         mdl = fao.Model('2018-108','2018-303', par, wth, autoirr=airr)
     #Case 18: Autoirrigate with mad=0.4 and replace ET less
-    #         precipitation since last watering event > 14 mm
+    #         precipitation since last watering event > 14 mm.
+    #         Default ET is ETcadj.
     elif case==18:
         airr.addset('2018-108','2018-250',mad=0.4,evnt=14,ietre=True)
         mdl = fao.Model('2018-108','2018-303', par, wth, autoirr=airr)
-    #Case 19: Autoirrigate with mad=0.45 and apply 90% of Dr
+    #Case 19: Autoirrigate every 5 days with 5-day ET replacement
+    #         less precipitation. Use ETc instead of ETcadj.
     elif case==19:
+        airr.addset('2018-108','2018-250',dsli=5,ietrd=5,ettyp='ETc')
+        mdl = fao.Model('2018-108','2018-303', par, wth, autoirr=airr)
+    #Case 20: Autoirrigate with mad=0.45 and apply 90% of Dr
+    elif case==20:
         airr.addset('2018-108','2018-250',mad=0.45,iper=90.)
         mdl = fao.Model('2018-108','2018-303', par, wth, autoirr=airr)
-    #Case 20: Autoirrigate with mad=0.45 considering an application
+    #Case 21: Autoirrigate with mad=0.45 considering an application
     #         efficiency of 80%.
-    elif case==20:
+    elif case==21:
         airr.addset('2018-108','2018-250',mad=0.45,ieff=80.)
         mdl = fao.Model('2018-108','2018-303', par, wth, autoirr=airr)
-    #Case 21: Autoirrigate with mad=0.3 considering a minimum
+    #Case 22: Autoirrigate with mad=0.3 considering a minimum
     #         application rate of 12 mm.
-    elif case==21:
+    elif case==22:
         airr.addset('2018-108','2018-250',mad=0.3,imin=12.)
         mdl = fao.Model('2018-108','2018-303', par, wth, autoirr=airr)
-    #Case 22: Autoirrigate with mad=0.3 considering a minimum
+    #Case 23: Autoirrigate with mad=0.3 considering a minimum
     #         application rate of 12 mm and maximum rate of 24 mm.
-    elif case==22:
+    elif case==23:
         airr.addset('2018-108','2018-250',mad=0.3,imin=12.,imax=24.)
         mdl = fao.Model('2018-108','2018-303', par, wth, autoirr=airr)
-    #Case 23: Autoirrigate with mad=0.4 and specify fw for the
+    #Case 24: Autoirrigate with mad=0.4 and specify fw for the
     #         irrigation method at 0.5
-    elif case==23:
+    elif case==24:
         airr.addset('2018-108','2018-250',mad=0.4,fw=0.5)
         mdl = fao.Model('2018-108','2018-303', par, wth, autoirr=airr)
     else:
         print("No case for input value.")
         return
+
+    #Test save and load methods
+    airr.savefile(os.path.join(module_dir,'cotton2018.ati'))
+    airr.loadfile(os.path.join(module_dir,'cotton2018.ati'))
 
     #Run the model
     mdl.run()

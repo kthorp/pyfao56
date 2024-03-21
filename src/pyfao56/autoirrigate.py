@@ -31,8 +31,8 @@ class AutoIrrigate:
         index - counter as int
         columns - ['start','end','alre','idow','fpdep','fpday','fpact',
                    'mad','madDr','ksc','dsli','dsle','evnt','icon',
-                   'itdr','itfdr','ietrd','ietri','ietre','iper','ieff',
-                   'imin','imax','fw']
+                   'itdr','itfdr','ietrd','ietri','ietre','ettyp',
+                   'iper','ieff','imin','imax','fw']
             Variables to determine if autoirrigation occurs or not:
             start - Autoirrigate only on start date or later
                     (str, 'yyyy-ddd')
@@ -94,8 +94,8 @@ class AutoIrrigate:
                     percentage (float, %)
             ieff  - Consider an application efficiency for
                     autoirrigation (float, %)
-            imin  - Limit autoirrigation to > minimum amount (float, mm)
-            imax  - Limit autoirrigation to < maximum amount (float, mm)
+            imin  - Limit autoirrigation to >= minimum amount (float,mm)
+            imax  - Limit autoirrigation to <= maximum amount (float,mm)
 
             fw    - Fraction of soil surface wetted (FAO-56 Table 20)
 
