@@ -11,7 +11,8 @@ Reference ET is computed using the ASCE Standardized Reference ET Equation, whic
 
 ## Source Code
 The main pyfao56 package contains the following modules:
-* irrigation.py - I/O tools to define irrigation management schedules
+* autoirrigate.py - I/O tools to specify parameters for autoirrigation
+* irrigation.py - I/O tools to specify irrigation schedules explicitly
 * model.py - Equations for daily soil water balance computations
 * parameters.py - I/O tools for required input parameters
 * refet.py - Equations for computing ASCE Standardized Reference ET
@@ -21,7 +22,7 @@ The main pyfao56 package contains the following modules:
 
 The source code is available [here](http://github.com/kthorp/pyfao56/). It uses a basic object-oriented design with separate classes to make FAO-56 calculations and to manage parameter, weather, irrigation management, and soil profile data. [Pandas](https://pandas.pydata.org/) data frames are used for data storage and management. Further documentation of the class structure is contained in the source files.
 
-The pyfao56 package contains a new subpackage called [tools](https://github.com/kthorp/pyfao56/tree/main/src/pyfao56/custom), which has several modules to facilitate model use as follows:
+The pyfao56 package contains a subpackage called [tools](https://github.com/kthorp/pyfao56/tree/main/src/pyfao56/custom), which has several modules to facilitate model use as follows:
 * forecast.py - Obtain a seven-day weather forecast from the National Digital Forecast Database ([NDFD](https://graphical.weather.gov/xml/rest.php))
 * soil_water.py - I/O tools for managing measured volumetric soil water content data and computing root zone soil water metrics from those measurements
 * visualization.py - Develop plots to visualize measured and simulated data for root zone soil water depletion and evapotranspiration
@@ -63,11 +64,12 @@ Users can customize loading of weather data with wth.customload(). The azmet_mar
 * To load data from a file: `irr.loadfile('myfilename.irr')`
 * To write data to a file: `irr.savefile('myfilename.irr')`
 * To add an irrigation event (provide yyyy, ddd, depth in mm, and fw): `irr.addevent(2019, 249, 28.3, 1.00)`
+* Optionally, add an irrigation efficiency (default = 100.0%): `irr.addevent(2019, 249, 28.3, 1.00, 95.0)`
 
 An example of the irrigation file format is [here](https://github.com/kthorp/pyfao56/tree/main/tests/test1/cottondry2013.irr).
 
 ### Run the daily soil water balance model
-* Instantiate a Model class (provide starting yyyy-ddd, ending yyyy-ddd, and classes for Parameters, Weather, and Irrigation): `mdl = fao.Model('2013-113','2013-312', par, wth, irr)`
+* Instantiate a Model class (provide starting yyyy-ddd, ending yyyy-ddd, and classes for Parameters, Weather, and optionally Irrigation): `mdl = fao.Model('2013-113','2013-312', par, wth, irr=irr)`
 * To run the model: `mdl.run()`
 * To print the output: `print(mdl)`
 * To save the output to file: `mdl.savefile('myoutputfile.out')`
@@ -78,18 +80,26 @@ An example of the model output file is [here](https://github.com/kthorp/pyfao56/
 * Instantiate a SoilProfile class: `sol = fao.SoilProfile()`
 * To load data from a file: `sol.loadfile('myfilename.sol')`
 * To write data to a file: `sol.savefile('myfilename.sol')`
-* Instantiate a Model class with stratified soil layer data (provide starting yyyy-ddd, ending yyyy-ddd, and classes for Parameters, Weather, Irrigation, and SoilProfile): `mdl = fao.Model('2019-108','2019-274', par, wth, irr, sol=sol)`
+* Instantiate a Model class with stratified soil layer data (provide starting yyyy-ddd, ending yyyy-ddd, and classes for Parameters, Weather, Irrigation, and SoilProfile): `mdl = fao.Model('2019-108','2019-274', par, wth, irr=irr, sol=sol)`
 * To run the model: `mdl.run()`
 
 An example of the soil file format is [here](https://github.com/kthorp/pyfao56/tree/main/tests/test5/E12FF2022.sol).
 
 Users can customize loading of soil profile data with sol.customload(). The example_soil.py module in the custom subpackage provides an example for developing a custom soil data class that inherits from SoilProfile and overrides its customload() function.
 
+### Run the daily soil water balance model with autoirrigation (optional)
+* Instantiate an AutoIrrigate class: `airr = fao.AutoIrrigate()`
+* Add one (or more) autoirrigation parameter set(s): `airr.addset('2018-108','2018-250',mad=0.4)`
+* Instantiate a Model class with autoirrigation enabled: `mdl = fao.Model('2018-108','2018-303', par, wth, autoirr=airr)`
+* To run the model: `mdl.run()`
+
+There are currently 25 parameters that can be used to customize the autoirrigation computation. The autoirrigation parameters are described in the comments of the [autoirrigate.py module](https://github.com/kthorp/pyfao56/tree/main/src/pyfao56/autoirrigate.py). Furthermore, the [cotton2018.py module](https://github.com/kthorp/pyfao56/tree/main/tests/test9/cotton2018.py) in [test9](https://github.com/kthorp/pyfao56/tree/main/tests/test9/) provides many examples of various ways to implement the autoirrigation method.
+
 ### Update basal crop coefficients (Kcb), crop height (h), or crop cover (fc) (optional)
 * Instantiate an Update class: `upd = fao.Update()`
 * To load data from a file: `upd.loadfile('myfilename.upd')`
 * To write data to a file: `upd.savefile('myfilename.upd')`
-* Instantiate a model class with updating (provide starting yyyy-ddd, ending yyyy-ddd, and classes for Parameters, Weather, Irrigation, and Updates): `mdl = fao.Model('2019-108','2019-274', par, wth, irr, upd=upd)`
+* Instantiate a model class with updating (provide starting yyyy-ddd, ending yyyy-ddd, and classes for Parameters, Weather, Irrigation, and Updates): `mdl = fao.Model('2019-108','2019-274', par, wth, irr=irr, upd=upd)`
 * To run the model: `mdl.run()`
 
 An example of the update file format is [here](https://github.com/kthorp/pyfao56/tree/main/tests/test3/cotton2019.upd).
@@ -111,9 +121,13 @@ Further example scripts for setting up and running the model are [here](https://
 
 [test7](https://github.com/kthorp/pyfao56/tree/main/tests/test7) - The cornE42FF2023.py module contains code to setup and run pyfao56 for a full-irrigation treatment in a 2023 maize study at Greeley, Colorado and to demonstrate the Visualization class for visualizing root zone soil water depletion and evapotranspiration time series. The SoilWaterSeries and Statistics classes are also demonstrated.
 
+[test8](https://github.com/kthorp/pyfao56/tree/main/tests/test8) - The runoff.py module contains code to setup and run pyfao56 while considering surface runoff for field conditions in McLean County, Illinois. A customized figure is created to demonstrate the water balance with surface runoff enabled.
+
+[test9](https://github.com/kthorp/pyfao56/tree/main/tests/test9) - The cotton2018.py module contains code to setup and run pyfao56 for a well-watered treatment in a 2018 cotton field study at Maricopa, Arizona. The module provides many examples of ways to parameterize the autoirrigation methododogy in pyfao56.
+
 ## Detailed Startup Information
 ### Core Functionality
-The core pyfao56 model is designed to follow the [FAO-56](http://www.fao.org/3/x0490e/x0490e00.htm) methodology in the strictest and purest sense. To implement the model, users must first populate two pyfao56 classes with appropriate data: Parameters and Weather. Together, these two classes represent the minimum data inputs that users must provide to conduct a simulation. Irrigation data is also often provided via the Irrigation class, although with version 1.2, irrigation data is not strictly required, and the model will run without it.
+The core pyfao56 model was originally designed to follow the [FAO-56](http://www.fao.org/3/x0490e/x0490e00.htm) methodology in the strictest and purest sense. To implement the model, users must first populate two pyfao56 classes with appropriate data: Parameters and Weather. Together, these two classes represent the minimum data inputs that users must provide to conduct a simulation. Irrigation data is also often provided via the Irrigation class, although with version 1.2, irrigation data is not strictly required, and the model will run without it.
 
 After the input classes are created and populated, users must then instantiate a Model class by providing the simulation starting date ('yyyy-ddd'), simulation ending date ('yyyy-ddd'), and the instances of the Parameters, Weather, and other optional classes. Users can then run the daily soil water balance model by calling the "run()" method of the Model class.
 
@@ -122,15 +136,25 @@ Each pyfao56 simulation is intended to model a single realization of the crop sy
 ### Optional Functionality
 The pyfao56 package also provides optional functionality that is intended to enhance the implementation of FAO-56 methodology. While the following enhancements may be beneficial for some users, their methodologies are not specifically described in FAO-56.
 
+* #### AutoIrrigate Class
+While users can specify irrigation management schedules explicitly using the Irrigation class, the AutoIrrigate class was developed for pyfao56 to compute irrigation schedules automatically, based on model states and other user-defined contraints for irrigation decisions. The AutoIrrigate class provides 25 parameters that can be used to customize automatic irrigation scheduling in pyfao56. Parameters for controlling autoirrigation timing include the start and end dates for the autoirrigation time period, day(s) of the week that irrigation is permitted, considering of forecasted precipitation events, managemed allowed depletion, the transpiration reduction coefficient (Ks) below a critical value, and days since last irrigation or watering event. When autoirrigation is triggered, the default irrigation amount is the root-zone soil water depletion (Dr, mm). Parameters to adjust this amount include a constant application depth, a targeted depletion (i.e., deficit irrigation), a variety of ET replacement options, and adjustment of the default rate by a fixed percentage, an adjustment for irrigation efficiency, and limits for minimum and maximum irrigation application amount. The Model class can be instantiated with an Irrigation class, an AutoIrrigate class, or both or neither.
+
 * #### SoilProfile Class
-The SoilProfile class enables input of stratified soil layer information to the model. If available, layered soil profile data should improve the estimates of total available water (TAW) and soil water depletion (Dr) in pyfao56. When including a SoilProfile class in the simulation, the model ignores the thetaFC, thetaWP, and theta0 inputs provided in the Parameters class. Because standard FAO-56 methodology considers only a single, homogenous soil layer, the SoilProfile class can enhance the representation of the soil profile when layered soil profile information is available.
+The SoilProfile class enables input of stratified soil layer information to the model. If available, layered soil profile data should improve the estimates of total available water (TAW) and soil water depletion (Dr) in pyfao56. When including a SoilProfile class in the simulation, the model ignores the thetaFC, thetaWP, and theta0 inputs provided in the Parameters class. Because standard FAO-56 methodology considers only a single, homogenous soil layer, the SoilProfile class can enhance the representation of the soil profile and improve estimates of TAW and Dr when layered soil profile information is available. However, the soil water balance is still computed for the entire root zone and not for individual soil layers.
 
 * #### Update Class
 The Update class enables users to update key state variables during the model simulation. At this time, the following variables can be updated: basal crop coefficients (Kcb), crop height (h), and crop cover (fc). When the pyfao56 Update class is populated and provided as an input to the Model class, pyfao56 overwrites model state variables with the data provided in the Update class.
 
-* #### Constant Depletion Fraction
-The pyfao56 Model class provides an argument to optionally set the TAW depletion fraction (p) to a constant value. FAO-56 specifies a methodology for varying the depletion fraction based on daily crop evapotranspiration (ETc) (see [FAO-56 page 162 and Table 22](https://www.fao.org/3/x0490e/x0490e0e.htm#readily%20available%20water%20(raw))). However, FAO-56 also discusses using constant values for depletion fraction (see [FAO-56 page 162](https://www.fao.org/3/x0490e/x0490e0e.htm#readily%20available%20water%20(raw)) and [Annex 8](https://www.fao.org/3/x0490e/x0490e0p.htm#annex%208.%20calculation%20example%20for%20applying%20the%20dual%20kc%20procedure%20in%20irrigation%20sc)). Annex 8 of FAO-56 suggests setting a constant depletion fraction equal to the management allowed depletion (MAD). Using a constant depletion fraction makes readily available water (RAW) vary only with rooting depth (Zr). Users can run the model with a constant depletion fraction by issuing `cons_p=True` at Model instantiation: `mdl = fao.Model('2019-108', '2019-274', par, wth, irr, cons_p=True)`. By default, the model is instantiated with `cons_p=False`, which leads to depletion fraction adjustments with ETc.
+* #### Surface Runoff
+By default, pyfao56 does not consider surface runoff. However, the [ASCE Manual of Practice #70] (https://ascelibrary.org/doi/book/10.1061/9780784414057) describes a straightforward surface runoff algorithm that integrates well with the FAO-56 dual crop coefficient method. Based on the USDA-NRCS curve number (CN) approach, the method uses readily evaporable water (REW), total evaporable water (TEW), and cumulative depth of evaporation (De) variables from the FAO-56 water balance to compute CN for surface runoff estimation. The method requires an additional input parameter, the curve number for antecedent water condition 2 (CN2), which can be specified in the Parameters class. Users can run the model with surface runoff by issuing `roff=True` at Model instantiation: `mdl = fao.Model('2019-108', '2019-274', par, wth, irr=irr, roff=True)`. By default, the model is instantiated with `roff=False` and surface runoff is not considered.
 
+* #### Constant Depletion Fraction
+The pyfao56 Model class provides an argument to optionally set the TAW depletion fraction (p) to a constant value. FAO-56 specifies a methodology for varying the depletion fraction based on daily crop evapotranspiration (ETc) (see [FAO-56 page 162 and Table 22](https://www.fao.org/3/x0490e/x0490e0e.htm#readily%20available%20water%20(raw))). However, FAO-56 also discusses using constant values for depletion fraction (see [FAO-56 page 162](https://www.fao.org/3/x0490e/x0490e0e.htm#readily%20available%20water%20(raw)) and [Annex 8](https://www.fao.org/3/x0490e/x0490e0p.htm#annex%208.%20calculation%20example%20for%20applying%20the%20dual%20kc%20procedure%20in%20irrigation%20sc)). Annex 8 of FAO-56 suggests setting a constant depletion fraction equal to the management allowed depletion (MAD). Using a constant depletion fraction makes readily available water (RAW) vary only with rooting depth (Zr). Users can run the model with a constant depletion fraction by issuing `cons_p=True` at Model instantiation: `mdl = fao.Model('2019-108', '2019-274', par, wth, irr=irr, cons_p=True)`. By default, the model is instantiated with `cons_p=False`, which leads to depletion fraction adjustments with ETc.
+
+* Curvilinear Ks
+By default, pyfao56 uses the linear computation of Ks as a function of root zone soil water depletion (Dr) when Dr is greater than readily available water (RAW), as described in FAO-56. [Maize field studies in Colorado] (https://doi.org/10.1061/(ASCE)IR.1943-4774.0001600) suggested that a curvilinear relationship between Ks and Dr, as used in the AquaCrop model, water better than the linear computation from FAO-56. Users can run the model with the curvilinear Ks computation by issuing `aq_ks=True` at Model instatiation: `mdl = fao.Model('2019-108', '2019-274', par, wth, irr=irr, aq_ks=True)`. By default, the model is instantiated with `aq_ks=False`, which defaults to the linear Ks computation from FAO-56.
+
+### Supporting Tools
 * #### Forecast Class
 The Forecast class is used to retrieve seven-day weather forecasts from the National Digital Forecast Database (NDFD). It uses the REST approach, which was more robust than the SOAP method, in terms of server responsiveness. Data is retrieved for computation of ASCE Standardized Reference Evapotranspiration, including wind speed (m/s) and minimum, maximum, and dew point air temperatures (degrees C). Solar radiation forecasts are not directly provided by NDFD, but NDFD does provide cloud cover forecasts. By providing the optional "elevation" parameter, users can obtain solar radiation forecasts computed by multiplication of cloud cover and clear-sky solar radiation. (However, these soil radiation forecasts were found unreliable at Maricopa, Arizona.) Liquid precipitation forecasts (mm) are also obtained. The NDFD provides wind speed forecasts at 10 m height. The Forecast class contains methods to convert the 10 m wind speeds to the anemometer height of the local weather station. Wind speeds from different sources should be represented at matching heights.
 
@@ -146,6 +170,10 @@ The Statistics class provides computations of 15 goodness-of-fit statistics when
 ## Further information
 The pyfao56 package is further described in the following articles:
 
+Thorp, K. R., DeJonge, K. C., Pokoski, T., Gulati, D., Kukal, M., Farag, F., Hashem, A., Erismann, G., Baumgartner, T., Holzkaemper, A., 2024. Version 1.3.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX. In review.
+
+DeJonge, K. C., Thorp, K. R., Brekel, J., Pokoski, T., Trout, T. J., 2024. Customizing pyfao56 for evapotranspiration estimation and irrigation scheduling at the Limited Irrigation Research Farm (LIRF), Greeley, Colorado. Agricultural Water Management. In review.
+
 Thorp, K. R., Brekel, J., DeJonge, K. C., 2023. Version 1.2.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 24, 101518. [doi.10.1016/j.softx.2023.101518](https://doi.org/10.1016/j.softx.2023.101518).
 
 Brekel, J., Thorp, K. R., DeJonge, K. C., Trout, T. J., 2023. Version 1.1.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 22, 101336. [doi.10.1016/j.softx.2023.101336](https://doi.org/10.1016/j.softx.2023.101336).
@@ -155,7 +183,7 @@ Thorp, K. R., 2022. pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 19, 
 
 Also, the pyfao56 package was used to conduct the following research:
 
-Thorp, K. R., 2023. Combining soil water content data with computer simulation models for improved irrigation scheduling. Journal of the ASABE. In press. Accepted 8/14/2023.
+Thorp, K. R., 2023. Combining soil water content data with computer simulation models for improved irrigation scheduling. Journal of the ASABE. 66(5):1265-1279. [doi:10.13031/ja.15591](https://doi.org/10.13031/ja.15591)
 
 Thorp, K. R., Calleja, S., Pauli, D., Thompson, A. L., Elshikha, D. E., 2022. Agronomic outcomes of precision irrigation technologies with varying complexity. Journal of the ASABE. 65(1):135-150. [doi:10.13031/ja.14950](https://doi.org/10.13031/ja.14950)
 
