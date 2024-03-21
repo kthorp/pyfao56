@@ -1,7 +1,7 @@
 ************************************************************************
 pyfao56: FAO-56 Evapotranspiration in Python
 Parameter Data
-Timestamp: 11/01/2023 11:29:13
+Timestamp: 03/20/2024 16:00:48
 ************************************************************************
 Comments: 2019 Cotton
 ************************************************************************
@@ -22,3 +22,4 @@ Comments: 2019 Cotton
    0.6500 pbase, Depletion Fraction (p) (FAO-56 Table 22)
    0.0600 Ze, Depth of surface evaporation layer (m) (FAO-56 Table 19 and Page 144)
    4.0000 REW, Total depth Stage 1 evaporation (mm) (FAO-56 Table 19)
+       70 CN2, Curve Number for AWCII (ASCE (2016) Table 14-3 or SCS (1972))

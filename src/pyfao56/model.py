@@ -8,9 +8,17 @@ The FAO-56 method is described in the following documentation:
 Allen, R. G., Pereira, L. S., Raes, D., Smith, M., 1998.  FAO Irrigation
 and Drainage Paper No. 56. Crop Evapotranspiration: Guidelines for
 Computing Crop Water Requirements. Food and Agriculture Organization of
-the United Nations, Rome Italy.
+the United Nations, Rome, Italy.
 
 http://www.fao.org/3/x0490e/x0490e00.htm
+
+Further details on the FAO56 methodology (as well as the runoff method)
+can be found in the following documentation:
+ASCE Task Committee on Revision of Manual 70, 2016. Evaporation,
+Evapotranspiration, and Irrigation Water Requirements, 2nd edition. ASCE
+Manuals and Reports on Engineering Practice No. 70. Jensen, M. E. and
+Allen, R. G. (eds.). American Society of Civil Engineers, Reston,
+Virginia.
 
 The model.py module contains the following:
     Model - A class for managing FAO-56 soil water balance computations.
@@ -22,6 +30,8 @@ The model.py module contains the following:
 08/17/2023 Improved logic for case of missing rhmin data
 10/31/2023 Added AquaCrop Ks option
 11/01/2023 Added reports of the cumulative seasonal water balance
+12/12/2023 Added the runoff functionality by Dinesh Gulati
+02/15/2024 Added functionality for automatic irrigation scheduling
 ########################################################################
 """
 
@@ -51,9 +61,15 @@ class Model:
     sol : pyfao56 SoilProfile class, optional
         Provides data for modeling with stratified soil layers
         (default = None)
+    autoirr : pyfao56 AutoIrrigate class, optional
+        Provides data for automatic irrigation scheduling
+        (default = None)
     upd : pyfao56 Update class, optional
         Provides data and methods for state variable updating
         (default = None)
+    roff : boolean, optional
+        If True, computes surface runoff following ASCE (2016)
+        (default = False)
     cons_p : boolean, optional
         If False, p follows FAO-56; if True, p is constant (=pbase)
         (default = False)
@@ -75,8 +91,8 @@ class Model:
                    'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
                    'Kc','ETc','TAW','TAWrmax','TAWb','Zr','p','RAW',
                    'Ks','Kcadj','ETcadj','T','DP','Dinc','Dr','fDr',
-                   'Drmax','fDrmax','Db','fDb','Irrig','Rain','Year',
-                   'DOY','DOW','Date']
+                   'Drmax','fDrmax','Db','fDb','Irrig','IrrLoss','Rain',
+                   'Runoff','Year','DOY','DOW','Date']
             Year    - 4-digit year (yyyy)
             DOY     - Day of year (ddd)
             DOW     - Day of week
@@ -114,16 +130,19 @@ class Model:
             fDrmax  - Fractional depletion for max root depth (mm/mm)
             Db      - Soil water depletion in the bottom layer (mm)
             fDb     - Fractional depletion in the bottom layer (mm/mm)
-            Irrig   - Depth of irrigation (mm)
+            Irrig   - Depth of applied irrigation (mm)
+            IrrLoss - Depth of irrigation loss due to inefficiency (mm)
             Rain    - Depth of precipitation (mm)
+            Runoff  - Surface runoff (mm)
             Year    - 4-digit year (yyyy)
             DOY     - Day of year (ddd)
             DOW     - Day of week
             Date    - Month/Day/Year (mm/dd/yy)
     swbdata : dict
         Container for cumulative seasonal water balance data
-        keys - ['ETref','ETc','ETcadj','E','T','DP','Irrig','Rain',
-                'Dr_ini','Dr_end','Drmax_ini','Drmax_end']
+        keys - ['ETref','ETc','ETcadj','E','T','DP','Irrig','IrrLoss',
+                'Rain','Runoff','Dr_ini','Dr_end','Drmax_ini',
+                'Drmax_end']
         value - Cumulative water balance data in mm
 
     Methods
@@ -136,8 +155,9 @@ class Model:
         Conduct the FAO-56 calculations from startDate to endDate
     """
 
-    def __init__(self, start, end, par, wth, irr=None, sol=None,
-                 upd=None, cons_p=False, aq_Ks=False, comment=''):
+    def __init__(self, start, end, par, wth, irr=None, autoirr=None,
+                 sol=None, upd=None, roff=False, cons_p=False,
+                 aq_Ks=False, comment=''):
         """Initialize the Model class attributes.
 
         Parameters
@@ -156,9 +176,15 @@ class Model:
         sol : pyfao56 SoilProfile object, optional
             Provides data for modeling with stratified soil layers
             (default = None)
+        autoirr : pyfao56 AutoIrrigate object, optional
+            Provides data for automatic irrigation scheduling
+            (default = None)
         upd : pyfao56 Update object, optional
             Provides data and methods for state variable updating
             (default = None)
+        roff : boolean, optional
+            If True, computes surface runoff following ASCE (2016)
+            (default = False)
         cons_p : boolean, optional
             If False, p follows FAO-56; if True, p is constant (=pbase)
             (default = False)
@@ -174,8 +200,10 @@ class Model:
         self.par = par
         self.wth = wth
         self.irr = irr
+        self.autoirr = autoirr
         self.sol = sol
         self.upd = upd
+        self.roff = roff
         self.cons_p = cons_p
         self.aq_Ks = aq_Ks
         self.comment = 'Comments: ' + comment.strip()
@@ -184,8 +212,9 @@ class Model:
                        'h','Kcmax','fc','fw','few','De','Kr','Ke','E',
                        'DPe','Kc','ETc','TAW','TAWrmax','TAWb','Zr','p',
                        'RAW','Ks','Kcadj','ETcadj','T','DP','Dinc','Dr',
-                       'fDr','Drmax','fDrmax','Db','fDb','Irrig','Rain',
-                       'Year','DOY','DOW','Date']
+                       'fDr','Drmax','fDrmax','Db','fDb','Irrig',
+                       'IrrLoss','Rain','Runoff','Year','DOY','DOW',
+                       'Date']
         self.odata = pd.DataFrame(columns=self.cnames)
 
     def __str__(self):
@@ -220,7 +249,8 @@ class Model:
                 'fDr':'{:7.3f}'.format,'Drmax':'{:7.3f}'.format,
                 'fDrmax':'{:7.3f}'.format,'Db':'{:7.3f}'.format,
                 'fDb':'{:7.3f}'.format,'Irrig':'{:7.3f}'.format,
-                'Rain':'{:7.3f}'.format}
+                'IrrLoss':'{:7.3f}'.format,'Rain':'{:7.3f}'.format,
+                'Runoff':'{:7.3f}'.format}
         ast='*'*72
         s = ('{:s}\n'
              'pyfao56: FAO-56 Evapotranspiration in Python\n'
@@ -237,7 +267,8 @@ class Model:
              '     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p'
              '     RAW    Ks Kcadj ETcadj      T      DP    Dinc'
              '      Dr     fDr   Drmax  fDrmax      Db     fDb'
-             '   Irrig    Rain  Year  DOY  DOW      Date\n'
+             '   Irrig IrrLoss    Rain  Runoff  Year  DOY  DOW'
+             '      Date\n'
              ).format(ast,
                       timestamp,
                       sdate,
@@ -304,8 +335,9 @@ class Model:
             '{:s}\n'
             ).format(ast,timestamp,sdate,edate,ast,self.comment,ast)
         if not self.odata.empty:
-            keys = ['ETref','ETc','ETcadj','E','T','DP','Irrig','Rain',
-                    'Dr_ini','Dr_end','Drmax_ini','Drmax_end']
+            keys = ['ETref','ETc','ETcadj','E','T','DP','Irrig',
+                    'IrrLoss','Rain','Runoff','Dr_ini','Dr_end',
+                    'Drmax_ini','Drmax_end']
             for key in keys:
                 s += '{:8.3f} : {:s}\n'.format(self.swbdata[key],key)
 
@@ -348,13 +380,14 @@ class Model:
         io.pbase   = self.par.pbase
         io.Ze      = self.par.Ze
         io.REW     = self.par.REW
-        #Total evaporable water (TEW, mm) - FAO-56 Equation 73
-        io.TEW = 1000. * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
-        #Initial depth of evaporation (De, mm) - FAO-56 page 153
-        io.De = 1000. * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
+        io.CN2     = float(self.par.CN2)
         if self.sol is None:
             io.solmthd = 'D' #Default homogeneous soil from Parameters
-            #Initial root zone depletion (Dr, mm) - FAO-56 Equation 87
+            #Total evaporable water (TEW, mm) - FAO-56 Eq. 73
+            io.TEW = 1000. * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
+            #Initial depth of evaporation (De, mm) - FAO-56 page 153
+            io.De = 1000. * (io.thetaFC - 0.50 * io.thetaWP) * io.Ze
+            #Initial root zone depletion (Dr, mm) - FAO-56 Eq. 87
             io.Dr = 1000. * (io.thetaFC - io.theta0) * io.Zrini
             #Initial soil depletion for max root depth (Drmax, mm)
             io.Drmax = 1000. * (io.thetaFC - io.theta0) * io.Zrmax
@@ -370,6 +403,8 @@ class Model:
             io.lyr_thFC  = list(self.sol.sdata['thetaFC'])
             io.lyr_thWP  = list(self.sol.sdata['thetaWP'])
             io.lyr_th0   = list(self.sol.sdata['theta0'])
+            io.TEW = 0.
+            io.De = 0.
             io.Dr = 0.
             io.Drmax = 0.
             io.TAW = 0.
@@ -379,6 +414,14 @@ class Model:
                 #Find soil layer index that contains dpthmm
                 lyr_idx = [idx for (idx, dpth) in
                           enumerate(io.lyr_dpths) if dpthmm<=dpth*10][0]
+                #Total evaporable water (TEW, mm) - FAO-56 Eq. 73
+                if dpthmm <= io.Ze * 1000.: #mm
+                    diff=io.lyr_thFC[lyr_idx]-0.50*io.lyr_thWP[lyr_idx]
+                    io.TEW += diff #mm
+                #Initial depth of evaporation (De, mm) - FAO-56 page 153
+                if dpthmm <= io.Ze * 1000.: #mm
+                    diff=io.lyr_thFC[lyr_idx]-0.50*io.lyr_thWP[lyr_idx]
+                    io.De += diff #mm
                 #Initial root zone depletion (Dr, mm)
                 if dpthmm <= io.Zrini * 1000.: #mm
                     diff = (io.lyr_thFC[lyr_idx] - io.lyr_th0[lyr_idx])
@@ -399,13 +442,17 @@ class Model:
             io.Db = io.Drmax - io.Dr
             #Initial total available water in bottom layer (TAWb, mm)
             io.TAWb = io.TAWrmax - io.TAW
+        #Initial root zone soil water depletion fraction (fDr, mm/mm)
+        io.fDr = 1.0 - ((io.TAW - io.Dr) / io.TAW)
+        io.Ks = 1.0
         io.h = io.hini
         io.Zr = io.Zrini
         io.fw = 1.0
-        io.wndht = self.wth.wndht
-        io.rfcrp = self.wth.rfcrp
+        io.wndht  = self.wth.wndht
+        io.rfcrp  = self.wth.rfcrp
+        io.roff   = self.roff
         io.cons_p = self.cons_p
-        io.aq_Ks = self.aq_Ks
+        io.aq_Ks  = self.aq_Ks
         self.odata = pd.DataFrame(columns=self.cnames)
 
         while tcurrent <= self.endDate:
@@ -427,18 +474,165 @@ class Model:
                 if math.isnan(tdew):
                     tdew = tmin
                 #ASCE (2005) Eqs. 7 and 8
-                emax = 0.6108*math.exp((17.27*tmax)/
-                                       (tmax+237.3))
-                ea   = 0.6108*math.exp((17.27*tdew)/
-                                       (tdew+237.3))
+                emax = 0.6108*math.exp((17.27*tmax)/(tmax+237.3))
+                ea   = 0.6108*math.exp((17.27*tdew)/(tdew+237.3))
                 io.rhmin = ea/emax*100.
             if math.isnan(io.rhmin):
                 io.rhmin = 45.
             io.idep = 0.0
+            io.ieff = 100.0
             if self.irr is not None:
                 if mykey in self.irr.idata.index:
                     io.idep = self.irr.idata.loc[mykey,'Depth']
                     io.fw = self.irr.idata.loc[mykey,'fw']
+                    io.ieff = self.irr.idata.loc[mykey,'ieff']
+
+            #Evaluate autoirrigation conditions and compute amounts
+            if self.autoirr is not None:
+                for i in range(self.autoirr.aidata.shape[0]):
+                    #Evaluate date range condition
+                    aistart= self.autoirr.aidata.loc[i,'start']
+                    aistart= datetime.datetime.strptime(aistart,'%Y-%j')
+                    aiend  = self.autoirr.aidata.loc[i,'end']
+                    aiend  = datetime.datetime.strptime(aiend,'%Y-%j')
+                    if tcurrent<aistart or tcurrent>aiend:
+                        continue
+                    #Evaluate "after last recorded irrigation" condition
+                    if self.autoirr.aidata.loc[i,'alre']:
+                        if self.irr is not None:
+                            lastirr = self.irr.getlastdate()
+                            if tcurrent <= lastirr:
+                                continue
+                    #Evaluate day of the week condition
+                    dnow = tcurrent.strftime('%w')
+                    if dnow not in self.autoirr.aidata.loc[i,'idow']:
+                        continue
+                    #Evaluate forecasted precipitation condition
+                    fpdep = self.autoirr.aidata.loc[i,'fpdep']
+                    fpday = int(self.autoirr.aidata.loc[i,'fpday'])
+                    fpact = self.autoirr.aidata.loc[i,'fpact']
+                    fcrain = 0.
+                    for j in range(fpday):
+                        fpdate = tcurrent + j*tdelta
+                        fpkey = fpdate.strftime('%Y-%j')
+                        fcrain += self.wth.wdata.loc[fpkey,'Rain']
+                    reduceirr = 0.
+                    if fcrain >= fpdep:
+                        if fpact == 'cancel':
+                            continue
+                        elif fpact == 'reduce':
+                            reduceirr = fcrain
+                        elif fpact not in ['proceed']:
+                            continue
+                    #Evaluate management allowed depletion (mm/mm)
+                    if io.fDr <= self.autoirr.aidata.loc[i,'mad']:
+                        continue
+                    #Evaluate management allowed depletion (mm)
+                    if io.Dr <= self.autoirr.aidata.loc[i,'madDr']:
+                        continue
+                    #Evaluate critical Ks
+                    if io.Ks >= self.autoirr.aidata.loc[i,'ksc']:
+                        continue
+                    #Evaluate days since last irrigation (dsli)
+                    idays = self.odata[self.odata['Irrig']>0.]
+                    idays = pd.to_datetime(idays.index,format='%Y-%j')
+                    if idays.size > 0:
+                        dsli = (tcurrent-max(idays)).days
+                    else:
+                        dsli = ((tcurrent-self.startDate).days)+1
+                    if dsli < self.autoirr.aidata.loc[i,'dsli']:
+                        continue
+                    #Evaluate days since last watering event
+                    evnt = self.autoirr.aidata.loc[i,'evnt']
+                    edays = self.odata[(self.odata['Irrig']-
+                                        self.odata['IrrLoss']+
+                                        self.odata['Rain']-
+                                        self.odata['Runoff'])>=evnt]
+                    edays = pd.to_datetime(edays.index,format='%Y-%j')
+                    if edays.size > 0:
+                        dsle = (tcurrent-max(edays)).days
+                    else:
+                        dsle = ((tcurrent-self.startDate).days)+1
+                    if dsle < self.autoirr.aidata.loc[i,'dsle']:
+                        continue
+
+                    #All conditions were met, need to autoirrigate
+                    #Default rate is root-zone soil water depletion (Dr)
+                    rate = max([0.0,io.Dr - reduceirr])
+
+                    #Alternatively, the default rate may be modified:
+                    #Use a contant rate
+                    icon  = self.autoirr.aidata.loc[i,'icon']
+                    if not math.isnan(icon):
+                        rate = max([0.0, icon - reduceirr])
+                    #Target a specific root-zone soil water depletion
+                    itdr  = self.autoirr.aidata.loc[i,'itdr']
+                    if not math.isnan(itdr):
+                        rate = max([0.0,io.Dr - reduceirr - itdr])
+                    #Target a fractional root-zone soil water depletion
+                    itfdr = self.autoirr.aidata.loc[i,'itfdr']
+                    if not math.isnan(itfdr):
+                        itdr2 = io.TAW-io.TAW*(1.0-itfdr)
+                        rate = max([0.0,io.Dr - reduceirr - itdr2])
+                    #Use ETcadj less precip for past X number of days
+                    ettyp = self.autoirr.aidata.loc[i,'ettyp']
+                    ietrd = self.autoirr.aidata.loc[i,'ietrd']
+                    if not math.isnan(ietrd):
+                        dsss = (tcurrent-self.startDate).days
+                        recent = self.odata.tail(min([dsss,int(ietrd)]))
+                        p1 = recent['Rain'].sum()
+                        p2 = recent['Runoff'].sum()
+                        et = recent[ettyp].sum()
+                        etrd=(et-p1+p2)
+                        rate = max([0.0,etrd - reduceirr])
+                    #Use ETcadj less precip since last irrigation
+                    ettyp = self.autoirr.aidata.loc[i,'ettyp']
+                    ietri = self.autoirr.aidata.loc[i,'ietri']
+                    if ietri:
+                        dsss = (tcurrent-self.startDate).days
+                        recent = self.odata.tail(min([dsss,dsli]))
+                        p1 = recent['Rain'].sum()
+                        p2 = recent['Runoff'].sum()
+                        et = recent[ettyp].sum()
+                        etri=(et-p1+p2)
+                        rate = max([0.0,etri - reduceirr])
+                    #Use ETcadj less precip since last watering event
+                    ettyp = self.autoirr.aidata.loc[i,'ettyp']
+                    ietre = self.autoirr.aidata.loc[i,'ietre']
+                    if ietre:
+                        dsss = (tcurrent-self.startDate).days
+                        recent = self.odata.tail(min([dsss,dsle]))
+                        p1 = recent['Rain'].sum()
+                        p2 = recent['Runoff'].sum()
+                        et = recent[ettyp].sum()
+                        etre=(et-p1+p2)
+                        rate = max([0.0,etre - reduceirr])
+
+                    #Furthermore, adjustments to the rate can be made
+                    #Adjust rate by a fixed percentage
+                    iper  = self.autoirr.aidata.loc[i,'iper']
+                    if not math.isnan(iper):
+                        rate = max([0.0, rate*iper/100.])
+                    #Adjust rate for irrigation inefficiency
+                    ieff  = self.autoirr.aidata.loc[i,'ieff']
+                    if not math.isnan(ieff):
+                        rate = rate/(ieff/100.)
+                        io.ieff = ieff
+                    #Adjust rate for minimum irrigation amount
+                    imin  = self.autoirr.aidata.loc[i,'imin']
+                    if not math.isnan(imin):
+                        rate = max([imin, rate])
+                    #Adjust rate for maximum irrigation amount
+                    imax  = self.autoirr.aidata.loc[i,'imax']
+                    if not math.isnan(imax):
+                        rate = min([imax,rate])
+
+                    #Update fraction wetted (fw) for autoirrigation
+                    io.fw=self.autoirr.aidata.loc[i,'fw']
+
+                    #Specify the final autoirrigation rate
+                    io.idep=rate
+                    break
 
             #Obtain updates for Kcb, h, and fc, if available
             io.updKcb = float('NaN')
@@ -463,7 +657,7 @@ class Model:
                     io.TAWrmax, io.TAWb, io.Zr, io.p, io.RAW, io.Ks,
                     io.Kcadj, io.ETcadj, io.T, io.DP, io.Dinc, io.Dr,
                     io.fDr, io.Drmax, io.fDrmax, io.Db, io.fDb, io.idep,
-                    io.rain, year, doy, dow, dat]
+                    io.irrloss, io.rain, io.runoff, year, doy, dow, dat]
             self.odata.loc[mykey] = data
 
             tcurrent = tcurrent + tdelta
@@ -479,7 +673,9 @@ class Model:
                         'T'        :sum(self.odata['T']),
                         'DP'       :sum(self.odata['DP']),
                         'Irrig'    :sum(self.odata['Irrig']),
+                        'IrrLoss'  :sum(self.odata['IrrLoss']),
                         'Rain'     :sum(self.odata['Rain']),
+                        'Runoff'   :sum(self.odata['Runoff']),
                         'Dr_ini'   :self.odata.loc[sdoy,'Dr'],
                         'Dr_end'   :self.odata.loc[edoy,'Dr'],
                         'Drmax_ini':self.odata.loc[sdoy,'Drmax'],
@@ -543,6 +739,38 @@ class Model:
         #Overwrite fc if updates are available
         if io.updfc > 0: io.fc = io.updfc
 
+        #Losses due to irrigation inefficiency (irrloss, mm)
+        io.irrloss = io.idep - io.idep * (io.ieff / 100.)
+
+        #Effective irrigation (mm)
+        effirr = io.idep - io.irrloss
+
+        # Surface runoff (runoff, mm)
+        io.runoff = 0.0
+        if io.roff is True:
+            #Method per ASCE (2016) Eqs. 14-12 to 14-20, page 451-454
+            CN1 = io.CN2/(2.281-0.01281*io.CN2) #ASCE (2016) Eq. 14-14
+            CN3 = io.CN2/(0.427+0.00573*io.CN2) #ASCE (2016) Eq. 14-15
+            if io.De <= 0.5*io.REW:
+                CN = CN3 #ASCE (2016) Eq. 14-18
+            elif io.De >= 0.7*io.REW+0.3*io.TEW:
+                CN = CN1 #ASCE (2016) Eq. 14-19
+            else:
+                CN = (io.De-0.5*io.REW)*CN1
+                CN = CN+(0.7*io.REW+0.3*io.TEW-io.De)*CN3
+                CN = CN/(0.2*io.REW+0.3*io.TEW) #ASCE (2016) Eq. 14-20
+            storage = 250.*((100./CN)-1.) #ASCE (2016) Eq. 14-12
+            if io.rain > 0.2*storage:
+                #ASCE (2016) Eq. 14-13
+                io.runoff = (io.rain-0.2*storage)**2
+                io.runoff = io.runoff/(io.rain+0.8*storage)
+                io.runoff = min([io.runoff,io.rain])
+            else:
+                io.runoff = 0.0
+
+        #Effective precipitation (mm)
+        effrain = io.rain - io.runoff
+
         #Fraction soil surface wetted (fw) - FAO-56 Table 20, page 149
         if io.idep > 0.0 and io.rain > 0.0:
             pass #fw=fw input
@@ -566,11 +794,10 @@ class Model:
         io.E = io.Ke * io.ETref
 
         #Deep percolation under exposed soil (DPe, mm) - FAO-56 Eq. 79
-        runoff = 0.0
-        io.DPe = max([io.rain - runoff + io.idep/io.fw - io.De,0.0])
+        io.DPe = max([effrain + effirr/io.fw - io.De, 0.0])
 
         #Cumulative depth of evaporation (De, mm) - FAO-56 Eqs. 77 & 78
-        De = io.De-(io.rain-runoff)-io.idep/io.fw+io.E/io.few+io.DPe
+        De = io.De - effrain - effirr/io.fw + io.E/io.few + io.DPe
         io.De = sorted([0.0,De,io.TEW])[1]
 
         #Crop coefficient (Kc) - FAO-56 Eq. 69
@@ -631,10 +858,11 @@ class Model:
         if io.solmthd == 'D':
             #Deep percolation (DP, mm) - FAO-56 Eq. 88
             #Boundary layer is considered at the root zone depth (Zr)
-            io.DP = max([io.rain-runoff+io.idep-io.ETcadj-io.Dr,0.0])
+            DP = effrain + effirr - io.ETcadj - io.Dr
+            io.DP = max([DP,0.0])
 
             #Root zone soil water depletion (Dr,mm) - FAO-56 Eqs.85 & 86
-            Dr = io.Dr - (io.rain-runoff) - io.idep + io.ETcadj + io.DP
+            Dr = io.Dr - effrain - effirr + io.ETcadj + io.DP
             io.Dr = sorted([0.0, Dr, io.TAW])[1]
 
             #Root zone soil water depletion fraction (fDr, mm/mm)
@@ -650,7 +878,8 @@ class Model:
         elif io.solmthd == 'L':
             #Deep percolation (DP, mm)
             #Boundary layer is at the max root depth (Zrmax)
-            io.DP = max([io.rain-runoff+io.idep-io.ETcadj-io.Drmax,0.0])
+            DP = effrain + effirr - io.ETcadj - io.Drmax
+            io.DP = max([DP,0.0])
 
             #Depletion increment due to root growth (Dinc, mm)
             #Computed from Db based on the incremental change in TAWb
@@ -660,14 +889,14 @@ class Model:
                 io.Dinc = 0.0
 
             #Root zone soil water depletion (Dr, mm)
-            Dr = io.Dr - (io.rain-runoff)-io.idep+io.ETcadj+io.Dinc
+            Dr = io.Dr - effrain - effirr + io.ETcadj + io.Dinc
             io.Dr = sorted([0.0, Dr, io.TAW])[1]
 
             #Root zone soil water depletion fraction (fDr, mm/mm)
             io.fDr = 1.0 - ((io.TAW - io.Dr) / io.TAW)
 
             #Soil water depletion at max root depth (Drmax, mm)
-            Drmax = io.Drmax - (io.rain-runoff)-io.idep+io.ETcadj+io.DP
+            Drmax = io.Drmax - effrain - effirr + io.ETcadj + io.DP
             io.Drmax = sorted([0.0, Drmax, io.TAWrmax])[1]
 
             #Soil water depletion fraction at Zrmax (fDrmax, mm/mm)

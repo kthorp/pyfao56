@@ -6,8 +6,9 @@ field study at Maricopa, Arizona. Simulation output was used in the
 first SoftwareX manuscript for pyfao56.
 
 The cotton2018.py module contains the following:
-    run - function to setup and run pyfao56 for the 100%-100% and the
-    60-60% in a 2018 cotton field study at Maricopa, Arizona
+    run - function to setup and run pyfao56 for the 60%-60%, 100%-100%,
+    and 120%-120% irrigation treatments in a 2018 cotton field study at
+    Maricopa, Arizona
 
 02/07/2022 Scripts developed for running pyfao56 for 2018 cotton data
 ########################################################################
