@@ -157,7 +157,7 @@ class Model:
 
     def __init__(self, start, end, par, wth, irr=None, autoirr=None,
                  sol=None, upd=None, roff=False, cons_p=False,
-                 aq_Ks=False, comment=''):
+                 aq_Ks=False, single=False, comment=''):
         """Initialize the Model class attributes.
 
         Parameters
@@ -206,6 +206,7 @@ class Model:
         self.roff = roff
         self.cons_p = cons_p
         self.aq_Ks = aq_Ks
+        self.single = single
         self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
         self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
@@ -453,6 +454,7 @@ class Model:
         io.roff   = self.roff
         io.cons_p = self.cons_p
         io.aq_Ks  = self.aq_Ks
+        io.single = self.single
         self.odata = pd.DataFrame(columns=self.cnames)
 
         while tcurrent <= self.endDate:
@@ -801,7 +803,35 @@ class Model:
         io.De = sorted([0.0,De,io.TEW])[1]
 
         #Crop coefficient (Kc) - FAO-56 Eq. 69
-        io.Kc = io.Ke + io.Kcb
+        if io.single is True:
+            print('Single Crop Coefficient')
+            # First calculating Kc-ini
+            TEW = 1000(io.thetaFC - io.thetaWP)*io.Ze
+            REW = io.REW
+            tw = 4
+            Eso = 1.15 * io.ETref
+            t1 = REW / Eso
+            Kcini = ((TEW - (TEW-REW)^((-(tw-t1)*Eso*(1+(REW / (TEW - REW)))) / REW)) / (tw * io.ETref))
+            
+            # Next calculate Kc-mid
+            Kcmid_tab = 1.20
+            Kcmid = Kcmid_tab + (0.04*(u2 - 2) - 0.004*(rhmin - 45))*(io.h / 3) ^ 0.3
+            
+            # And lastly calculate Kc-end
+            Kcend_tab = 0.35
+            Kcend = Kcend_tab + (0.04*(u2 - 2) - 0.004*(rhmin - 45))*(io.h / 3) ^ 0.3
+            
+            if 0<=io.i<=s1:
+                io.Kc = Kcini
+            elif s1<io.i<=s2:
+                io.Kc = Kcini +((io.i-io.Lini)/io.Ldev)*(Kcmid - Kcini)
+            elif s2<io.i<=s3:
+                io.Kc = Kcmid
+            elif s3<io.i:
+                io.Kc = Kcmid +((io.i-io.Lmid)/io.Lend)*(Kcend - Kcmid)
+            
+        else:
+            io.Kc = io.Ke + io.Kcb
 
         #Non-stressed crop evapotranspiration (ETc, mm) - FAO-56 Eq. 69
         io.ETc = io.Kc * io.ETref
