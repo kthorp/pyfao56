@@ -367,6 +367,9 @@ class Model:
         io.Kcbini  = self.par.Kcbini
         io.Kcbmid  = self.par.Kcbmid
         io.Kcbend  = self.par.Kcbend
+        io.Kcini  = self.par.Kcini
+        io.Kcmid  = self.par.Kcmid
+        io.Kcend  = self.par.Kcend
         io.Lini    = self.par.Lini
         io.Ldev    = self.par.Ldev
         io.Lmid    = self.par.Lmid
@@ -804,32 +807,16 @@ class Model:
 
         #Crop coefficient (Kc) - FAO-56 Eq. 69
         if io.single is True:
-            print('Single Crop Coefficient')
-            # First calculating Kc-ini
-            TEW = 1000(io.thetaFC - io.thetaWP)*io.Ze
-            REW = io.REW
-            tw = 4
-            Eso = 1.15 * io.ETref
-            t1 = REW / Eso
-            Kcini = ((TEW - (TEW-REW)^((-(tw-t1)*Eso*(1+(REW / (TEW - REW)))) / REW)) / (tw * io.ETref))
-            
-            # Next calculate Kc-mid
-            Kcmid_tab = 1.20
-            Kcmid = Kcmid_tab + (0.04*(u2 - 2) - 0.004*(rhmin - 45))*(io.h / 3) ^ 0.3
-            
-            # And lastly calculate Kc-end
-            Kcend_tab = 0.35
-            Kcend = Kcend_tab + (0.04*(u2 - 2) - 0.004*(rhmin - 45))*(io.h / 3) ^ 0.3
-            
             if 0<=io.i<=s1:
-                io.Kc = Kcini
+                io.Kc = io.Kcini / 1.24
             elif s1<io.i<=s2:
-                io.Kc = Kcini +((io.i-io.Lini)/io.Ldev)*(Kcmid - Kcini)
+                io.Kc = (io.Kcini +((io.i-s1)/io.Ldev)*(io.Kcmid - io.Kcini)) / 1.24
             elif s2<io.i<=s3:
-                io.Kc = Kcmid
+                io.Kc = io.Kcmid / 1.24
             elif s3<io.i:
-                io.Kc = Kcmid +((io.i-io.Lmid)/io.Lend)*(Kcend - Kcmid)
-            
+                io.Kc = (io.Kcmid +((io.i-s3)/io.Lend)*(io.Kcend - io.Kcmid)) / 1.24
+                if io.Kc <= (io.Kcend)/1.24:
+                    io.Kc = io.Kcend / 1.24
         else:
             io.Kc = io.Ke + io.Kcb
 

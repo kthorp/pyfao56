@@ -382,7 +382,7 @@ class Visualization:
         else:
             plt.close(fig)
 
-    def plot_Kc(self, Kc=True, Ke=True, tKcb=True, Kcb=True,
+    def plot_Kc(self, Kc=True, Kcadj=True, Ke=True, tKcb=True, Kcb=True,
                 title='', show=True, filepath=None):
         """Plot crop coeffient data versus time.
 
@@ -390,6 +390,9 @@ class Visualization:
         ----------
         Kc : boolean, optional
             If True, include a plot of Kc
+            (default = True)
+        Kcadj : boolean, optional
+            If True, include a plot of Kcadj
             (default = True)
         Ke : boolean, optional
             If True, include a plot of Ke
@@ -437,9 +440,9 @@ class Visualization:
 
         #Create crop coefficient plot
         maxkc = 1.2
-        if Kc:
-            kc_c = 'dimgrey'
-            ax.plot(x, d['Kcadj'], color=kc_c, label='Kc_adj')
+        if Kcadj:
+            kcadj_c = 'dimgrey'
+            ax.plot(x, d['Kcadj'], color=kcadj_c, label='Kc_adj')
             maxkc = round(max([maxkc,d['Kcadj'].max()])+0.05,1)
 
         if Ke:
@@ -457,9 +460,13 @@ class Visualization:
             ax.plot(x, d['tKcb'], linestyle='--', color=tkcb_c,
                     label='Tabular Kcb')
             maxkc = round(max([maxkc,d['tKcb'].max()])+0.05,1)
+        if Kc:
+            kc_c = 'blue'
+            ax.plot(x, d['Kc'], color=kc_c, label='Kc')
+            maxkc = round(max([maxkc,d['Kc'].max()])+0.05,1) 
         yticks=[]
         ylabels=[]
-        for i in range(int(maxkc*10.)+1):
+        for i in range(int(maxkc*10.)+2):
             yticks.append(float(i)/10.)
             ylabels.append(str(float(i)/10.))
 
