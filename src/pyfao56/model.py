@@ -703,18 +703,24 @@ class Model:
         if 0<=io.i<=s1:
             io.tKcb = io.Kcbini
             io.Kcb = io.Kcbini
+            io.Kc = io.Kcini
         elif s1<io.i<=s2:
             io.tKcb += (io.Kcbmid-io.Kcbini)/(s2-s1)
             io.Kcb += (io.Kcbmid-io.Kcbini)/(s2-s1)
+            io.Kc = io.Kcini +((io.i-s1)/io.Ldev)*(io.Kcmid - io.Kcini)
         elif s2<io.i<=s3:
             io.tKcb = io.Kcbmid
             io.Kcb = io.Kcbmid
+            io.Kc = io.Kcmid
         elif s3<io.i<=s4:
             io.tKcb += (io.Kcbmid-io.Kcbend)/(s3-s4)
             io.Kcb += (io.Kcbmid-io.Kcbend)/(s3-s4)
+            io.Kc = io.Kcmid +((io.i-s3)/io.Lend)*(io.Kcend - io.Kcmid)
         elif s4<io.i:
             io.tKcb = io.Kcbend
             io.Kcb = io.Kcbend
+            io.Kc = io.Kcend
+
         #Overwrite Kcb if updates are available
         if io.updKcb > 0: io.Kcb = io.updKcb
 
@@ -806,18 +812,7 @@ class Model:
         io.De = sorted([0.0,De,io.TEW])[1]
 
         #Crop coefficient (Kc) - FAO-56 Eq. 69
-        if io.single is True:
-            if 0<=io.i<=s1:
-                io.Kc = io.Kcini / 1.24
-            elif s1<io.i<=s2:
-                io.Kc = (io.Kcini +((io.i-s1)/io.Ldev)*(io.Kcmid - io.Kcini)) / 1.24
-            elif s2<io.i<=s3:
-                io.Kc = io.Kcmid / 1.24
-            elif s3<io.i:
-                io.Kc = (io.Kcmid +((io.i-s3)/io.Lend)*(io.Kcend - io.Kcmid)) / 1.24
-                if io.Kc <= (io.Kcend)/1.24:
-                    io.Kc = io.Kcend / 1.24
-        else:
+        if io.single is False:
             io.Kc = io.Ke + io.Kcb
 
         #Non-stressed crop evapotranspiration (ETc, mm) - FAO-56 Eq. 69

@@ -466,7 +466,7 @@ class Visualization:
             maxkc = round(max([maxkc,d['Kc'].max()])+0.05,1) 
         yticks=[]
         ylabels=[]
-        for i in range(int(maxkc*10.)+2):
+        for i in range(int(maxkc*10.)+1):
             yticks.append(float(i)/10.)
             ylabels.append(str(float(i)/10.))
 

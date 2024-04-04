@@ -76,8 +76,8 @@ class Parameters:
         Load the parameter data from a file
     """
 
-    def __init__(self, Kcbini=0.15, Kcbmid=1.10, Kcbend=0.50, Kcini=0.3,
-                 Kcmid=1.2, Kcend=0.35, Lini=25,
+    def __init__(self, Kcbini=0.15, Kcbmid=1.10, Kcbend=0.50, Kcini=0.24,
+                 Kcmid=0.97, Kcend=0.28, Lini=25,
                  Ldev=50, Lmid=50, Lend=25, hini=0.010, hmax=1.20,
                  thetaFC=0.250, thetaWP=0.100, theta0=0.100, Zrini=0.20,
                  Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0, CN2=70,
@@ -94,9 +94,9 @@ class Parameters:
         Kcbini  : float, optional, default = 0.15
         Kcbmid  : float, optional, default = 1.10
         Kcbend  : float, optional, default = 0.50
-        Kcini  : float, optional, default = 0.3
-        Kcmid  : float, optional, default = 1.20
-        Kcend  : float, optional, default = 0.35
+        Kcini  : float, optional, default = 0.24
+        Kcmid  : float, optional, default = 0.97
+        Kcend  : float, optional, default = 0.28
         Lini    : int  , optional, default = 25
         Ldev    : int  , optional, default = 50
         Lmid    : int  , optional, default = 50
