@@ -27,6 +27,12 @@ class Parameters:
         Kcb Mid (FAO-56 Table 17)
     Kcbend : float
         Kcb End (FAO-56 Table 17)
+    Kcini : float
+        Kc Initial (FAO-56 Table 12)
+    Kcmid : float
+        Kc Mid (FAO-56 Table 12)
+    Kcend : float
+        Kc End (FAO-56 Table 12)
     Lini : int
         Length Stage Initial (days) (FAO-56 Table 11)
     Ldev : int
@@ -70,7 +76,8 @@ class Parameters:
         Load the parameter data from a file
     """
 
-    def __init__(self, Kcbini=0.15, Kcbmid=1.10, Kcbend=0.50, Lini=25,
+    def __init__(self, Kcbini=0.15, Kcbmid=1.10, Kcbend=0.50, Kcini=0.24,
+                 Kcmid=0.97, Kcend=0.28, Lini=25,
                  Ldev=50, Lmid=50, Lend=25, hini=0.010, hmax=1.20,
                  thetaFC=0.250, thetaWP=0.100, theta0=0.100, Zrini=0.20,
                  Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0, CN2=70,
@@ -87,6 +94,9 @@ class Parameters:
         Kcbini  : float, optional, default = 0.15
         Kcbmid  : float, optional, default = 1.10
         Kcbend  : float, optional, default = 0.50
+        Kcini  : float, optional, default = 0.24
+        Kcmid  : float, optional, default = 0.97
+        Kcend  : float, optional, default = 0.28
         Lini    : int  , optional, default = 25
         Ldev    : int  , optional, default = 50
         Lmid    : int  , optional, default = 50
@@ -108,6 +118,9 @@ class Parameters:
         self.Kcbini  = Kcbini
         self.Kcbmid  = Kcbmid
         self.Kcbend  = Kcbend
+        self.Kcini  = Kcini
+        self.Kcmid  = Kcmid
+        self.Kcend  = Kcend
         self.Lini    = Lini
         self.Ldev    = Ldev
         self.Lmid    = Lmid
@@ -142,6 +155,9 @@ class Parameters:
            '{:9.4f} Kcbini, Kcb Initial (FAO-56 Table 17)\n'
            '{:9.4f} Kcbmid, Kcb Mid (FAO-56 Table 17)\n'
            '{:9.4f} Kcbend, Kcb End (FAO-56 Table 17)\n'
+           '{:9.4f} Kcini, Kc Initial (FAO-56 Table 12)\n'
+           '{:9.4f} Kcmid, Kc Mid (FAO-56 Table 12)\n'
+           '{:9.4f} Kcend, Kc End (FAO-56 Table 12)\n'
            '{:9d} Lini, Length Stage Initial (days) (FAO-56 Table 11)\n'
            '{:9d} Ldev, Length Stage Development (days) '
            '(FAO-56 Table 11)\n'
@@ -166,7 +182,7 @@ class Parameters:
            '{:9d} CN2, Curve Number for AWCII '
            '(ASCE (2016) Table 14-3 or SCS (1972))\n'
           ).format(ast,timestamp,ast,self.comment,ast,self.Kcbini,
-                   self.Kcbmid,self.Kcbend,self.Lini,self.Ldev,
+                   self.Kcbmid,self.Kcbend,self.Kcini, self.Kcmid, self.Kcend,self.Lini,self.Ldev,
                    self.Lmid,self.Lend,self.hini,self.hmax,self.thetaFC,
                    self.thetaWP,self.theta0,self.Zrini,self.Zrmax,
                    self.pbase,self.Ze,self.REW,self.CN2)
@@ -234,6 +250,12 @@ class Parameters:
                     self.Kcbmid = float(line[0])
                 elif line[1].lower() == 'kcbend':
                     self.Kcbend = float(line[0])
+                elif line[1].lower() == 'kcini':
+                    self.Kcini = float(line[0])
+                elif line[1].lower() == 'kcmid':
+                    self.Kcmid = float(line[0])
+                elif line[1].lower() == 'kcend':
+                    self.Kcend = float(line[0])
                 elif line[1].lower() == 'lini':
                     self.Lini = int(line[0])
                 elif line[1].lower() == 'ldev':

@@ -157,7 +157,7 @@ class Model:
 
     def __init__(self, start, end, par, wth, irr=None, autoirr=None,
                  sol=None, upd=None, roff=False, cons_p=False,
-                 aq_Ks=False, comment=''):
+                 aq_Ks=False, single=False, comment=''):
         """Initialize the Model class attributes.
 
         Parameters
@@ -206,6 +206,7 @@ class Model:
         self.roff = roff
         self.cons_p = cons_p
         self.aq_Ks = aq_Ks
+        self.single = single
         self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
         self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
@@ -366,6 +367,9 @@ class Model:
         io.Kcbini  = self.par.Kcbini
         io.Kcbmid  = self.par.Kcbmid
         io.Kcbend  = self.par.Kcbend
+        io.Kcini  = self.par.Kcini
+        io.Kcmid  = self.par.Kcmid
+        io.Kcend  = self.par.Kcend
         io.Lini    = self.par.Lini
         io.Ldev    = self.par.Ldev
         io.Lmid    = self.par.Lmid
@@ -453,6 +457,7 @@ class Model:
         io.roff   = self.roff
         io.cons_p = self.cons_p
         io.aq_Ks  = self.aq_Ks
+        io.single = self.single
         self.odata = pd.DataFrame(columns=self.cnames)
 
         while tcurrent <= self.endDate:
@@ -698,18 +703,24 @@ class Model:
         if 0<=io.i<=s1:
             io.tKcb = io.Kcbini
             io.Kcb = io.Kcbini
+            io.Kc = io.Kcini
         elif s1<io.i<=s2:
             io.tKcb += (io.Kcbmid-io.Kcbini)/(s2-s1)
             io.Kcb += (io.Kcbmid-io.Kcbini)/(s2-s1)
+            io.Kc = io.Kcini +((io.i-s1)/io.Ldev)*(io.Kcmid - io.Kcini)
         elif s2<io.i<=s3:
             io.tKcb = io.Kcbmid
             io.Kcb = io.Kcbmid
+            io.Kc = io.Kcmid
         elif s3<io.i<=s4:
             io.tKcb += (io.Kcbmid-io.Kcbend)/(s3-s4)
             io.Kcb += (io.Kcbmid-io.Kcbend)/(s3-s4)
+            io.Kc = io.Kcmid +((io.i-s3)/io.Lend)*(io.Kcend - io.Kcmid)
         elif s4<io.i:
             io.tKcb = io.Kcbend
             io.Kcb = io.Kcbend
+            io.Kc = io.Kcend
+
         #Overwrite Kcb if updates are available
         if io.updKcb > 0: io.Kcb = io.updKcb
 
@@ -801,7 +812,8 @@ class Model:
         io.De = sorted([0.0,De,io.TEW])[1]
 
         #Crop coefficient (Kc) - FAO-56 Eq. 69
-        io.Kc = io.Ke + io.Kcb
+        if io.single is False:
+            io.Kc = io.Ke + io.Kcb
 
         #Non-stressed crop evapotranspiration (ETc, mm) - FAO-56 Eq. 69
         io.ETc = io.Kc * io.ETref
