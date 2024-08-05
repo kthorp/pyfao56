@@ -170,9 +170,9 @@ The Statistics class provides computations of 15 goodness-of-fit statistics when
 ## Further information
 The pyfao56 package is further described in the following articles:
 
-Thorp, K. R., DeJonge, K. C., Pokoski, T., Gulati, D., Kukal, M., Farag, F., Hashem, A., Erismann, G., Baumgartner, T., Holzkaemper, A., 2024. Version 1.3.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX. In review.
+DeJonge, K. C., Thorp, K. R., Brekel, J. Pokoski, T., Trout, T.J., 2024. Customizing pyfao56 for evapotranspiration estimation and irrigation scheduling at the Limited Irrigation Research Farm, Greeley, Colorado. Agricultural Water Management, 299. https://doi.org/10.1016/j.agwat.2024.108891 
 
-DeJonge, K. C., Thorp, K. R., Brekel, J., Pokoski, T., Trout, T. J., 2024. Customizing pyfao56 for evapotranspiration estimation and irrigation scheduling at the Limited Irrigation Research Farm (LIRF), Greeley, Colorado. Agricultural Water Management. In review.
+Thorp, K. R., DeJonge, K. C., Pokoski, T., Gulati, D., Kukal, M., Farag, F., Hashem, A., Erismann, G., Baumgartner, T., Holzkaemper, A., 2024. Version 1.3.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX, 26. https://doi.org/10.1016/j.softx.2024.101724
 
 Thorp, K. R., Brekel, J., DeJonge, K. C., 2023. Version 1.2.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 24, 101518. [doi.10.1016/j.softx.2023.101518](https://doi.org/10.1016/j.softx.2023.101518).
 
