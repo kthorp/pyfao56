@@ -17,8 +17,10 @@ between measured and simulated data, including
 13. Coefficient of residual mass ('crm')
 14. Nash & Sutcliffe (1970) model efficiency ('nse')
 15. Willmott (1981) index of agreement ('d')
+16. Kling-Gupta (2011) efficiency ('kge')
 
 11/01/2023 Initial Python script
+08/05/2024 Added Kling-Gupta efficiency
 ########################################################################
 """
 
@@ -37,7 +39,7 @@ class Statistics:
     stats - dict
         Container for goodness-of-fit statistics
         keys - ['bias','rbias','pbias','maxerr','meanerr','mae','sse',
-                'r','r2','rmse','rrmse','prmse','crm','nse','d']
+                'r','r2','rmse','rrmse','prmse','crm','nse','d','kge']
         value - Computed value of the statistic
 
     Methods
@@ -78,6 +80,7 @@ class Statistics:
         self.stats.update({'crm'    :self._crm(s,m)})
         self.stats.update({'nse'    :self._nse(s,m)})
         self.stats.update({'d'      :self._d(s,m)})
+        self.stats.update({'kge'    :self._kge(s,m)})
 
     def __str__(self):
         """Represent the Statistics class variables as a string."""
@@ -98,7 +101,7 @@ class Statistics:
                       self.comment,
                       ast)
         keys = ['bias','rbias','pbias','maxerr','meanerr','mae','sse',
-                'r','r2','rmse','rrmse','prmse','crm','nse','d']
+                'r','r2','rmse','rrmse','prmse','crm','nse','d','kge']
         for key in keys:
             s += '{:s} : {:f}\n'.format(key, self.stats[key])
         return s
@@ -197,3 +200,13 @@ class Statistics:
         c = np.absolute(m-np.mean(m))
         d = np.sum(np.square(b+c))
         return 1.0-a/d
+
+    def _kge(self,s,m):
+        """Compute the Kling-Gupta (2011) efficiency (kge)."""
+        r = self._r(s,m)
+        beta = np.mean(s)/np.mean(m)
+        alpha = np.std(s)/np.std(m)
+        a = (r-1.0)*(r-1.0)
+        b = (alpha-1.0)*(alpha-1.0)
+        c = (beta-1.0)*(beta-1.0)
+        return 1.0-np.sqrt(a+b+c)
