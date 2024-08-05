@@ -170,21 +170,20 @@ The Statistics class provides computations of 15 goodness-of-fit statistics when
 ## Further information
 The pyfao56 package is further described in the following articles:
 
-DeJonge, K. C., Thorp, K. R., Brekel, J. Pokoski, T., Trout, T.J., 2024. Customizing pyfao56 for evapotranspiration estimation and irrigation scheduling at the Limited Irrigation Research Farm, Greeley, Colorado. Agricultural Water Management, 299. https://doi.org/10.1016/j.agwat.2024.108891 
+Thorp, K. R., 2022. pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 19, 101208. [doi:10.1016/softx.2022.101208](https://doi.org/10.1016/j.softx.2022.101208).
 
-Thorp, K. R., DeJonge, K. C., Pokoski, T., Gulati, D., Kukal, M., Farag, F., Hashem, A., Erismann, G., Baumgartner, T., Holzkaemper, A., 2024. Version 1.3.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX, 26. https://doi.org/10.1016/j.softx.2024.101724
+Brekel, J., Thorp, K. R., DeJonge, K. C., Trout, T. J., 2023. Version 1.1.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 22, 101336. [doi:10.1016/j.softx.2023.101336](https://doi.org/10.1016/j.softx.2023.101336).
 
 Thorp, K. R., Brekel, J., DeJonge, K. C., 2023. Version 1.2.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 24, 101518. [doi.10.1016/j.softx.2023.101518](https://doi.org/10.1016/j.softx.2023.101518).
 
-Brekel, J., Thorp, K. R., DeJonge, K. C., Trout, T. J., 2023. Version 1.1.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 22, 101336. [doi.10.1016/j.softx.2023.101336](https://doi.org/10.1016/j.softx.2023.101336).
+Thorp, K. R., DeJonge, K. C., Pokoski, T., Gulati, D., Kukal, M., Farag, F., Hashem, A., Erismann, G., Baumgartner, T., Holzkaemper, A., 2024. Version 1.3.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX, 26. [doi:10.1016/j.softx.2024.101724](https://doi.org/10.1016/j.softx.2024.101724).
 
-Thorp, K. R., 2022. pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 19, 101208. [doi:10.1016/softx.2022.101208](https://doi.org/10.1016/j.softx.2022.101208).
-
+DeJonge, K. C., Thorp, K. R., Brekel, J. Pokoski, T., Trout, T.J., 2024. Customizing pyfao56 for evapotranspiration estimation and irrigation scheduling at the Limited Irrigation Research Farm, Greeley, Colorado. Agricultural Water Management, 299. [doi:10.1016/j.agwat.2024.108891](https://doi.org/10.1016/j.agwat.2024.108891).
 
 Also, the pyfao56 package was used to conduct the following research:
 
-Thorp, K. R., 2023. Combining soil water content data with computer simulation models for improved irrigation scheduling. Journal of the ASABE. 66(5):1265-1279. [doi:10.13031/ja.15591](https://doi.org/10.13031/ja.15591)
+Thorp, K. R., Thompson, A. L., Harders, S. J., French, A. N., Ward, R. W., 2018. High-throughput phenotyping of crop water use efficiency via multispectral drone imagery and a daily soil water balance model. Remote Sensing 10, 1682. [doi:10.3390/rs10111682](https://doi.org/10.3390/rs10111682)
 
 Thorp, K. R., Calleja, S., Pauli, D., Thompson, A. L., Elshikha, D. E., 2022. Agronomic outcomes of precision irrigation technologies with varying complexity. Journal of the ASABE. 65(1):135-150. [doi:10.13031/ja.14950](https://doi.org/10.13031/ja.14950)
 
-Thorp, K. R., Thompson, A. L., Harders, S. J., French, A. N., Ward, R. W., 2018. High-throughput phenotyping of crop water use efficiency via multispectral drone imagery and a daily soil water balance model. Remote Sensing 10, 1682. [doi:10.3390/rs10111682](https://doi.org/10.3390/rs10111682)
+Thorp, K. R., 2023. Combining soil water content data with computer simulation models for improved irrigation scheduling. Journal of the ASABE. 66(5):1265-1279. [doi:10.13031/ja.15591](https://doi.org/10.13031/ja.15591)
