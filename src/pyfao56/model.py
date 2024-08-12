@@ -89,10 +89,10 @@ class Model:
         index - Year and day of year as string ('yyyy-ddd')
         columns - ['Year','DOY','DOW','Date','ETref','tKcb','Kcb','h',
                    'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
-                   'Kc','ETc','TAW','TAWrmax','TAWb','Zr','p','RAW',
-                   'Ks','Kcadj','ETcadj','T','DP','Dinc','Dr','fDr',
-                   'Drmax','fDrmax','Db','fDb','Irrig','IrrLoss','Rain',
-                   'Runoff','Year','DOY','DOW','Date']
+                   'Kc','Kc1,'ETc','ETc1','TAW','TAWrmax','TAWb','Zr',
+                   'p','RAW','Ks','Kcadj','ETcadj','T','DP','Dinc','Dr',
+                   'fDr','Drmax','fDrmax','Db','fDb','Irrig','IrrLoss',
+                   'Rain','Runoff','Year','DOY','DOW','Date']
             Year    - 4-digit year (yyyy)
             DOY     - Day of year (ddd)
             DOW     - Day of week
@@ -157,7 +157,7 @@ class Model:
 
     def __init__(self, start, end, par, wth, irr=None, autoirr=None,
                  sol=None, upd=None, roff=False, cons_p=False,
-                 aq_Ks=False, single=False, comment=''):
+                 aq_Ks=False, comment=''):
         """Initialize the Model class attributes.
 
         Parameters
@@ -206,16 +206,15 @@ class Model:
         self.roff = roff
         self.cons_p = cons_p
         self.aq_Ks = aq_Ks
-        self.single = single
         self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
         self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
                        'h','Kcmax','fc','fw','few','De','Kr','Ke','E',
-                       'DPe','Kc','ETc','TAW','TAWrmax','TAWb','Zr','p',
-                       'RAW','Ks','Kcadj','ETcadj','T','DP','Dinc','Dr',
-                       'fDr','Drmax','fDrmax','Db','fDb','Irrig',
-                       'IrrLoss','Rain','Runoff','Year','DOY','DOW',
-                       'Date']
+                       'DPe','Kc','Kc1','ETc','ETc1','TAW','TAWrmax',
+                       'TAWb','Zr','p','RAW','Ks','Kcadj','ETcadj','T',
+                       'DP','Dinc','Dr','fDr','Drmax','fDrmax','Db',
+                       'fDb','Irrig','IrrLoss','Rain','Runoff','Year',
+                       'DOY','DOW','Date']
         self.odata = pd.DataFrame(columns=self.cnames)
 
     def __str__(self):
@@ -457,7 +456,6 @@ class Model:
         io.roff   = self.roff
         io.cons_p = self.cons_p
         io.aq_Ks  = self.aq_Ks
-        io.single = self.single
         self.odata = pd.DataFrame(columns=self.cnames)
 
         while tcurrent <= self.endDate:
@@ -658,11 +656,12 @@ class Model:
             dat = tcurrent.strftime('%m/%d/%y') #Date mm/dd/yy
             data = [year, doy, dow, dat, io.ETref, io.tKcb, io.Kcb,
                     io.h, io.Kcmax, io.fc, io.fw, io.few, io.De, io.Kr,
-                    io.Ke, io.E, io.DPe, io.Kc, io.ETc, io.TAW,
-                    io.TAWrmax, io.TAWb, io.Zr, io.p, io.RAW, io.Ks,
-                    io.Kcadj, io.ETcadj, io.T, io.DP, io.Dinc, io.Dr,
-                    io.fDr, io.Drmax, io.fDrmax, io.Db, io.fDb, io.idep,
-                    io.irrloss, io.rain, io.runoff, year, doy, dow, dat]
+                    io.Ke, io.E, io.DPe, io.Kc, io.Kc1, io.ETc, io.ETc1,
+                    io.TAW, io.TAWrmax, io.TAWb, io.Zr, io.p, io.RAW, 
+                    io.Ks, io.Kcadj, io.ETcadj, io.T, io.DP, io.Dinc, 
+                    io.Dr, io.fDr, io.Drmax, io.fDrmax, io.Db, io.fDb, 
+                    io.idep, io.irrloss, io.rain, io.runoff, year, 
+                    doy, dow, dat]
             self.odata.loc[mykey] = data
 
             tcurrent = tcurrent + tdelta
@@ -703,23 +702,23 @@ class Model:
         if 0<=io.i<=s1:
             io.tKcb = io.Kcbini
             io.Kcb = io.Kcbini
-            io.Kc = io.Kcini
+            io.Kc1 = io.Kcini
         elif s1<io.i<=s2:
             io.tKcb += (io.Kcbmid-io.Kcbini)/(s2-s1)
             io.Kcb += (io.Kcbmid-io.Kcbini)/(s2-s1)
-            io.Kc = io.Kcini +((io.i-s1)/io.Ldev)*(io.Kcmid - io.Kcini)
+            io.Kc1 = io.Kcini +((io.i-s1)/io.Ldev)*(io.Kcmid - io.Kcini)
         elif s2<io.i<=s3:
             io.tKcb = io.Kcbmid
             io.Kcb = io.Kcbmid
-            io.Kc = io.Kcmid
+            io.Kc1 = io.Kcmid
         elif s3<io.i<=s4:
             io.tKcb += (io.Kcbmid-io.Kcbend)/(s3-s4)
             io.Kcb += (io.Kcbmid-io.Kcbend)/(s3-s4)
-            io.Kc = io.Kcmid +((io.i-s3)/io.Lend)*(io.Kcend - io.Kcmid)
+            io.Kc1 = io.Kcmid +((io.i-s3)/io.Lend)*(io.Kcend - io.Kcmid)
         elif s4<io.i:
             io.tKcb = io.Kcbend
             io.Kcb = io.Kcbend
-            io.Kc = io.Kcend
+            io.Kc1 = io.Kcend
 
         #Overwrite Kcb if updates are available
         if io.updKcb > 0: io.Kcb = io.updKcb
@@ -812,12 +811,12 @@ class Model:
         io.De = sorted([0.0,De,io.TEW])[1]
 
         #Crop coefficient (Kc) - FAO-56 Eq. 69
-        if io.single is False:
-            io.Kc = io.Ke + io.Kcb
+        io.Kc = io.Ke + io.Kcb
 
         #Non-stressed crop evapotranspiration (ETc, mm) - FAO-56 Eq. 69
+        io.ETc1 = io.Kc1 * io.ETref
         io.ETc = io.Kc * io.ETref
-
+        
         if io.solmthd == 'D':
             # Total available water (TAW, mm) - FAO-56 Eq. 82
             io.TAW = 1000.0 * (io.thetaFC - io.thetaWP) * io.Zr

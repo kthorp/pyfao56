@@ -382,14 +382,17 @@ class Visualization:
         else:
             plt.close(fig)
 
-    def plot_Kc(self, Kc=True, Kcadj=True, Ke=True, tKcb=True, Kcb=True,
+    def plot_Kc(self, Kc=True, Kc1=True, Kcadj=True, Ke=True, tKcb=True, Kcb=True,
                 title='', show=True, filepath=None):
         """Plot crop coeffient data versus time.
 
         Parameters
         ----------
         Kc : boolean, optional
-            If True, include a plot of Kc
+            If True, include a plot of Kc (Dual Crop Coefficent)
+            (default = True)
+        Kc1 : boolean, optional
+            If True, include a plot of Kc (Single Crop Coefficent)
             (default = True)
         Kcadj : boolean, optional
             If True, include a plot of Kcadj
@@ -464,6 +467,10 @@ class Visualization:
             kc_c = 'blue'
             ax.plot(x, d['Kc'], color=kc_c, label='Kc')
             maxkc = round(max([maxkc,d['Kc'].max()])+0.05,1) 
+        if Kc1:
+            kc_c = 'blueviolet'
+            ax.plot(x, d['Kc1'], color=kc_c, label='Kc1')
+            maxkc = round(max([maxkc,d['Kc1'].max()])+0.05,1) 
         yticks=[]
         ylabels=[]
         for i in range(int(maxkc*10.)+1):
