@@ -377,7 +377,6 @@ class SoilWaterSeries:
 
             #Root zone is evaluated in 10^-5 meter increments
             #Set root zone depth variables in 10^-5 meter units
-            rzmax = int(self.par.Zrmax * 100000.) #10^-5 meters
             rz = int(self.Zr * 100000.) #10^-5 meters
 
             #Initialize other variables
@@ -386,11 +385,13 @@ class SoilWaterSeries:
                 sol_dpths = list(self.sol.sdata.index.values) #cm
                 thetaFC = self.sol.sdata['thetaFC'].to_dict()
                 thetaWP = self.sol.sdata['thetaWP'].to_dict()
+                rzmax = int(sol_dpths[-1]*1000.) #10^-5 meters
             elif self.par is not None:
                 sol_dpth = int(self.par.Zrmax*100.) #cm
                 sol_dpths = [sol_dpth] #cm
                 thetaFC = {sol_dpth:self.par.thetaFC}
                 thetaWP = {sol_dpth:self.par.thetaWP}
+                rzmax = int(self.par.Zrmax * 100000.) #10^-5 meters
             else:
                 raise Exception("No soil profile data available.")
             FCr = 0.
