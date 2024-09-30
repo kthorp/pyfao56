@@ -143,8 +143,8 @@ class Model:
             Date    - Month/Day/Year (mm/dd/yy)
     swbdata : dict
         Container for cumulative seasonal water balance data
-        keys - ['ETref','ETc','ETcadj','E','T','DP','Irrig','IrrLoss',
-                'Rain','Runoff','Dr_ini','Dr_end','Drmax_ini',
+        keys - ['ETref','ETc1','ETc2','ETcadj','E','T','DP','Irrig',
+                'IrrLoss','Rain','Runoff','Dr_ini','Dr_end','Drmax_ini',
                 'Drmax_end']
         value - Cumulative water balance data in mm
 
@@ -339,7 +339,7 @@ class Model:
             '{:s}\n'
             ).format(ast,timestamp,sdate,edate,ast,self.comment,ast)
         if not self.odata.empty:
-            keys = ['ETref','ETc','ETcadj','E','T','DP','Irrig',
+            keys = ['ETref','ETc1','ETc2','ETcadj','E','T','DP','Irrig',
                     'IrrLoss','Rain','Runoff','Dr_ini','Dr_end',
                     'Drmax_ini','Drmax_end']
             for key in keys:
@@ -677,7 +677,8 @@ class Model:
         sdoy = self.startDate.strftime("%Y-%j")
         edoy = self.endDate.strftime("%Y-%j")
         self.swbdata = {'ETref'    :sum(self.odata['ETref']),
-                        'ETc'      :sum(self.odata['ETc']),
+                        'ETc1'     :sum(self.odata['ETc1']),
+                        'ETc2'     :sum(self.odata['ETc2']),
                         'ETcadj'   :sum(self.odata['ETcadj']),
                         'E'        :sum(self.odata['E']),
                         'T'        :sum(self.odata['T']),
@@ -725,6 +726,9 @@ class Model:
             io.tKcb = io.Kcbend
             io.Kcb = io.Kcbend
             io.Kc1 = io.Kcend
+
+        #Crop evapotranspiration, single method (ETc1) - FAO-56 Eq. 56
+        io.ETc1 = io.Kc1 * io.ETref
 
         #Overwrite Kcb if updates are available
         if io.updKcb > 0: io.Kcb = io.updKcb
@@ -819,8 +823,7 @@ class Model:
         #Crop coefficient (Kc) - FAO-56 Eq. 69
         io.Kc2 = io.Ke + io.Kcb
 
-        #Non-stressed crop evapotranspiration (ETc, mm) - FAO-56 Eq. 69
-        io.ETc1 = io.Kc1 * io.ETref
+        #Non-stressed crop evapotranspiration (ETc2, mm) - FAO-56 Eq. 69
         io.ETc2 = io.Kc2 * io.ETref
 
         if io.solmthd == 'D':
@@ -845,7 +848,7 @@ class Model:
         if io.cons_p is True:
             io.p = io.pbase
         else:
-            io.p = sorted([0.1,io.pbase+0.04*(5.0-io.ETc),0.8])[1]
+            io.p = sorted([0.1,io.pbase+0.04*(5.0-io.ETc2),0.8])[1]
 
         #Readily available water (RAW, mm) - FAO-56 Equation 83
         io.RAW = io.p * io.TAW
