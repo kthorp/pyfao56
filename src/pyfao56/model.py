@@ -32,6 +32,7 @@ The model.py module contains the following:
 11/01/2023 Added reports of the cumulative seasonal water balance
 12/12/2023 Added the runoff functionality by Dinesh Gulati
 02/15/2024 Added functionality for automatic irrigation scheduling
+09/30/2024 Added single crop coefficient calculations
 ########################################################################
 """
 
@@ -87,17 +88,19 @@ class Model:
     odata : DataFrame
         Model output data as float
         index - Year and day of year as string ('yyyy-ddd')
-        columns - ['Year','DOY','DOW','Date','ETref','tKcb','Kcb','h',
-                   'Kcmax','fc','fw','few','De','Kr','Ke','E','DPe',
-                   'Kc','Kc1,'ETc','ETc1','TAW','TAWrmax','TAWb','Zr',
-                   'p','RAW','Ks','Kcadj','ETcadj','T','DP','Dinc','Dr',
-                   'fDr','Drmax','fDrmax','Db','fDb','Irrig','IrrLoss',
-                   'Rain','Runoff','Year','DOY','DOW','Date']
+        columns - ['Year','DOY','DOW','Date','ETref','Kc1','ETc1',
+                   'tKcb','Kcb','h','Kcmax','fc','fw','few','De','Kr',
+                   'Ke','E','DPe','Kc2','ETc2','TAW','TAWrmax','TAWb',
+                   'Zr','p','RAW','Ks','Kcadj','ETcadj','T','DP','Dinc',
+                   'Dr','fDr','Drmax','fDrmax','Db','fDb','Irrig',
+                   'IrrLoss','Rain','Runoff','Year','DOY','DOW','Date']
             Year    - 4-digit year (yyyy)
             DOY     - Day of year (ddd)
             DOW     - Day of week
             Date    - Month/Day/Year (mm/dd/yy)
             ETref   - Daily reference evapotranspiration (mm)
+            Kc1     - Single crop coefficient, FAO-56 Eq. 56
+            ETc1    - Single non-stressed crop ET (mm), FAO-56 Eq. 56
             tKcb    - Basal crop coefficient, trapezoidal from FAO-56
             Kcb     - Basal crop coefficient, considering updates
             h       - Plant height (m)
@@ -110,8 +113,8 @@ class Model:
             Ke      - Evaporation coefficient, FAO-56 Eq. 71
             E       - Soil water evaporation (mm), FAO-56 Eq. 69
             DPe     - Percolation under exposed soil (mm), FAO-56 Eq. 79
-            Kc      - Crop coefficient, FAO-56 Eq. 69
-            ETc     - Non-stressed crop ET (mm), FAO-56 Eq. 69
+            Kc2     - Dual crop coefficient, FAO-56 Eq. 69
+            ETc2    - Dual non-stressed crop ET (mm), FAO-56 Eq. 69
             TAW     - Total available water (mm), FAO-56 Eq. 82
             TAWrmax - Total available water for max root depth (mm)
             TAWb    - Total available water in bottom layer (mm)
@@ -208,9 +211,9 @@ class Model:
         self.aq_Ks = aq_Ks
         self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
-        self.cnames = ['Year','DOY','DOW','Date','ETref','tKcb','Kcb',
-                       'h','Kcmax','fc','fw','few','De','Kr','Ke','E',
-                       'DPe','Kc','Kc1','ETc','ETc1','TAW','TAWrmax',
+        self.cnames = ['Year','DOY','DOW','Date','ETref','Kc1','ETc1',
+                       'tKcb','Kcb','h','Kcmax','fc','fw','few','De',
+                       'Kr','Ke','E','DPe','Kc2','ETc2','TAW','TAWrmax',
                        'TAWb','Zr','p','RAW','Ks','Kcadj','ETcadj','T',
                        'DP','Dinc','Dr','fDr','Drmax','fDrmax','Db',
                        'fDb','Irrig','IrrLoss','Rain','Runoff','Year',
@@ -232,14 +235,15 @@ class Model:
                       'approach'
         fmts = {'Year':'{:4s}'.format,'DOY':'{:3s}'.format,
                 'DOW':'{:3s}'.format,'Date':'{:8s}'.format,
-                'ETref':'{:6.3f}'.format,'tKcb':'{:5.3f}'.format,
+                'ETref':'{:6.3f}'.format,'Kc1':'{:5.3f}'.format,
+                'ETc1':'{:6.3f}'.format,'tKcb':'{:5.3f}'.format,
                 'Kcb':'{:5.3f}'.format,'h':'{:5.3f}'.format,
                 'Kcmax':'{:5.3f}'.format,'fc':'{:5.3f}'.format,
                 'fw':'{:5.3f}'.format,'few':'{:5.3f}'.format,
                 'De':'{:7.3f}'.format,'Kr':'{:5.3f}'.format,
                 'Ke':'{:5.3f}'.format,'E':'{:6.3f}'.format,
-                'DPe':'{:7.3f}'.format,'Kc':'{:5.3f}'.format,
-                'ETc':'{:6.3f}'.format,'TAW':'{:7.3f}'.format,
+                'DPe':'{:7.3f}'.format,'Kc2':'{:5.3f}'.format,
+                'ETc2':'{:6.3f}'.format,'TAW':'{:7.3f}'.format,
                 'TAWrmax':'{:7.3f}'.format,'TAWb':'{:7.3f}'.format,
                 'Zr':'{:5.3f}'.format,'p':'{:5.3f}'.format,
                 'RAW':'{:7.3f}'.format,'Ks':'{:5.3f}'.format,
@@ -262,12 +266,12 @@ class Model:
              '{:s}\n'
              '{:s}\n'
              '{:s}\n'
-             'Year-DOY  Year  DOY  DOW      Date  ETref  tKcb   Kcb'
-             '     h Kcmax    fc    fw   few      De    Kr    Ke      E'
-             '     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p'
-             '     RAW    Ks Kcadj ETcadj      T      DP    Dinc'
-             '      Dr     fDr   Drmax  fDrmax      Db     fDb'
-             '   Irrig IrrLoss    Rain  Runoff  Year  DOY  DOW'
+             'Year-DOY  Year  DOY  DOW      Date  ETref   Kc1   ETc1'
+             '  tKcb   Kcb     h Kcmax    fc    fw   few      De    Kr'
+             '    Ke      E     DPe   Kc2   ETc2     TAW TAWrmax'
+             '    TAWb    Zr     p     RAW    Ks Kcadj ETcadj      T'
+             '      DP    Dinc      Dr     fDr   Drmax  fDrmax      Db'
+             '     fDb   Irrig IrrLoss    Rain  Runoff  Year  DOY  DOW'
              '      Date\n'
              ).format(ast,
                       timestamp,
@@ -363,12 +367,12 @@ class Model:
         #Initialize model state
         io = self.ModelState()
         io.i = 0
-        io.Kcbini  = self.par.Kcbini
-        io.Kcbmid  = self.par.Kcbmid
-        io.Kcbend  = self.par.Kcbend
         io.Kcini  = self.par.Kcini
         io.Kcmid  = self.par.Kcmid
         io.Kcend  = self.par.Kcend
+        io.Kcbini  = self.par.Kcbini
+        io.Kcbmid  = self.par.Kcbmid
+        io.Kcbend  = self.par.Kcbend
         io.Lini    = self.par.Lini
         io.Ldev    = self.par.Ldev
         io.Lmid    = self.par.Lmid
@@ -656,14 +660,14 @@ class Model:
             doy = tcurrent.strftime('%j') #Day of Year
             dow = tcurrent.strftime('%a') #Day of Week
             dat = tcurrent.strftime('%m/%d/%y') #Date mm/dd/yy
-            data = [year, doy, dow, dat, io.ETref, io.tKcb, io.Kcb,
-                    io.h, io.Kcmax, io.fc, io.fw, io.few, io.De, io.Kr,
-                    io.Ke, io.E, io.DPe, io.Kc, io.Kc1, io.ETc, io.ETc1,
-                    io.TAW, io.TAWrmax, io.TAWb, io.Zr, io.p, io.RAW, 
-                    io.Ks, io.Kcadj, io.ETcadj, io.T, io.DP, io.Dinc, 
-                    io.Dr, io.fDr, io.Drmax, io.fDrmax, io.Db, io.fDb, 
-                    io.idep, io.irrloss, io.rain, io.runoff, year, 
-                    doy, dow, dat]
+            data = [year, doy, dow, dat, io.ETref, io.Kc1, io.ETc1,
+                    io.tKcb, io.Kcb, io.h, io.Kcmax, io.fc, io.fw,
+                    io.few, io.De, io.Kr, io.Ke, io.E, io.DPe, io.Kc2,
+                    io.ETc2, io.TAW, io.TAWrmax, io.TAWb, io.Zr, io.p,
+                    io.RAW, io.Ks, io.Kcadj, io.ETcadj, io.T, io.DP,
+                    io.Dinc, io.Dr, io.fDr, io.Drmax, io.fDrmax, io.Db,
+                    io.fDb, io.idep, io.irrloss, io.rain, io.runoff,
+                    year, doy, dow, dat]
             self.odata.loc[mykey] = data
 
             tcurrent = tcurrent + tdelta
@@ -708,7 +712,7 @@ class Model:
         elif s1<io.i<=s2:
             io.tKcb += (io.Kcbmid-io.Kcbini)/(s2-s1)
             io.Kcb += (io.Kcbmid-io.Kcbini)/(s2-s1)
-            io.Kc1 = io.Kcini +((io.i-s1)/io.Ldev)*(io.Kcmid - io.Kcini)
+            io.Kc1 += (io.Kcmid-io.Kcini)/(s2-s1)
         elif s2<io.i<=s3:
             io.tKcb = io.Kcbmid
             io.Kcb = io.Kcbmid
@@ -716,7 +720,7 @@ class Model:
         elif s3<io.i<=s4:
             io.tKcb += (io.Kcbmid-io.Kcbend)/(s3-s4)
             io.Kcb += (io.Kcbmid-io.Kcbend)/(s3-s4)
-            io.Kc1 = io.Kcmid +((io.i-s3)/io.Lend)*(io.Kcend - io.Kcmid)
+            io.Kc1 += (io.Kcmid-io.Kcend)/(s3-s4)
         elif s4<io.i:
             io.tKcb = io.Kcbend
             io.Kcb = io.Kcbend
@@ -813,12 +817,12 @@ class Model:
         io.De = sorted([0.0,De,io.TEW])[1]
 
         #Crop coefficient (Kc) - FAO-56 Eq. 69
-        io.Kc = io.Ke + io.Kcb
+        io.Kc2 = io.Ke + io.Kcb
 
         #Non-stressed crop evapotranspiration (ETc, mm) - FAO-56 Eq. 69
         io.ETc1 = io.Kc1 * io.ETref
-        io.ETc = io.Kc * io.ETref
-        
+        io.ETc2 = io.Kc2 * io.ETref
+
         if io.solmthd == 'D':
             # Total available water (TAW, mm) - FAO-56 Eq. 82
             io.TAW = 1000.0 * (io.thetaFC - io.thetaWP) * io.Zr

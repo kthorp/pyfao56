@@ -279,8 +279,8 @@ class Visualization:
         else:
             plt.close(fig)
 
-    def plot_ET(self, refET=True, ETc=True, ETcadj=True, events=False,
-                title='', show=True, filepath=None):
+    def plot_ET(self, refET=True, ETc1=True, ETc2=True, ETcadj=True,
+                events=False, title='', show=True, filepath=None):
         """Plot evapotranspiration data versus time.
 
         Parameters
@@ -288,8 +288,11 @@ class Visualization:
         refET : boolean, optional
             If True, include a lineplot for reference ET
             (default = True)
-        ETc : boolean, optional
-            If True, include a lineplot for crop ET
+        ETc1 : boolean, optional
+            If True, include a lineplot for crop ET (single method)
+            (default = True)
+        ETc2 : boolean, optional
+            If True, include a lineplot for crop ET (dual method)
             (default = True)
         ETcadj : boolean, optional
             If True, include a lineplot for adjusted crop ET
@@ -333,7 +336,7 @@ class Visualization:
                 vline = i
 
         #Find maximum water state for scaling y axis
-        maxwat = [d['ETref'].max(),d['ETc'].max(),
+        maxwat = [d['ETref'].max(),d['ETc1'].max(),d['ETc2'].max(),
                   d['ETcadj'].max()]
         if events:
             maxwat.append(d['Rain'].max())
@@ -344,9 +347,12 @@ class Visualization:
         if refET:
             ax.plot(x, d['ETref'], color='darkred',
                     label='Reference ET (ETref)')
-        if ETc:
-            ax.plot(x, d['ETc'], color='deepskyblue',
-                    label='Crop ET (ETc)')
+        if ETc1:
+            ax.plot(x, d['ETc1'], color='blueviolet',
+                    label='Crop ET (ETc1, single)')
+        if ETc2:
+            ax.plot(x, d['ETc2'], color='blue',
+                    label='Crop ET (ETc2, dual)')
         if ETcadj:
             ax.plot(x, d['ETcadj'], linestyle='-.', color='navy',
                     label='Adjusted Crop ET (ETcadj)')
@@ -382,29 +388,29 @@ class Visualization:
         else:
             plt.close(fig)
 
-    def plot_Kc(self, Kc=True, Kc1=True, Kcadj=True, Ke=True, tKcb=True, Kcb=True,
-                title='', show=True, filepath=None):
+    def plot_Kc(self, Kc1=True, tKcb=True, Kcb=True, Ke=True, Kc2=True,
+                Kcadj=True, title='', show=True, filepath=None):
         """Plot crop coeffient data versus time.
 
         Parameters
         ----------
-        Kc : boolean, optional
-            If True, include a plot of Kc (Dual Crop Coefficent)
-            (default = True)
         Kc1 : boolean, optional
-            If True, include a plot of Kc (Single Crop Coefficent)
-            (default = True)
-        Kcadj : boolean, optional
-            If True, include a plot of Kcadj
-            (default = True)
-        Ke : boolean, optional
-            If True, include a plot of Ke
+            If True, include a plot of Kc1 (single crop coefficient)
             (default = True)
         tKcb : boolean, optional
             If True, include a plot of tabular (trapezoidal) Kcb
             (default = True)
         Kcb : boolean, optional
             If True, include a plot of Kcb
+            (default = True)
+        Ke : boolean, optional
+            If True, include a plot of Ke
+            (default = True)
+        Kc2 : boolean, optional
+            If True, include a plot of Kc2 (dual crop coefficient)
+            (default = True)
+        Kcadj : boolean, optional
+            If True, include a plot of Kcadj
             (default = True)
         title : str, optional
             Specify the title as the provided string
@@ -443,34 +449,32 @@ class Visualization:
 
         #Create crop coefficient plot
         maxkc = 1.2
-        if Kcadj:
-            kcadj_c = 'dimgrey'
-            ax.plot(x, d['Kcadj'], color=kcadj_c, label='Kc_adj')
-            maxkc = round(max([maxkc,d['Kcadj'].max()])+0.05,1)
-
-        if Ke:
-            ke_c = 'lightskyblue'
-            ax.plot(x, d['Ke'], color=ke_c, label='Ke')
-            maxkc = round(max([maxkc,d['Ke'].max()])+0.05,1)
-
-        if Kcb:
-            kcb_c = 'seagreen'
-            ax.plot(x, d['Kcb'], color=kcb_c, label='Kcb')
-            maxkc = round(max([maxkc,d['Kcb'].max()])+0.05,1)
-
+        if Kc1:
+            kc1_c = 'blueviolet'
+            ax.plot(x, d['Kc1'], color=kc1_c, label='Kc1')
+            maxkc = round(max([maxkc,d['Kc1'].max()])+0.05,1)
         if tKcb:
             tkcb_c = 'mediumseagreen'
             ax.plot(x, d['tKcb'], linestyle='--', color=tkcb_c,
                     label='Tabular Kcb')
             maxkc = round(max([maxkc,d['tKcb'].max()])+0.05,1)
-        if Kc:
-            kc_c = 'blue'
-            ax.plot(x, d['Kc'], color=kc_c, label='Kc')
-            maxkc = round(max([maxkc,d['Kc'].max()])+0.05,1) 
-        if Kc1:
-            kc_c = 'blueviolet'
-            ax.plot(x, d['Kc1'], color=kc_c, label='Kc1')
-            maxkc = round(max([maxkc,d['Kc1'].max()])+0.05,1) 
+        if Kcb:
+            kcb_c = 'seagreen'
+            ax.plot(x, d['Kcb'], color=kcb_c, label='Kcb')
+            maxkc = round(max([maxkc,d['Kcb'].max()])+0.05,1)
+        if Ke:
+            ke_c = 'lightskyblue'
+            ax.plot(x, d['Ke'], color=ke_c, label='Ke')
+            maxkc = round(max([maxkc,d['Ke'].max()])+0.05,1)
+        if Kc2:
+            kc2_c = 'blue'
+            ax.plot(x, d['Kc2'], color=kc2_c, label='Kc2')
+            maxkc = round(max([maxkc,d['Kc2'].max()])+0.05,1)
+        if Kcadj:
+            kcadj_c = 'dimgrey'
+            ax.plot(x, d['Kcadj'], color=kcadj_c, label='Kc_adj')
+            maxkc = round(max([maxkc,d['Kcadj'].max()])+0.05,1)
+
         yticks=[]
         ylabels=[]
         for i in range(int(maxkc*10.)+1):

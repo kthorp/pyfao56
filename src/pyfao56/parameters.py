@@ -11,6 +11,7 @@ The parameters.py module contains the following:
 01/07/2016 Initial Python functions developed by Kelly Thorp
 11/04/2021 Finalized updates for inclusion in the pyfao56 Python package
 12/12/2023 Added CN2 parameter for runoff method
+09/30/2024 Added inputs for single crop coefficient computation
 ########################################################################
 """
 
@@ -21,18 +22,18 @@ class Parameters:
 
     Attributes
     ----------
-    Kcbini : float
-        Kcb Initial (FAO-56 Table 17)
-    Kcbmid : float
-        Kcb Mid (FAO-56 Table 17)
-    Kcbend : float
-        Kcb End (FAO-56 Table 17)
     Kcini : float
         Kc Initial (FAO-56 Table 12)
     Kcmid : float
         Kc Mid (FAO-56 Table 12)
     Kcend : float
         Kc End (FAO-56 Table 12)
+    Kcbini : float
+        Kcb Initial (FAO-56 Table 17)
+    Kcbmid : float
+        Kcb Mid (FAO-56 Table 17)
+    Kcbend : float
+        Kcb End (FAO-56 Table 17)
     Lini : int
         Length Stage Initial (days) (FAO-56 Table 11)
     Ldev : int
@@ -76,12 +77,11 @@ class Parameters:
         Load the parameter data from a file
     """
 
-    def __init__(self, Kcbini=0.15, Kcbmid=1.10, Kcbend=0.50, Kcini=0.24,
-                 Kcmid=0.97, Kcend=0.28, Lini=25,
-                 Ldev=50, Lmid=50, Lend=25, hini=0.010, hmax=1.20,
-                 thetaFC=0.250, thetaWP=0.100, theta0=0.100, Zrini=0.20,
-                 Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0, CN2=70,
-                 comment=''):
+    def __init__(self, Kcini=0.35, Kcmid=1.15, Kcend=0.60, Kcbini=0.15,
+                 Kcbmid=1.10, Kcbend=0.50, Lini=25, Ldev=50, Lmid=50,
+                 Lend=25, hini=0.010, hmax=1.20, thetaFC=0.250,
+                 thetaWP=0.100, theta0=0.100, Zrini=0.20, Zrmax=1.40,
+                 pbase=0.50, Ze=0.10, REW=8.0, CN2=70, comment=''):
         """Initialize the Parameters class attributes.
 
         Default parameter values are given below. Users should update
@@ -91,12 +91,12 @@ class Parameters:
         Parameters
         ----------
         See Parameters class docstring for parameter definitions.
+        Kcini   : float, optional, default = 0.35
+        Kcmid   : float, optional, default = 1.15
+        Kcend   : float, optional, default = 0.60
         Kcbini  : float, optional, default = 0.15
         Kcbmid  : float, optional, default = 1.10
         Kcbend  : float, optional, default = 0.50
-        Kcini  : float, optional, default = 0.24
-        Kcmid  : float, optional, default = 0.97
-        Kcend  : float, optional, default = 0.28
         Lini    : int  , optional, default = 25
         Ldev    : int  , optional, default = 50
         Lmid    : int  , optional, default = 50
@@ -115,12 +115,12 @@ class Parameters:
         comment : str  , optional, default = ''
         """
 
-        self.Kcbini  = Kcbini
-        self.Kcbmid  = Kcbmid
-        self.Kcbend  = Kcbend
         self.Kcini  = Kcini
         self.Kcmid  = Kcmid
         self.Kcend  = Kcend
+        self.Kcbini  = Kcbini
+        self.Kcbmid  = Kcbmid
+        self.Kcbend  = Kcbend
         self.Lini    = Lini
         self.Ldev    = Ldev
         self.Lmid    = Lmid
@@ -152,12 +152,12 @@ class Parameters:
            '{:s}\n'
            '{:s}\n'
            '{:s}\n'
-           '{:9.4f} Kcbini, Kcb Initial (FAO-56 Table 17)\n'
-           '{:9.4f} Kcbmid, Kcb Mid (FAO-56 Table 17)\n'
-           '{:9.4f} Kcbend, Kcb End (FAO-56 Table 17)\n'
            '{:9.4f} Kcini, Kc Initial (FAO-56 Table 12)\n'
            '{:9.4f} Kcmid, Kc Mid (FAO-56 Table 12)\n'
            '{:9.4f} Kcend, Kc End (FAO-56 Table 12)\n'
+           '{:9.4f} Kcbini, Kcb Initial (FAO-56 Table 17)\n'
+           '{:9.4f} Kcbmid, Kcb Mid (FAO-56 Table 17)\n'
+           '{:9.4f} Kcbend, Kcb End (FAO-56 Table 17)\n'
            '{:9d} Lini, Length Stage Initial (days) (FAO-56 Table 11)\n'
            '{:9d} Ldev, Length Stage Development (days) '
            '(FAO-56 Table 11)\n'
@@ -181,9 +181,10 @@ class Parameters:
            '(FAO-56 Table 19)\n'
            '{:9d} CN2, Curve Number for AWCII '
            '(ASCE (2016) Table 14-3 or SCS (1972))\n'
-          ).format(ast,timestamp,ast,self.comment,ast,self.Kcbini,
-                   self.Kcbmid,self.Kcbend,self.Kcini, self.Kcmid, self.Kcend,self.Lini,self.Ldev,
-                   self.Lmid,self.Lend,self.hini,self.hmax,self.thetaFC,
+          ).format(ast,timestamp,ast,self.comment,ast,self.Kcini,
+                   self.Kcmid,self.Kcend,self.Kcbini,self.Kcbmid,
+                   self.Kcbend,self.Lini,self.Ldev,self.Lmid,
+                   self.Lend,self.hini,self.hmax,self.thetaFC,
                    self.thetaWP,self.theta0,self.Zrini,self.Zrmax,
                    self.pbase,self.Ze,self.REW,self.CN2)
         return s
@@ -244,18 +245,18 @@ class Parameters:
                 self.tmstmp = ts
             for line in lines[endast+1:]:
                 line = line.strip().split(',')[0].split()
-                if line[1].lower() == 'kcbini':
-                    self.Kcbini = float(line[0])
-                elif line[1].lower() == 'kcbmid':
-                    self.Kcbmid = float(line[0])
-                elif line[1].lower() == 'kcbend':
-                    self.Kcbend = float(line[0])
-                elif line[1].lower() == 'kcini':
+                if line[1].lower() == 'kcini':
                     self.Kcini = float(line[0])
                 elif line[1].lower() == 'kcmid':
                     self.Kcmid = float(line[0])
                 elif line[1].lower() == 'kcend':
                     self.Kcend = float(line[0])
+                elif line[1].lower() == 'kcbini':
+                    self.Kcbini = float(line[0])
+                elif line[1].lower() == 'kcbmid':
+                    self.Kcbmid = float(line[0])
+                elif line[1].lower() == 'kcbend':
+                    self.Kcbend = float(line[0])
                 elif line[1].lower() == 'lini':
                     self.Lini = int(line[0])
                 elif line[1].lower() == 'ldev':
