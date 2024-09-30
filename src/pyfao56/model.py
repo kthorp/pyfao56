@@ -400,6 +400,8 @@ class Model:
         else:
             io.solmthd = 'L' #Layered soil profile from SoilProfile
             io.lyr_dpths = list(self.sol.sdata.index)
+            if io.lyr_dpths[-1]*10 < io.Zrmax*1000.:
+                raise Exception("Soil profile depth must be >= Zrmax")
             io.lyr_thFC  = list(self.sol.sdata['thetaFC'])
             io.lyr_thWP  = list(self.sol.sdata['thetaWP'])
             io.lyr_th0   = list(self.sol.sdata['theta0'])
