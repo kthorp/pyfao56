@@ -89,7 +89,8 @@ class AutoIrrigate:
                     last watering event (boolean)
             ettyp - Specify type of ET to replace
                     'ETcadj' - Replace ETcadj less precip
-                    'ETc'    - Replace ETc less precip
+                    'ETc1'   - Replace ETc1 less precip
+                    'ETc2'   - Replace ETc2 less precip
             iper  - Adjust the autoirrigation amount by a fixed
                     percentage (float, %)
             ieff  - Consider an application efficiency for
