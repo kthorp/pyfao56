@@ -44,7 +44,7 @@ def run(start='2003-001',end='2020-366'):
         print('Retrieving {:4d} data...'.format(year))
         year2 = ('{:4d}'.format(year))[2:4]
         client = urllib3.PoolManager()
-        url = 'http://ag.arizona.edu/azmet/data/06'+year2+'rh.txt'
+        url = 'http://cales.arizona.edu/azmet/data/06'+year2+'rh.txt'
         page = client.request('GET',url,retries=9999)
         weatherdata = page.data.decode('utf-8').split('\n')[:-1]
         for line in weatherdata:
