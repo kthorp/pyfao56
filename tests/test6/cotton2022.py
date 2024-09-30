@@ -28,6 +28,7 @@ def run():
 
     #Specify the model parameters
     par = fao.Parameters(comment = '2022 Cotton, plot 10-2')
+    par.Kcmid = 1.275
     par.Kcbmid = 1.225
     par.Lini = 35
     par.Ldev = 50

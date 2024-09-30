@@ -1,10 +1,13 @@
 ************************************************************************
 pyfao56: FAO-56 Evapotranspiration in Python
 Parameter Data
-Timestamp: 03/20/2024 16:00:48
+Timestamp: 09/30/2024 14:51:26
 ************************************************************************
 Comments: 2019 Cotton
 ************************************************************************
+   0.3500 Kcini, Kc Initial (FAO-56 Table 12)
+   1.1500 Kcmid, Kc Mid (FAO-56 Table 12)
+   0.6000 Kcend, Kc End (FAO-56 Table 12)
    0.1500 Kcbini, Kcb Initial (FAO-56 Table 17)
    1.2250 Kcbmid, Kcb Mid (FAO-56 Table 17)
    0.5000 Kcbend, Kcb End (FAO-56 Table 17)
