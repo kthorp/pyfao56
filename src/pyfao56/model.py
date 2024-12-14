@@ -758,7 +758,7 @@ class Model:
 
         #Root depth (Zr, m) - FAO-56 page 279
         if io.Kcb_adj is True:
-                #To use Kcb_adj for root grow id available
+                #To use Kcb_adj for root growth if available
                     io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*(io.Kcb-io.Kcbini)/
                      (io.Kcbmid-io.Kcbini),0.001,io.Zr])
         else:
