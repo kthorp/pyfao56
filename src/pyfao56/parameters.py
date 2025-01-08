@@ -16,7 +16,6 @@ The parameters.py module contains the following:
 """
 
 import datetime
-
 from pyfao56.tools import FAOTables
 
 class Parameters:
@@ -79,9 +78,11 @@ class Parameters:
         Load the parameter data from a file
     """
 
-    def __init__(self, crop = "Maize, Field (grain)", hini=0.010, 
-                 thetaFC=0.250, thetaWP=0.100, theta0=0.100, Zrini=0.20, 
-                  Ze=0.10, REW=8.0, CN2=70, comment=''):
+    def __init__(self, Kcini=0.35, Kcmid=1.15, Kcend=0.60, Kcbini=0.15,
+                 Kcbmid=1.10, Kcbend=0.50, Lini=25, Ldev=50, Lmid=50,
+                 Lend=25, hini=0.010, hmax=1.20, thetaFC=0.250,
+                 thetaWP=0.100, theta0=0.100, Zrini=0.20, Zrmax=1.40,
+                 pbase=0.50, Ze=0.10, REW=8.0, CN2=70, comment=''):
         """Initialize the Parameters class attributes.
 
         Default parameter values are given below. Users should update
@@ -91,48 +92,48 @@ class Parameters:
         Parameters
         ----------
         See Parameters class docstring for parameter definitions.
-        crop    : string, optional, default = 'Maize, Field (grain)'
+        Kcini   : float, optional, default = 0.35
+        Kcmid   : float, optional, default = 1.15
+        Kcend   : float, optional, default = 0.60
+        Kcbini  : float, optional, default = 0.15
+        Kcbmid  : float, optional, default = 1.10
+        Kcbend  : float, optional, default = 0.50
+        Lini    : int  , optional, default = 25
+        Ldev    : int  , optional, default = 50
+        Lmid    : int  , optional, default = 50
+        Lend    : int  , optional, default = 25
+        hini    : float, optional, default = 0.010
+        hmax    : float, optional, default = 1.20
         thetaFC : float, optional, default = 0.250
         thetaWP : float, optional, default = 0.100
         theta0  : float, optional, default = 0.100
         Zrini   : float, optional, default = 0.20
+        Zrmax   : float, optional, default = 1.40
+        pbase   : float, optional, default = 0.50
         Ze      : float, optional, default = 0.10
         REW     : float, optional, default = 8.0
         CN2     : int  , optional, default = 70
         comment : str  , optional, default = ''
         """
-        FAOTable=FAOTables()
-        table=FAOTable.tables
-        table11=FAOTable.table11
-    
-        self.Kcini = table.get(crop).get("Kcini")
-        self.Kcmid = table.get(crop).get("Kcmid")
-        self.Kcend = table.get(crop).get("Kcend")
-        self.hmax = table.get(crop).get("h")
-        self.Kcbini = table.get(crop).get("Kcbini")
-        self.Kcbmid = table.get(crop).get("Kcbmid")
-        self.Kcbend = table.get(crop).get("Kcbend")
-        self.Zrmax = table.get(crop).get("Zrmax")
-        self.pbase = table.get(crop).get("p")
 
-        try:
-           self.Lini = table11.get(crop).get("Lini")
-           self.Ldev = table11.get(crop).get("Ldev")
-           self.Lmid = table11.get(crop).get("Lmid")
-           self.Lend = table11.get(crop).get("Llate")
-        except AttributeError:
-            print("Crop name not found in table 11,")
-            print("Using maize development stages as default")
-            self.Lini = table11.get('Maize, Field (grain)').get("Lini")
-            self.Ldev = table11.get('Maize, Field (grain)').get("Ldev")
-            self.Lmid = table11.get('Maize, Field (grain)').get("Lmid")
-            self.Lend = table11.get('Maize, Field (grain)').get("Llate")
-
+        self.Kcini  = Kcini
+        self.Kcmid  = Kcmid
+        self.Kcend  = Kcend
+        self.Kcbini  = Kcbini
+        self.Kcbmid  = Kcbmid
+        self.Kcbend  = Kcbend
+        self.Lini    = Lini
+        self.Ldev    = Ldev
+        self.Lmid    = Lmid
+        self.Lend    = Lend
         self.hini    = hini
+        self.hmax    = hmax
         self.thetaFC = thetaFC
         self.thetaWP = thetaWP
         self.theta0  = theta0
         self.Zrini   = Zrini
+        self.Zrmax   = Zrmax
+        self.pbase   = pbase
         self.Ze      = Ze
         self.REW     = REW
         self.CN2     = CN2
@@ -288,6 +289,31 @@ class Parameters:
                 elif line[1].lower() == 'CN2':
                     self.CN2 = int(line[0])
 
-if __name__== "__main__": 
-    par=Parameters('Broccoli')
-    print(par.Kcbend)
+
+    def Tables()
+        FAOTable=FAOTables()
+        table=FAOTable.tables
+        table11=FAOTable.table11
+    
+        self.Kcini = table.get(crop).get("Kcini")
+        self.Kcmid = table.get(crop).get("Kcmid")
+        self.Kcend = table.get(crop).get("Kcend")
+        self.hmax = table.get(crop).get("h")
+        self.Kcbini = table.get(crop).get("Kcbini")
+        self.Kcbmid = table.get(crop).get("Kcbmid")
+        self.Kcbend = table.get(crop).get("Kcbend")
+        self.Zrmax = table.get(crop).get("Zrmax")
+        self.pbase = table.get(crop).get("p")
+
+        try:
+           self.Lini = table11.get(crop).get("Lini")
+           self.Ldev = table11.get(crop).get("Ldev")
+           self.Lmid = table11.get(crop).get("Lmid")
+           self.Lend = table11.get(crop).get("Llate")
+        except AttributeError:
+            print("Crop name not found in table 11,")
+            print("Using maize development stages as default")
+            self.Lini = table11.get('Maize, Field (grain)').get("Lini")
+            self.Ldev = table11.get('Maize, Field (grain)').get("Ldev")
+            self.Lmid = table11.get('Maize, Field (grain)').get("Lmid")
+            self.Lend = table11.get('Maize, Field (grain)').get("Llate")
