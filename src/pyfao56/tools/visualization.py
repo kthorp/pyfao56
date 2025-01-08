@@ -79,8 +79,8 @@ class Visualization:
 
         #Set zero rain and irrigation to NaN
         NaN = float('NaN')
-        self.vdata['Rain'].replace(0.0,NaN,inplace=True)
-        self.vdata['Irrig'].replace(0.0,NaN,inplace=True)
+        self.vdata['Rain'] = self.vdata['Rain'].replace(0.0,NaN)
+        self.vdata['Irrig'] = self.vdata['Irrig'].replace(0.0,NaN)
 
         #Determine today's index
         self.todayidx = ''
