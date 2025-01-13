@@ -79,9 +79,11 @@ class Parameters:
         Load the parameter data from a file
     """
 
-    def __init__(self, crop = "Maize, Field (grain)", hini=0.010, 
-                 thetaFC=0.250, thetaWP=0.100, theta0=0.100, Zrini=0.20, 
-                  Ze=0.10, REW=8.0, CN2=70, comment=''):
+    def __init__(self, Kcini=0.35, Kcmid=1.15, Kcend=0.60, Kcbini=0.15,
+                 Kcbmid=1.10, Kcbend=0.50, Lini=25, Ldev=50, Lmid=50,
+                 Lend=25, hini=0.010, hmax=1.20, thetaFC=0.250,
+                 thetaWP=0.100, theta0=0.100, Zrini=0.20, Zrmax=1.40,
+                 pbase=0.50, Ze=0.10, REW=8.0, CN2=70, comment=''):
         """Initialize the Parameters class attributes.
 
         Default parameter values are given below. Users should update
@@ -91,20 +93,98 @@ class Parameters:
         Parameters
         ----------
         See Parameters class docstring for parameter definitions.
-        crop    : string, optional, default = 'Maize, Field (grain)'
+        Kcini   : float, optional, default = 0.35
+        Kcmid   : float, optional, default = 1.15
+        Kcend   : float, optional, default = 0.60
+        Kcbini  : float, optional, default = 0.15
+        Kcbmid  : float, optional, default = 1.10
+        Kcbend  : float, optional, default = 0.50
+        Lini    : int  , optional, default = 25
+        Ldev    : int  , optional, default = 50
+        Lmid    : int  , optional, default = 50
+        Lend    : int  , optional, default = 25
+        hini    : float, optional, default = 0.010
+        hmax    : float, optional, default = 1.20
         thetaFC : float, optional, default = 0.250
         thetaWP : float, optional, default = 0.100
         theta0  : float, optional, default = 0.100
         Zrini   : float, optional, default = 0.20
+        Zrmax   : float, optional, default = 1.40
+        pbase   : float, optional, default = 0.50
         Ze      : float, optional, default = 0.10
         REW     : float, optional, default = 8.0
         CN2     : int  , optional, default = 70
         comment : str  , optional, default = ''
         """
+
+        self.Kcini  = Kcini
+        self.Kcmid  = Kcmid
+        self.Kcend  = Kcend
+        self.Kcbini  = Kcbini
+        self.Kcbmid  = Kcbmid
+        self.Kcbend  = Kcbend
+        self.Lini    = Lini
+        self.Ldev    = Ldev
+        self.Lmid    = Lmid
+        self.Lend    = Lend
+        self.hini    = hini
+        self.hmax    = hmax
+        self.thetaFC = thetaFC
+        self.thetaWP = thetaWP
+        self.theta0  = theta0
+        self.Zrini   = Zrini
+        self.Zrmax   = Zrmax
+        self.pbase   = pbase
+        self.Ze      = Ze
+        self.REW     = REW
+        self.CN2     = CN2
+        self.comment = 'Comments: ' + comment.strip()
+        self.tmstmp  = datetime.datetime.now()
+
+    def cropinput(self,crop_input):
         FAOTable=FAOTables()
         table=FAOTable.tables
         table11=FAOTable.table11
-    
+        syn= FAOTable.syn
+   
+        crop_input = crop_input.lower()
+
+        try:
+            crop = table.get(crop_input)
+            if crop == None:
+                fao_name = syn.get(crop_input)
+                if fao_name == None:
+                    raise AttributeError
+                elif len(fao_name)>1:
+                    print(f'The crop options found in FAO tables that might match your input are: {fao_name}')
+                    for i in fao_name:
+                        prompt=True
+                        if crop != None:
+                            break
+                        while prompt is True:    
+                            answer = input(f'Is your crop {i}? Y/N ').lower()                        
+                            if answer=="y":
+                                crop=i
+                                prompt=False                                
+                            elif answer=="n":
+                                prompt=False
+                            else:
+                                print('Please enter "Y or N"')
+                                prompt = True
+                    if crop == None:
+                        print('Crop not found in FAO tables, refer to FAO-56')
+                        return           
+                else:
+                    crop = fao_name[0] 
+            else:
+                crop=crop_input     
+
+        except AttributeError:
+            print('Crop not found in FAO tables, try to check spelling')
+            return
+       
+        print('Using provided input, the best match in FAO-56 tables is: ',crop)
+
         self.Kcini = table.get(crop).get("Kcini")
         self.Kcmid = table.get(crop).get("Kcmid")
         self.Kcend = table.get(crop).get("Kcend")
@@ -127,17 +207,6 @@ class Parameters:
             self.Ldev = table11.get('Maize, Field (grain)').get("Ldev")
             self.Lmid = table11.get('Maize, Field (grain)').get("Lmid")
             self.Lend = table11.get('Maize, Field (grain)').get("Llate")
-
-        self.hini    = hini
-        self.thetaFC = thetaFC
-        self.thetaWP = thetaWP
-        self.theta0  = theta0
-        self.Zrini   = Zrini
-        self.Ze      = Ze
-        self.REW     = REW
-        self.CN2     = CN2
-        self.comment = 'Comments: ' + comment.strip()
-        self.tmstmp  = datetime.datetime.now()
 
     def __str__(self):
         """Represent the Parameter class variables as a string."""
@@ -288,6 +357,8 @@ class Parameters:
                 elif line[1].lower() == 'CN2':
                     self.CN2 = int(line[0])
 
-if __name__== "__main__": 
-    par=Parameters('Broccoli')
-    print(par.Kcbend)
+if __name__ == "__main__":
+    par = Parameters()
+    par.cropinput('corn')
+
+    print(par.Kcbmid)
