@@ -76,6 +76,8 @@ class Parameters:
         Save the parameter data to a file
     loadfile(filepath='pyfao56.par')
         Load the parameter data from a file
+    getparameters(crop)
+        Obtain parameters from FAO-56 Tables 11, 12, 17, and 22
     """
 
     def __init__(self, Kcini=0.35, Kcmid=1.15, Kcend=0.60, Kcbini=0.15,
@@ -289,12 +291,23 @@ class Parameters:
                 elif line[1].lower() == 'CN2':
                     self.CN2 = int(line[0])
 
+    def getparameters(self, crop):
+        """Obtain parameters from FAO-56 Tables 11, 12, 17, and 22
 
-    def Tables()
+        Parameters
+        ----------
+        crop : str
+            Any valid crop type string from first column of FAO56 tables
+
+        Raises
+        ------
+
+        """
+
         FAOTable=FAOTables()
         table=FAOTable.tables
         table11=FAOTable.table11
-    
+
         self.Kcini = table.get(crop).get("Kcini")
         self.Kcmid = table.get(crop).get("Kcmid")
         self.Kcend = table.get(crop).get("Kcend")
