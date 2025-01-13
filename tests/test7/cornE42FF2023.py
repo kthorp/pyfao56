@@ -54,7 +54,6 @@ def run():
     mdl.savesums(os.path.join(module_dir,'E42FF2023.sum'))
 
     #Analyze measured soil water data
-    #Need to update soil water data with remainder of 2023 season.
     sws = tools.SoilWaterSeries(filepath='E42FF2023.sws',
                                 par=par,sol=sol)
     for key in sorted(sws.swdata.keys()):

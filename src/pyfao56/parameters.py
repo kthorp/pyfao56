@@ -16,7 +16,6 @@ The parameters.py module contains the following:
 """
 
 import datetime
-
 from pyfao56.tools import FAOTables
 
 class Parameters:
@@ -77,6 +76,8 @@ class Parameters:
         Save the parameter data to a file
     loadfile(filepath='pyfao56.par')
         Load the parameter data from a file
+    getparameters(crop)
+        Obtain parameters from FAO-56 Tables 11, 12, 17, and 22
     """
 
     def __init__(self, Kcini=0.35, Kcmid=1.15, Kcend=0.60, Kcbini=0.15,
@@ -356,3 +357,43 @@ class Parameters:
                     self.REW = float(line[0])
                 elif line[1].lower() == 'CN2':
                     self.CN2 = int(line[0])
+
+    def getparameters(self, crop):
+        """Obtain parameters from FAO-56 Tables 11, 12, 17, and 22
+
+        Parameters
+        ----------
+        crop : str
+            Any valid crop type string from first column of FAO56 tables
+
+        Raises
+        ------
+
+        """
+
+        FAOTable=FAOTables()
+        table=FAOTable.tables
+        table11=FAOTable.table11
+
+        self.Kcini = table.get(crop).get("Kcini")
+        self.Kcmid = table.get(crop).get("Kcmid")
+        self.Kcend = table.get(crop).get("Kcend")
+        self.hmax = table.get(crop).get("h")
+        self.Kcbini = table.get(crop).get("Kcbini")
+        self.Kcbmid = table.get(crop).get("Kcbmid")
+        self.Kcbend = table.get(crop).get("Kcbend")
+        self.Zrmax = table.get(crop).get("Zrmax")
+        self.pbase = table.get(crop).get("p")
+
+        try:
+           self.Lini = table11.get(crop).get("Lini")
+           self.Ldev = table11.get(crop).get("Ldev")
+           self.Lmid = table11.get(crop).get("Lmid")
+           self.Lend = table11.get(crop).get("Llate")
+        except AttributeError:
+            print("Crop name not found in table 11,")
+            print("Using maize development stages as default")
+            self.Lini = table11.get('Maize, Field (grain)').get("Lini")
+            self.Ldev = table11.get('Maize, Field (grain)').get("Ldev")
+            self.Lmid = table11.get('Maize, Field (grain)').get("Lmid")
+            self.Lend = table11.get('Maize, Field (grain)').get("Llate")
