@@ -142,6 +142,73 @@ class Parameters:
         self.comment = 'Comments: ' + comment.strip()
         self.tmstmp  = datetime.datetime.now()
 
+    def cropinput(self,crop_input):
+        FAOTable=FAOTables()
+        table=FAOTable.tables
+        table11=FAOTable.table11
+        syn= FAOTable.syn
+   
+        crop_input = crop_input.lower()
+
+        try:
+            crop = table.get(crop_input)
+            if crop == None:
+                fao_name = syn.get(crop_input)
+                if fao_name == None:
+                    raise AttributeError
+                elif len(fao_name)>1:
+                    print(f'The crop options found in FAO tables that might match your input are: {fao_name}')
+                    for i in fao_name:
+                        prompt=True
+                        if crop != None:
+                            break
+                        while prompt is True:    
+                            answer = input(f'Is your crop {i}? Y/N ').lower()                        
+                            if answer=="y":
+                                crop=i
+                                prompt=False                                
+                            elif answer=="n":
+                                prompt=False
+                            else:
+                                print('Please enter "Y or N"')
+                                prompt = True
+                    if crop == None:
+                        print('Crop not found in FAO tables, refer to FAO-56')
+                        return           
+                else:
+                    crop = fao_name[0] 
+            else:
+                crop=crop_input     
+
+        except AttributeError:
+            print('Crop not found in FAO tables, try to check spelling')
+            return
+       
+        print('Using provided input, the best match in FAO-56 tables is: ',crop)
+
+        self.Kcini = table.get(crop).get("Kcini")
+        self.Kcmid = table.get(crop).get("Kcmid")
+        self.Kcend = table.get(crop).get("Kcend")
+        self.hmax = table.get(crop).get("h")
+        self.Kcbini = table.get(crop).get("Kcbini")
+        self.Kcbmid = table.get(crop).get("Kcbmid")
+        self.Kcbend = table.get(crop).get("Kcbend")
+        self.Zrmax = table.get(crop).get("Zrmax")
+        self.pbase = table.get(crop).get("p")
+
+        try:
+           self.Lini = table11.get(crop).get("Lini")
+           self.Ldev = table11.get(crop).get("Ldev")
+           self.Lmid = table11.get(crop).get("Lmid")
+           self.Lend = table11.get(crop).get("Llate")
+        except AttributeError:
+            print("Crop name not found in table 11,")
+            print("Using maize development stages as default")
+            self.Lini = table11.get('Maize, Field (grain)').get("Lini")
+            self.Ldev = table11.get('Maize, Field (grain)').get("Ldev")
+            self.Lmid = table11.get('Maize, Field (grain)').get("Lmid")
+            self.Lend = table11.get('Maize, Field (grain)').get("Llate")
+
     def __str__(self):
         """Represent the Parameter class variables as a string."""
 
