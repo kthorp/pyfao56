@@ -356,9 +356,3 @@ class Parameters:
                     self.REW = float(line[0])
                 elif line[1].lower() == 'CN2':
                     self.CN2 = int(line[0])
-
-if __name__ == "__main__":
-    par = Parameters()
-    par.cropinput('corn')
-
-    print(par.Kcbmid)
