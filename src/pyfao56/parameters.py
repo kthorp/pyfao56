@@ -12,11 +12,12 @@ The parameters.py module contains the following:
 11/04/2021 Finalized updates for inclusion in the pyfao56 Python package
 12/12/2023 Added CN2 parameter for runoff method
 09/30/2024 Added inputs for single crop coefficient computation
+01/27/2025 Added methods for obtaining values from FAO-56 tables
 ########################################################################
 """
 
 import datetime
-from pyfao56.tools import FAOTables
+from pyfao56.tools import FAO56Tables
 
 class Parameters:
     """A class for managing input parameters for FAO-56 calculations
@@ -76,8 +77,18 @@ class Parameters:
         Save the parameter data to a file
     loadfile(filepath='pyfao56.par')
         Load the parameter data from a file
-    getparameters(crop)
-        Obtain parameters from FAO-56 Tables 11, 12, 17, and 22
+    getlengths(index)
+        Obtain growth stage lengths from FAO-56 Table 11
+    getKc(index)
+        Obtain Kc values from FAO-56 Table 12
+    getKcb(index)
+        Obtain Kcb values from FAO-56 Table 17
+    gethmax(index)
+        Obtain hmax value from FAO-56 Table 17
+    getZrmax(index)
+        Obtain mean Zrmax value from FAO-56 Table 22
+    getpbase(index)
+        Obtain pbase value from FAO-56 Table 22
     """
 
     def __init__(self, Kcini=0.35, Kcmid=1.15, Kcend=0.60, Kcbini=0.15,
@@ -291,109 +302,77 @@ class Parameters:
                 elif line[1].lower() == 'CN2':
                     self.CN2 = int(line[0])
 
-    def cropinput(self,crop_input):
-        FAOTable=FAOTables()
-        table=FAOTable.tables
-        table11=FAOTable.table11
-        syn= FAOTable.syn
-
-        crop_input = crop_input.lower()
-
-        try:
-            crop = table.get(crop_input)
-            if crop == None:
-                fao_name = syn.get(crop_input)
-                if fao_name == None:
-                    raise AttributeError
-                elif len(fao_name)>1:
-                    print(f'The crop options found in FAO tables that might match your input are: {fao_name}')
-                    for i in fao_name:
-                        prompt=True
-                        if crop != None:
-                            break
-                        while prompt is True:    
-                            answer = input(f'Is your crop {i}? Y/N ').lower()                        
-                            if answer=="y":
-                                crop=i
-                                prompt=False                                
-                            elif answer=="n":
-                                prompt=False
-                            else:
-                                print('Please enter "Y or N"')
-                                prompt = True
-                    if crop == None:
-                        print('Crop not found in FAO tables, refer to FAO-56')
-                        return           
-                else:
-                    crop = fao_name[0] 
-            else:
-                crop=crop_input     
-
-        except AttributeError:
-            print('Crop not found in FAO tables, try to check spelling')
-            return
-
-        print('Using provided input, the best match in FAO-56 tables is: ',crop)
-
-        self.Kcini = table.get(crop).get("Kcini")
-        self.Kcmid = table.get(crop).get("Kcmid")
-        self.Kcend = table.get(crop).get("Kcend")
-        self.hmax = table.get(crop).get("h")
-        self.Kcbini = table.get(crop).get("Kcbini")
-        self.Kcbmid = table.get(crop).get("Kcbmid")
-        self.Kcbend = table.get(crop).get("Kcbend")
-        self.Zrmax = table.get(crop).get("Zrmax")
-        self.pbase = table.get(crop).get("p")
-
-        try:
-           self.Lini = table11.get(crop).get("Lini")
-           self.Ldev = table11.get(crop).get("Ldev")
-           self.Lmid = table11.get(crop).get("Lmid")
-           self.Lend = table11.get(crop).get("Llate")
-        except AttributeError:
-            print("Crop name not found in table 11,")
-            print("Using maize development stages as default")
-            self.Lini = table11.get('Maize, Field (grain)').get("Lini")
-            self.Ldev = table11.get('Maize, Field (grain)').get("Ldev")
-            self.Lmid = table11.get('Maize, Field (grain)').get("Lmid")
-            self.Lend = table11.get('Maize, Field (grain)').get("Llate")
-
-    def getparameters(self, crop):
-        """Obtain parameters from FAO-56 Tables 11, 12, 17, and 22
+    def getlengths(self,index):
+        """Get growth stage lengths from FAO-56 Table 11
 
         Parameters
         ----------
-        crop : str
-            Any valid crop type string from first column of FAO56 tables
-
-        Raises
-        ------
-
+        index : int
+            row index for FAO56Tables.table11 DataFrame
         """
+        table11 = FAO56Tables().table11
+        self.Lini = int(table11.iloc[index].loc['Lini'])
+        self.Ldev = int(table11.iloc[index].loc['Ldev'])
+        self.Lmid = int(table11.iloc[index].loc['Lmid'])
+        self.Lend = int(table11.iloc[index].loc['Lend'])
 
-        FAOTable=FAOTables()
-        table=FAOTable.tables
-        table11=FAOTable.table11
+    def getKc(self,index):
+        """Get Kc values from FAO-56 Table 12
 
-        self.Kcini = table.get(crop).get("Kcini")
-        self.Kcmid = table.get(crop).get("Kcmid")
-        self.Kcend = table.get(crop).get("Kcend")
-        self.hmax = table.get(crop).get("h")
-        self.Kcbini = table.get(crop).get("Kcbini")
-        self.Kcbmid = table.get(crop).get("Kcbmid")
-        self.Kcbend = table.get(crop).get("Kcbend")
-        self.Zrmax = table.get(crop).get("Zrmax")
-        self.pbase = table.get(crop).get("p")
+        Parameters
+        ----------
+        index : int
+            row index for FAO56Tables.table12 DataFrame
+        """
+        table12 = FAO56Tables().table12
+        self.Kcini = float(table12.iloc[index].loc['Kcini'])
+        self.Kcmid = float(table12.iloc[index].loc['Kcmid'])
+        self.Kcend = float(table12.iloc[index].loc['Kcend'])
 
-        try:
-           self.Lini = table11.get(crop).get("Lini")
-           self.Ldev = table11.get(crop).get("Ldev")
-           self.Lmid = table11.get(crop).get("Lmid")
-           self.Lend = table11.get(crop).get("Llate")
-        except AttributeError:
-            print("Crop name not found in table 11,")
-            print("Using maize development stages as default")
-            self.Lini = table11.get('Maize, Field (grain)').get("Lini")
-            self.Ldev = table11.get('Maize, Field (grain)').get("Ldev")
-            self.Lmid = table11.get('Maize, Field (grain)').get("Lmid")
-            self.Lend = table11.get('Maize, Field (grain)').get("Llate")
+    def getKcb(self,index):
+        """Get Kcb values from FAO-56 Table 17
+
+        Parameters
+        ----------
+        index : int
+            row index for FAO56Tables.table17 DataFrame
+        """
+        table17 = FAO56Tables().table17
+        self.Kcbini = float(table17.iloc[index].loc['Kcbini'])
+        self.Kcbmid = float(table17.iloc[index].loc['Kcbmid'])
+        self.Kcbend = float(table17.iloc[index].loc['Kcbend'])
+
+    def gethmax(self,index):
+        """Get hmax value from FAO-56 Table 17
+
+        Parameters
+        ----------
+        index : int
+            row index for FAO56Tables.table17 DataFrame
+        """
+        table17 = FAO56Tables().table17
+        self.hmax = float(table17.iloc[index].loc['hmax'])
+
+    def getZrmax(self,index):
+        """Get mean Zrmax value from FAO-56 Table 22
+
+        Parameters
+        ----------
+        index : int
+            row index for FAO56Tables.table22 DataFrame
+        """
+        table22 = FAO56Tables().table22
+        Zrmax1 = float(table22.iloc[index].loc['Zrmax1'])
+        Zrmax2 = float(table22.iloc[index].loc['Zrmax2'])
+        self.Zrmax = (Zrmax1 + Zrmax2) / 2.0
+
+    def getpbase(self,index):
+        """Get pbase value from FAO-56 Table 22
+
+        Parameters
+        ----------
+        index : int
+            row index for FAO56Tables.table22 DataFrame
+        """
+        table22 = FAO56Tables().table22
+        pbase = float(table22.iloc[index].loc['pbase'])
