@@ -77,18 +77,18 @@ class Parameters:
         Save the parameter data to a file
     loadfile(filepath='pyfao56.par')
         Load the parameter data from a file
-    getlengths(index)
-        Obtain growth stage lengths from FAO-56 Table 11
-    getKc(index)
-        Obtain Kc values from FAO-56 Table 12
-    getKcb(index)
-        Obtain Kcb values from FAO-56 Table 17
-    gethmax(index)
-        Obtain hmax value from FAO-56 Table 17
-    getZrmax(index)
-        Obtain mean Zrmax value from FAO-56 Table 22
-    getpbase(index)
-        Obtain pbase value from FAO-56 Table 22
+    setfrom11(index, setLini=True, setLdev=True, setLmid=True,
+              setLend=True):
+        Set growth stage lengths from FAO-56 Table 11
+    setfrom12(index, setKcini=True, setKcmid=True,
+              setKcend=True, sethmax=True):
+        Set Kc values and maximum crop height from FAO-56 Table 12
+    setfrom17(index, setKcbini=True, setKcbmid=True,
+              setKcbend=True):
+        Set Kcb values from FAO-56 Table 17
+    setfrom22(index, setZrmax1=True, setZrmax2=True,
+              setpbase=True):
+        Set Zrmax and pbase values from FAO-56 Table 22
     """
 
     def __init__(self, Kcini=0.35, Kcmid=1.15, Kcend=0.60, Kcbini=0.15,
@@ -302,77 +302,113 @@ class Parameters:
                 elif line[1].lower() == 'CN2':
                     self.CN2 = int(line[0])
 
-    def getlengths(self,index):
-        """Get growth stage lengths from FAO-56 Table 11
+    def setfrom11(self, index, setLini=True, setLdev=True,
+                  setLmid=True, setLend=True):
+        """Set growth stage lengths from FAO-56 Table 11
 
         Parameters
         ----------
         index : int
             row index for FAO56Tables.table11 DataFrame
+        setLini : boolean, optional
+            Set Lini value from FAO-56 Table 11 or not (default = True)
+        setLdev : boolean, optional
+            Set Ldev value from FAO-56 Table 11 or not (default = True)
+        setLmid : boolean, optional
+            Set Lmid value from FAO-56 Table 11 or not (default = True)
+        setLend : boolean, optional
+            Set Lend value from FAO-56 Table 11 or not (default = True)
         """
-        table11 = FAO56Tables().table11
-        self.Lini = int(table11.iloc[index].loc['Lini'])
-        self.Ldev = int(table11.iloc[index].loc['Ldev'])
-        self.Lmid = int(table11.iloc[index].loc['Lmid'])
-        self.Lend = int(table11.iloc[index].loc['Lend'])
 
-    def getKc(self,index):
-        """Get Kc values from FAO-56 Table 12
+        table11 = FAO56Tables().table11
+        value = table11.iloc[index].loc['Lini']
+        if setLini and value!='': self.Lini = int(value)
+        value = table11.iloc[index].loc['Ldev']
+        if setLdev and value!='': self.Ldev = int(value)
+        value = table11.iloc[index].loc['Lmid']
+        if setLmid and value!='': self.Lmid = int(value)
+        value = table11.iloc[index].loc['Llate']
+        if setLend and value!='': self.Lend = int(value)
+
+    def setfrom12(self, index, setKcini=True, setKcmid=True,
+                  setKcend=True, sethmax=True):
+        """Set Kc values and maximum crop height from FAO-56 Table 12
 
         Parameters
         ----------
         index : int
             row index for FAO56Tables.table12 DataFrame
+        setKcini : boolean, optional
+            Set Kcini value from FAO-56 Table 12 or not (default = True)
+        setKcmid : boolean, optional
+            Set Kcmid value from FAO-56 Table 12 or not (default = True)
+        setKcend : boolean, optional
+            Set Kcend value from FAO-56 Table 12 or not (default = True)
+        sethmax : boolean, optional
+            Set hmax value from FAO-56 Table 12 or not (default = True)
         """
+
         table12 = FAO56Tables().table12
-        self.Kcini = float(table12.iloc[index].loc['Kcini'])
-        self.Kcmid = float(table12.iloc[index].loc['Kcmid'])
-        self.Kcend = float(table12.iloc[index].loc['Kcend'])
+        value = table12.iloc[index].loc['Kcini']
+        if setKcini and value!='': self.Kcini = float(value)
+        value = table12.iloc[index].loc['Kcmid']
+        if setKcmid and value!='': self.Kcmid = float(value)
+        value = table12.iloc[index].loc['Kcend']
+        if setKcend and value!='': self.Kcend = float(value)
+        value = table12.iloc[index].loc['hmax']
+        if sethmax and value!='': self.hmax = float(value)
 
-    def getKcb(self,index):
-        """Get Kcb values from FAO-56 Table 17
-
-        Parameters
-        ----------
-        index : int
-            row index for FAO56Tables.table17 DataFrame
-        """
-        table17 = FAO56Tables().table17
-        self.Kcbini = float(table17.iloc[index].loc['Kcbini'])
-        self.Kcbmid = float(table17.iloc[index].loc['Kcbmid'])
-        self.Kcbend = float(table17.iloc[index].loc['Kcbend'])
-
-    def gethmax(self,index):
-        """Get hmax value from FAO-56 Table 17
+    def setfrom17(self, index, setKcbini=True, setKcbmid=True,
+                  setKcbend=True):
+        """Set Kcb values from FAO-56 Table 17
 
         Parameters
         ----------
         index : int
             row index for FAO56Tables.table17 DataFrame
+        setKcbini : boolean, optional
+            Set Kcbini value from FAO-56 Table 17 or not (default=True)
+        setKcbmid : boolean, optional
+            Set Kcbmid value from FAO-56 Table 17 or not (default=True)
+        setKcbend : boolean, optional
+            Set Kcbend value from FAO-56 Table 17 or not (default=True)
         """
+
         table17 = FAO56Tables().table17
-        self.hmax = float(table17.iloc[index].loc['hmax'])
+        value = table17.iloc[index].loc['Kcbini']
+        if setKcbini and value!='': self.Kcbini = float(value)
+        value = table17.iloc[index].loc['Kcbmid']
+        if setKcbmid and value!='': self.Kcbmid = float(value)
+        value = table17.iloc[index].loc['Kcbend']
+        if setKcbend and value!='': self.Kcbend = float(value)
 
-    def getZrmax(self,index):
-        """Get mean Zrmax value from FAO-56 Table 22
-
-        Parameters
-        ----------
-        index : int
-            row index for FAO56Tables.table22 DataFrame
-        """
-        table22 = FAO56Tables().table22
-        Zrmax1 = float(table22.iloc[index].loc['Zrmax1'])
-        Zrmax2 = float(table22.iloc[index].loc['Zrmax2'])
-        self.Zrmax = (Zrmax1 + Zrmax2) / 2.0
-
-    def getpbase(self,index):
-        """Get pbase value from FAO-56 Table 22
+    def setfrom22(self, index, setZrmax1=True, setZrmax2=True,
+                  setpbase=True):
+        """Set Zrmax and pbase values from FAO-56 Table 22
 
         Parameters
         ----------
         index : int
             row index for FAO56Tables.table22 DataFrame
+        setZrmax1 : boolean, optional
+            Use Zrmax1 value from FAO-56 Table 22 or not (default=True)
+            If setZrmax2 is also True, use mean of Zrmax1 and Zrmax2.
+        setZrmax2 : boolean, optional
+            Use Zrmax2 value from FAO-56 Table 22 or not (default=True)
+            If setZrmax1 is also True, use mean of Zrmax1 and Zrmax2.
+        setpbase : boolean, optional
+            Use pbase value from FAO-56 Table 22 or not (default=True)
         """
+
         table22 = FAO56Tables().table22
-        pbase = float(table22.iloc[index].loc['pbase'])
+        if setZrmax1 and setZrmax2:
+            a = float(table22.iloc[index].loc['Zrmax1'])
+            b = float(table22.iloc[index].loc['Zrmax2'])
+            self.Zrmax = (a + b) / 2.0
+        elif setZrmax1:
+            self.Zrmax = float(table22.iloc[index].loc['Zrmax1'])
+        elif setZrmax2:
+            self.Zrmax = float(table22.iloc[index].loc['Zrmax2'])
+
+        if setpbase:
+            self.pbase = float(table22.iloc[index].loc['pbase'])

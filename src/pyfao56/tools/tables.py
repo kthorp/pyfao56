@@ -14,7 +14,7 @@ The tables.py module contains the following:
                   FAO-56 tables.
 
 12/12/2024 FAOTables class created by Reagan Ames and Tyler Pokoski
-01/08/2024 Modification for release by Kelly Thorp
+01/08/2025 Modification for release by Kelly Thorp
 ########################################################################
 """
 
@@ -264,7 +264,7 @@ class FAO56Tables:
         #for use with the FAO Penman-Monteith ETo.
         #   Crop                                                          ,Kcini,Kcmid,Kcend,hmax
         table12data = """
-            small vegetables                                              , 0.7 , 1.05, 0.95,
+            small vegetables                                              , 0.7 , 1.05, 0.95, 
             broccoli                                                      , 0.7 , 1.05, 0.95, 0.3
             brussel sprouts                                               , 0.7 , 1.05, 0.95, 0.4
             cabbage                                                       , 0.7 , 1.05, 0.95, 0.4
@@ -278,11 +278,11 @@ class FAO56Tables:
             onions seed                                                   , 0.7 , 1.05, 0.80, 0.5
             spinach                                                       , 0.7 , 1.00, 0.95, 0.3
             radish                                                        , 0.7 , 0.90, 0.85, 0.3
-            vegetables solanum family solanaceae                          , 0.6 , 1.15, 0.80,
+            vegetables solanum family solanaceae                          , 0.6 , 1.15, 0.80, 
             eggplant                                                      , 0.6 , 1.05, 0.90, 0.8
             sweet peppers bell                                            , 0.6 , 1.05, 0.90, 0.7
             tomato                                                        , 0.6 , 1.15, 0.80, 0.6
-            vegetables cucumber family cucurbitaceae                      , 0.5 , 1.00, 0.80,
+            vegetables cucumber family cucurbitaceae                      , 0.5 , 1.00, 0.80, 
             cantaloupe                                                    , 0.5 , 0.85, 0.60, 0.3
             cucumber fresh market                                         , 0.6 , 1.00, 0.75, 0.3
             cucumber machine harvest                                      , 0.5 , 1.00, 0.90, 0.3
@@ -290,7 +290,7 @@ class FAO56Tables:
             squash zucchini                                               , 0.5 , 0.95, 0.75, 0.3
             sweet melons                                                  , 0.5 , 1.05, 0.75, 0.4
             watermelon                                                    , 0.4 , 1.00, 0.75, 0.4
-            roots tubers                                                  , 0.5 , 1.10, 0.95,
+            roots tubers                                                  , 0.5 , 1.10, 0.95, 
             beets table                                                   , 0.5 , 1.05, 0.95, 0.4
             cassava year 1                                                , 0.3 , 0.80, 0.30, 1.0
             cassava year 2                                                , 0.3 , 1.10, 0.50, 1.5
@@ -299,7 +299,7 @@ class FAO56Tables:
             sweet potato                                                  , 0.5 , 1.15, 0.65, 0.4
             turnip rutabaga                                               , 0.5 , 1.10, 0.95, 0.6
             sugar beet                                                    , 0.35, 1.20, 0.70, 0.5
-            legumes leguminosae                                           , 0.4 , 1.15, 0.55,
+            legumes leguminosae                                           , 0.4 , 1.15, 0.55, 
             beans green                                                   , 0.5 , 1.05, 0.90, 0.4
             beans dry pulses                                              , 0.4 , 1.15, 0.35, 0.4
             chickpea                                                      , 0.4 , 1.00, 0.35, 0.4
@@ -313,29 +313,29 @@ class FAO56Tables:
             peas fresh                                                    , 0.5 , 1.15, 1.10, 0.5
             peas dry seed                                                 , 0.5 , 1.15, 0.30, 0.5
             soybeans                                                      , 0.5 , 1.15, 0.50, 0.75
-            perennial vegetables winter dormancy bare mulched soil        , 0.5 , 1.00, 0.80,
+            perennial vegetables winter dormancy bare mulched soil        , 0.5 , 1.00, 0.80, 
             artichokes                                                    , 0.5 , 1.00, 0.95, 0.7
             asparagus                                                     , 0.5 , 0.95, 0.30, 0.5
             mint                                                          , 0.60, 1.15, 1.10, 0.7
             strawberries                                                  , 0.40, 0.85, 0.75, 0.2
-            fiber crops                                                   , 0.35,     ,     ,
+            fiber crops                                                   , 0.35,     ,     , 
             cotton                                                        , 0.35, 1.17, 0.60, 1.35
             flax                                                          , 0.35, 1.10, 0.25, 1.2
             sisal                                                         , 0.35, 0.55, 0.55, 1.5
-            oil crops                                                     , 0.35, 1.15, 0.35,
+            oil crops                                                     , 0.35, 1.15, 0.35, 
             castorbean ricinus                                            , 0.35, 1.15, 0.55, 0.3
             rapeseed canola                                               , 0.35, 1.10, 0.35, 0.6
             safflower                                                     , 0.35, 1.10, 0.25, 0.8
             sesame                                                        , 0.35, 1.10, 0.25, 1.0
             sunflower                                                     , 0.35, 1.10, 0.35, 2.0
-            cereals                                                       , 0.3 , 1.15, 0.4 ,
+            cereals                                                       , 0.3 , 1.15, 0.4 , 
             barley                                                        , 0.3 , 1.15, 0.25, 1
             oats                                                          , 0.3 , 1.15, 0.25, 1
             spring wheat                                                  , 0.3 , 1.15, 0.25, 1
             winter wheat frozen soils                                     , 0.4 , 1.15, 0.25, 1
             winter wheat non-frozen soils                                 , 0.7 , 1.15, 0.25, 1
             maize field grain corn 18% moisture                           , 0.3 , 1.20, 0.35, 2
-            maize field grain corn harvested wet                          , 0.3 , 1.20  0.60, 2
+            maize field grain corn harvested wet                          , 0.3 , 1.20, 0.60, 2
             maize sweet corn fresh                                        , 0.3 , 1.15, 1.05, 1.5
             maize sweet corn dry                                          , 0.3 , 1.15, 0.35, 1.5
             millet                                                        , 0.3 , 1.00, 0.30, 1.5
@@ -399,7 +399,7 @@ class FAO56Tables:
             short vegetation no frost                                     , 1.05, 1.10, 1.10, 0.3
             reed swamp standing water                                     , 1.00, 1.20, 1.00, 2
             reed swamp moist soil                                         , 0.90, 1.20, 0.70, 2
-            open water < 2 m depth or in subhumid climates or tropics     ,     , 1.05, 1.05,
+            open water < 2 m depth or in subhumid climates or tropics     ,     , 1.05, 1.05, 
             open water > 5 m depth clear of turbidity temperate climate   ,     , 0.65, 1.25,  """
         self.table12 = pd.read_csv(io.StringIO(table12data),
                                    names=['Crop','Kcini','Kcmid','Kcend','hmax'],
@@ -464,7 +464,7 @@ class FAO56Tables:
             asparagus                                                     , 0.15,  0.90,  0.20
             mint                                                          , 0.40,  1.10,  1.05
             strawberries                                                  , 0.30,  0.80,  0.70
-            fiber crops                                                   , 0.15,      ,
+            fiber crops                                                   , 0.15,      , 
             cotton                                                        , 0.15,  1.12,  0.45
             flax                                                          , 0.15,  1.05,  0.20
             sisal                                                         , 0.15,  0.55,  0.55
