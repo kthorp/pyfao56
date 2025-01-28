@@ -14,7 +14,7 @@ The tables.py module contains the following:
                   FAO-56 tables.
 
 12/12/2024 FAOTables class created by Reagan Ames and Tyler Pokoski
-01/08/2024 Modification for release by K. Thorp
+01/08/2024 Modification for release by Kelly Thorp
 ########################################################################
 """
 
@@ -66,7 +66,7 @@ class FAO56Tables:
             pbase  - Depletion fraction
     synonyms : dict
         keys - common synonyms for crop names and other search terms
-        values - list of terms actually contained in tables
+        values - list of corresponding  search terms in tables
 
     Methods
     -------
@@ -545,112 +545,112 @@ class FAO56Tables:
         #FAO-56 Table 22. Ranges of maximum effective rooting depth (Zr)
         #and soil water depletion fraction for no stress (p) for common
         #crops
-        #   Crop                                     Zrmax1,Zrmax2,pbase
+        #   Crop                                      Zrmax1,Zrmax2,pbase
         table22data = """
-            broccoli                                    0.4,   0.6, 0.45
-            brussel sprouts                             0.4,   0.6, 0.45
-            cabbage                                     0.5,   0.8, 0.45
-            carrots                                     0.5,   1.0, 0.35
-            cauliflower                                 0.4,   0.7, 0.45
-            celery                                      0.3,   0.5, 0.20
-            garlic                                      0.3,   0.5, 0.30
-            lettuce                                     0.3,   0.5, 0.30
-            onions dry                                  0.3,   0.6, 0.30
-            onoins green                                0.3,   0.6, 0.30
-            onions seed                                 0.3,   0.6, 0.35
-            spinach                                     0.3,   0.5, 0.20
-            radishes                                    0.3,   0.5, 0.30
-            eggplant                                    0.7,   1.2, 0.45
-            sweet peppers bell                          0.5,   1.0, 0.30
-            tomato                                      0.7,   1.5, 0.40
-            cantaloupe                                  0.9,   1.5, 0.45
-            cucumber fresh market                       0.7,   1.2, 0.50
-            cucumber machine harvest                    0.7,   1.2, 0.50
-            pumpkin winter squash                       1.0,   1.5, 0.35
-            squash zucchini                             0.6,   1.0, 0.50
-            sweet melons                                0.8,   1.5, 0.40
-            watermelon                                  0.8,   1.5, 0.40
-            beets table                                 0.6,   1.0, 0.50
-            cassava year 1                              0.5,   0.8, 0.35
-            cassava year 2                              0.7,   1.0, 0.40
-            parsnip                                     0.5,   1.0, 0.40
-            potato                                      0.4,   0.6, 0.35
-            sweet potato                                1.0,   1.5, 0.65
-            turnip rutabaga                             0.5,   1.0, 0.50
-            sugar beet                                  0.7,   1.2, 0.55
-            beans green                                 0.5,   0.7, 0.45
-            beans dry pulses                            0.6,   0.9, 0.45
-            beans lima large vines                      0.8,   1.2, 0.45
-            chickpea                                    0.6,   1.0, 0.50
-            faba bean broad fresh                       0.5,   0.7, 0.45
-            faba bean broad dry seed                    0.5,   0.7, 0.45
-            garbanzo                                    0.6,   1.0, 0.45
-            green gram cowpeas                          0.6,   1.0, 0.45
-            groundnut peanut                            0.5,   1.0, 0.50
-            lentil                                      0.6,   0.8, 0.50
-            peas fresh                                  0.6,   1.0, 0.35
-            peas dry seed                               0.6,   1.0, 0.40
-            soybeans                                    0.6,   1.3, 0.50
-            artichokes                                  0.6,   0.9, 0.45
-            asparagus                                   1.2,   1.8, 0.45
-            mint                                        0.4,   0.8, 0.40
-            strawberries                                0.2,   0.3, 0.20
-            cotton                                      1.0,   1.7, 0.65
-            flax                                        1.0,   1.5, 0.50
-            sisal                                       0.5,   1.0, 0.80
-            castorbean ricinus                          1.0,   2.0, 0.50
-            rapeseed canola                             1.0,   1.5, 0.60
-            safflower                                   1.0,   2.0, 0.60
-            sesame                                      1.0,   1.5, 0.60
-            sunflower                                   0.8,   1.5, 0.45
-            barley                                      1.0,   1.5, 0.55
-            oats                                        1.0,   1.5, 0.55
-            spring wheat                                1.0,   1.5, 0.55
-            winter wheat                                1.5,   1.8, 0.55
-            maize field grain corn                      1.0,   1.7, 0.55
-            maize sweet corn                            0.8,   1.2, 0.50
-            millet                                      1.0,   2.0, 0.55
-            sorghum grain                               1.0,   2.0, 0.55
-            sorghum sweet                               1.0,   2.0, 0.50
-            rice                                        0.5,   1.0, 0.20
-            alfalfa for hay                             1.0,   2.0, 0.55
-            alfalfa for seed                            1.0,   3.0, 0.60
-            bermuda for hay                             1.0,   1.5, 0.55
-            spring crop for seed                        1.0,   1.5, 0.60
-            clover hay berseem                          0.6,   0.9, 0.50
-            rye grass hay                               0.6,   1.0, 0.60
-            sudangrass hay annual                       1.0,   1.5, 0.55
-            grazing pasture rotated                     0.5,   1.5, 0.60
-            grazing pasture extensive                   0.5,   1.5, 0.60
-            turfgrass cool season                       0.5,   1.0, 0.40
-            turfgrass warm season                       0.5,   1.0, 0.50
-            sugarcane                                   1.2,   2.0, 0.65
-            banana first year                           0.5,   0.9, 0.35
-            banana second year                          0.5,   0.9, 0.35
-            cacao                                       0.7,   1.0, 0.30
-            coffee                                      0.9,   1.5, 0.40
-            date palms                                  1.5,   2.5, 0.50
-            palm trees                                  0.7,   1.1, 0.65
-            pineapple                                   0.3,   0.6, 0.50
-            rubber trees                                1.0,   1.5, 0.40
-            tea non-shaded                              0.9,   1.5, 0.40
-            tea shaded                                  0.9,   1.5, 0.45
-            berries bushes                              0.6,   1.2, 0.50
-            grapes table raisin                         1.0,   2.0, 0.35
-            grapes wine                                 1.0,   2.0, 0.45
-            hops                                        1.0,   1.2, 0.50
-            almonds                                     1.0,   2.0, 0.40
-            apples cherries pears                       1.0,   2.0, 0.50
-            apricots peaches stone fruit                1.0,   2.0, 0.50
-            avocado                                     0.5,   1.0, 0.70
-            citrus 70% canopy                           1.2,   1.5, 0.50
-            citrus 50% canopy                           1.1,   1.5, 0.50
-            citrus 20% canopy                           0.8,   1.1, 0.50
-            conifer trees                               1.0,   1.5, 0.70
-            kiwi                                        0.7,   1.3, 0.35
-            olives 40% to 60% ground coverage by canopy 1.2,   1.7, 0.65
-            pistachios                                  1.0,   1.5, 0.40
-            walnut orchard                              1.7,   2.4, 0.50"""
+            broccoli                                   , 0.4,   0.6, 0.45
+            brussel sprouts                            , 0.4,   0.6, 0.45
+            cabbage                                    , 0.5,   0.8, 0.45
+            carrots                                    , 0.5,   1.0, 0.35
+            cauliflower                                , 0.4,   0.7, 0.45
+            celery                                     , 0.3,   0.5, 0.20
+            garlic                                     , 0.3,   0.5, 0.30
+            lettuce                                    , 0.3,   0.5, 0.30
+            onions dry                                 , 0.3,   0.6, 0.30
+            onoins green                               , 0.3,   0.6, 0.30
+            onions seed                                , 0.3,   0.6, 0.35
+            spinach                                    , 0.3,   0.5, 0.20
+            radishes                                   , 0.3,   0.5, 0.30
+            eggplant                                   , 0.7,   1.2, 0.45
+            sweet peppers bell                         , 0.5,   1.0, 0.30
+            tomato                                     , 0.7,   1.5, 0.40
+            cantaloupe                                 , 0.9,   1.5, 0.45
+            cucumber fresh market                      , 0.7,   1.2, 0.50
+            cucumber machine harvest                   , 0.7,   1.2, 0.50
+            pumpkin winter squash                      , 1.0,   1.5, 0.35
+            squash zucchini                            , 0.6,   1.0, 0.50
+            sweet melons                               , 0.8,   1.5, 0.40
+            watermelon                                 , 0.8,   1.5, 0.40
+            beets table                                , 0.6,   1.0, 0.50
+            cassava year 1                             , 0.5,   0.8, 0.35
+            cassava year 2                             , 0.7,   1.0, 0.40
+            parsnip                                    , 0.5,   1.0, 0.40
+            potato                                     , 0.4,   0.6, 0.35
+            sweet potato                               , 1.0,   1.5, 0.65
+            turnip rutabaga                            , 0.5,   1.0, 0.50
+            sugar beet                                 , 0.7,   1.2, 0.55
+            beans green                                , 0.5,   0.7, 0.45
+            beans dry pulses                           , 0.6,   0.9, 0.45
+            beans lima large vines                     , 0.8,   1.2, 0.45
+            chickpea                                   , 0.6,   1.0, 0.50
+            faba bean broad fresh                      , 0.5,   0.7, 0.45
+            faba bean broad dry seed                   , 0.5,   0.7, 0.45
+            garbanzo                                   , 0.6,   1.0, 0.45
+            green gram cowpeas                         , 0.6,   1.0, 0.45
+            groundnut peanut                           , 0.5,   1.0, 0.50
+            lentil                                     , 0.6,   0.8, 0.50
+            peas fresh                                 , 0.6,   1.0, 0.35
+            peas dry seed                              , 0.6,   1.0, 0.40
+            soybeans                                   , 0.6,   1.3, 0.50
+            artichokes                                 , 0.6,   0.9, 0.45
+            asparagus                                  , 1.2,   1.8, 0.45
+            mint                                       , 0.4,   0.8, 0.40
+            strawberries                               , 0.2,   0.3, 0.20
+            cotton                                     , 1.0,   1.7, 0.65
+            flax                                       , 1.0,   1.5, 0.50
+            sisal                                      , 0.5,   1.0, 0.80
+            castorbean ricinus                         , 1.0,   2.0, 0.50
+            rapeseed canola                            , 1.0,   1.5, 0.60
+            safflower                                  , 1.0,   2.0, 0.60
+            sesame                                     , 1.0,   1.5, 0.60
+            sunflower                                  , 0.8,   1.5, 0.45
+            barley                                     , 1.0,   1.5, 0.55
+            oats                                       , 1.0,   1.5, 0.55
+            spring wheat                               , 1.0,   1.5, 0.55
+            winter wheat                               , 1.5,   1.8, 0.55
+            maize field grain corn                     , 1.0,   1.7, 0.55
+            maize sweet corn                           , 0.8,   1.2, 0.50
+            millet                                     , 1.0,   2.0, 0.55
+            sorghum grain                              , 1.0,   2.0, 0.55
+            sorghum sweet                              , 1.0,   2.0, 0.50
+            rice                                       , 0.5,   1.0, 0.20
+            alfalfa for hay                            , 1.0,   2.0, 0.55
+            alfalfa for seed                           , 1.0,   3.0, 0.60
+            bermuda for hay                            , 1.0,   1.5, 0.55
+            spring crop for seed                       , 1.0,   1.5, 0.60
+            clover hay berseem                         , 0.6,   0.9, 0.50
+            rye grass hay                              , 0.6,   1.0, 0.60
+            sudangrass hay annual                      , 1.0,   1.5, 0.55
+            grazing pasture rotated                    , 0.5,   1.5, 0.60
+            grazing pasture extensive                  , 0.5,   1.5, 0.60
+            turfgrass cool season                      , 0.5,   1.0, 0.40
+            turfgrass warm season                      , 0.5,   1.0, 0.50
+            sugarcane                                  , 1.2,   2.0, 0.65
+            banana first year                          , 0.5,   0.9, 0.35
+            banana second year                         , 0.5,   0.9, 0.35
+            cacao                                      , 0.7,   1.0, 0.30
+            coffee                                     , 0.9,   1.5, 0.40
+            date palms                                 , 1.5,   2.5, 0.50
+            palm trees                                 , 0.7,   1.1, 0.65
+            pineapple                                  , 0.3,   0.6, 0.50
+            rubber trees                               , 1.0,   1.5, 0.40
+            tea non-shaded                             , 0.9,   1.5, 0.40
+            tea shaded                                 , 0.9,   1.5, 0.45
+            berries bushes                             , 0.6,   1.2, 0.50
+            grapes table raisin                        , 1.0,   2.0, 0.35
+            grapes wine                                , 1.0,   2.0, 0.45
+            hops                                       , 1.0,   1.2, 0.50
+            almonds                                    , 1.0,   2.0, 0.40
+            apples cherries pears                      , 1.0,   2.0, 0.50
+            apricots peaches stone fruit               , 1.0,   2.0, 0.50
+            avocado                                    , 0.5,   1.0, 0.70
+            citrus 70% canopy                          , 1.2,   1.5, 0.50
+            citrus 50% canopy                          , 1.1,   1.5, 0.50
+            citrus 20% canopy                          , 0.8,   1.1, 0.50
+            conifer trees                              , 1.0,   1.5, 0.70
+            kiwi                                       , 0.7,   1.3, 0.35
+            olives 40% to 60% ground coverage by canopy, 1.2,   1.7, 0.65
+            pistachios                                 , 1.0,   1.5, 0.40
+            walnut orchard                             , 1.7,   2.4, 0.50"""
         self.table22 = pd.read_csv(io.StringIO(table22data),
                                    names=['Crop','Zrmax1','Zrmax2','pbase'],
                                    dtype=str)
@@ -733,7 +733,7 @@ class FAO56Tables:
             "spud": ["potato"],
             "sweet potatoes": ["sweet potato"],
             "turnips": ["turnip"],
-            "rutabagas": ["rutabaga)"],
+            "rutabagas": ["rutabaga"],
             "swedish turnip": ["turnip"],
             "white turnip": ["turnip"],
             "sugarbeet": ["sugar beet"],
@@ -968,7 +968,6 @@ class FAO56Tables:
                 temp =  df[df[col].str.contains(phrase)].index.values
                 indices += temp.tolist()
         table11sub = self.table11.iloc[list(set(indices))]
-        print(table11sub)
         return table11sub
 
     def search12(self,phrase,usesyn=True):
@@ -997,7 +996,6 @@ class FAO56Tables:
             temp = df[df['Crop'].str.contains(phrase)].index.values
             indices += temp.tolist()
         table12sub = self.table12.iloc[list(set(indices))]
-        print(table12sub)
         return table12sub
 
     def search17(self,phrase,usesyn=True):
@@ -1026,7 +1024,6 @@ class FAO56Tables:
             temp = df[df['Crop'].str.contains(phrase)].index.values
             indices += temp.tolist()
         table17sub = self.table17.iloc[list(set(indices))]
-        print(table17sub)
         return table17sub
 
     def search22(self,phrase,usesyn=True):
@@ -1055,5 +1052,4 @@ class FAO56Tables:
             temp = df[df['Crop'].str.contains(phrase)].index.values
             indices += temp.tolist()
         table22sub = self.table22.iloc[list(set(indices))]
-        print(table22sub)
         return table22sub
