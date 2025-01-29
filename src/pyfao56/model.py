@@ -33,6 +33,7 @@ The model.py module contains the following:
 12/12/2023 Added the runoff functionality by Dinesh Gulati
 02/15/2024 Added functionality for automatic irrigation scheduling
 09/30/2024 Added single crop coefficient calculations
+01/29/2025 Added Kcb adjustment methodology (FAO-56 Eq. 70)
 ########################################################################
 """
 
@@ -78,7 +79,7 @@ class Model:
         If False, Ks follows FAO-56; if True, Ks via AquaCrop equation
         (default = False)
     Kcb_adj : boolean, optional
-        If False, given Kcb values will be used; if True, Kcb will be adjusted to weather conditions
+        If True, Kcb is adjusted for weather following FAO-56 Eq. 70
         (default = False)
     comment : str, optional
         User-defined file descriptions or metadata (default = '')
@@ -126,7 +127,7 @@ class Model:
             RAW     - Readily available water (mm), FAO-56 Equation 83
             Ks      - Transpiration reduction factor, FAO-56 Eq. 84
             Kcadj   - Adjusted crop coefficient, FA0-56 Eq. 80
-            ETcadj  - Adjusted crop ET (mm), FAO-56 Eq. 80
+            ETcadj  - Adjusted crop ET (mm)
             T       - Adjusted crop transpiration (mm)
             DP      - Deep percolation (mm), FAO-56 Eq. 88
             Dinc    - Depletion increment due to root growth (mm)
@@ -163,7 +164,7 @@ class Model:
 
     def __init__(self, start, end, par, wth, irr=None, autoirr=None,
                  sol=None, upd=None, roff=False, cons_p=False,
-                 aq_Ks=False, Kcb_adj = False, comment=''):
+                 aq_Ks=False, Kcb_adj=False, comment=''):
         """Initialize the Model class attributes.
 
         Parameters
@@ -198,7 +199,7 @@ class Model:
             If False, Ks follows FAO-56; if True, Ks via AquaCrop Eqn
             (default = False)
         Kcb_adj : boolean, optional
-            If False, given Kcb values will be used; if True, Kcb will be adjusted to weather conditions
+            If True, Kcb is adjusted for weather following FAO-56 Eq. 70
             (default = False)
         comment : str, optional
             User-defined file descriptions or metadata (default = '')
@@ -469,37 +470,43 @@ class Model:
         io.roff   = self.roff
         io.cons_p = self.cons_p
         io.aq_Ks  = self.aq_Ks
-        io.Kcb_adj = self.Kcb_adj
         self.odata = pd.DataFrame(columns=self.cnames)
 
-                #Adjustment of Kcbmid and Kcbend based on RHmin and wind speed - FAO-56 Equation 70 page 136
+        #Adjustments of Kcbmid and Kcbend based on minimum relative
+        #humidity and wind speed (FAO-56 Eq. 70 page 136)
+        if self.Kcb_adj is True:
+            days1 = io.Lini+io.Ldev
+            days2 = io.Lini+io.Ldev+io.Lmid
+            days3 = io.Lini+io.Ldev+io.Lmid+io.Lend
+            date1 = (self.startDate + days1*tdelta).strftime('%Y-%j')
+            date2 = (self.startDate + days2*tdelta).strftime('%Y-%j')
+            date3 = (self.startDate + days3*tdelta).strftime('%Y-%j')
 
-        if io.Kcb_adj is True:
-            io.kcbmid_adj, io.Kcbend_adj = io.Kcbmid, io.Kcbend #initiating values if the condition (>= 0.45) is not satisfied
-            adj_df = self.wth.wdata.loc[self.startDate.strftime('%Y-%j'):self.endDate.strftime('%Y-%j')]
+            convert = 4.87/math.log(67.8*io.wndht-5.42) #Wndsp to u2
 
-            #Note for kelly:
-            #This df slice (which might be whole df if simulating for a year) to avoid having extra rows (days) if model is simulated for number of years (for start and end date)
-            # as we do. we ingest the df containing number of years to simulate in loop
-            #The df slice can be avoided by using (io.Lend+1) in end slicing of Rhmin and WS 
-
-            RHmin_mid_avg = adj_df[io.Lini+io.Ldev:io.Lini+io.Ldev+io.Lmid]['RHmin'].mean()
-            RHmin_mid_avg = sorted([20.0,RHmin_mid_avg,80.0])[1]
-            ws_mid_avg = adj_df[io.Lini+io.Ldev:io.Lini+io.Ldev+io.Lmid]['Wndsp']
-            ws_mid_avg = ws_mid_avg.apply(lambda x: x*(4.87/math.log(67.8*io.wndht-5.42))).mean()
-            ws_mid_avg = sorted([1.0,ws_mid_avg,6.0])[1]
-            
-            RHmin_end_avg = adj_df[io.Lini+io.Ldev+io.Lmid:]['RHmin'].mean()
-            RHmin_end_avg = sorted([20.0,RHmin_end_avg,80.0])[1]
-            ws_end_avg = adj_df[io.Lini+io.Ldev+io.Lmid:]['Wndsp']
-            ws_end_avg = ws_end_avg.apply(lambda x: x*(4.87/math.log(67.8*io.wndht-5.42))).mean()
-            ws_end_avg = sorted([1.0,ws_end_avg,6.0])[1]
-
+            #Compute adjustment for Kcbmid
+            rhmin_sub = self.wth.wdata.loc[date1:date2]['RHmin']
+            rhmin_mean = sorted([20.0,rhmin_sub.mean(),80.0])[1]
+            wndsp_sub = self.wth.wdata.loc[date1:date2]['Wndsp']
+            u2_mean = wndsp_sub.apply(lambda x: x*convert).mean()
+            u2_mean = sorted([1.0,u2_mean,6.0])[1]
             if io.Kcbmid >= 0.45:
-                io.Kcbmid_adj = round(io.Kcbmid + (0.04*(ws_mid_avg-2)-0.004*(RHmin_mid_avg-45))*(io.hmax/3)**0.3, 2)
+                term1 = 0.04*(u2_mean-2.)
+                term2 = 0.004*(rhmin_mean-45.)
+                term3 = (term1-term2)*(io.hmax/3.)**0.3
+                io.Kcbmid = io.Kcbmid + round(term3,3)
 
+            #Compute adjustment for Kcbend
+            rhmin_sub = self.wth.wdata.loc[date2:date3]['RHmin']
+            rhmin_mean = sorted([20.0,rhmin_sub.mean(),80.0])[1]
+            wndsp_sub = self.wth.wdata.loc[date2:date3]['Wndsp']
+            u2_mean = wndsp_sub.apply(lambda x: x*convert).mean()
+            u2_mean = sorted([1.0,u2_mean,6.0])[1]
             if io.Kcbend >= 0.45:
-                io.Kcbend_adj = round(io.Kcbend + (0.04*(ws_end_avg-2)-0.004*(RHmin_end_avg-45))*(io.hmax/3)**0.3, 2)
+                term1 = 0.04*(u2_mean-2.)
+                term2 = 0.004*(rhmin_mean-45.)
+                term3 = (term1-term2)*(io.hmax/3.)**0.3
+                io.Kcbend = io.Kcbend + round(term3,3)
 
         while tcurrent <= self.endDate:
             mykey = tcurrent.strftime('%Y-%j')
@@ -749,19 +756,19 @@ class Model:
             io.Kc1 = io.Kcini
         elif s1<io.i<=s2:
             io.tKcb += (io.Kcbmid-io.Kcbini)/(s2-s1)
-            io.Kcb += (io.Kcbmid_adj-io.Kcbini)/(s2-s1) if io.Kcb_adj is True else (io.Kcbmid-io.Kcbini)/(s2-s1)
+            io.Kcb += (io.Kcbmid-io.Kcbini)/(s2-s1)
             io.Kc1 += (io.Kcmid-io.Kcini)/(s2-s1)
         elif s2<io.i<=s3:
             io.tKcb = io.Kcbmid
-            io.Kcb = io.Kcbmid_adj if io.Kcb_adj is True else io.Kcbmid
+            io.Kcb = io.Kcbmid
             io.Kc1 = io.Kcmid
         elif s3<io.i<=s4:
             io.tKcb += (io.Kcbmid-io.Kcbend)/(s3-s4)
-            io.Kcb += (io.Kcbmid_adj-io.Kcbend_adj)/(s3-s4) if io.Kcb_adj is True else (io.Kcbmid-io.Kcbend)/(s3-s4)
+            io.Kcb += (io.Kcbmid-io.Kcbend)/(s3-s4)
             io.Kc1 += (io.Kcmid-io.Kcend)/(s3-s4)
         elif s4<io.i:
             io.tKcb = io.Kcbend
-            io.Kcb = io.Kcbend_adj if io.Kcb_adj is True else io.Kcbend
+            io.Kcb = io.Kcbend
             io.Kc1 = io.Kcend
 
         #Crop evapotranspiration, single method (ETc1) - FAO-56 Eq. 56
@@ -777,18 +784,13 @@ class Model:
         if io.updh > 0: io.h = io.updh
 
         #Root depth (Zr, m) - FAO-56 page 279
-        if io.Kcb_adj is True:
-                #To use Kcb_adj for root growth if available
-            io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*(io.Kcb-io.Kcbini)/
-                        (io.Kcbmid-io.Kcbini),0.001,io.Zr])
-        else:
-            io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*(io.tKcb-io.Kcbini)/
-                        (io.Kcbmid-io.Kcbini),0.001,io.Zr])
+        io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*(io.tKcb-io.Kcbini)/
+                     (io.Kcbmid-io.Kcbini),0.001,io.Zr])
 
         #Upper limit crop coefficient (Kcmax) - FAO-56 Eq. 72
         u2 = io.wndsp * (4.87/math.log(67.8*io.wndht-5.42))
         u2 = sorted([1.0,u2,6.0])[1]
-        rhmin = sorted([20.0,io.rhmin,80.])[1]
+        rhmin = sorted([20.0,io.rhmin,80.0])[1]
         if io.rfcrp == 'S':
             io.Kcmax = max([1.2+(0.04*(u2-2.0)-0.004*(rhmin-45.0))*
                             (io.h/3.0)**.3, io.Kcb+0.05])
