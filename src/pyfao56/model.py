@@ -127,7 +127,7 @@ class Model:
             RAW     - Readily available water (mm), FAO-56 Equation 83
             Ks      - Transpiration reduction factor, FAO-56 Eq. 84
             Kcadj   - Adjusted crop coefficient, FA0-56 Eq. 80
-            ETcadj  - Adjusted crop ET (mm)
+            ETcadj  - Adjusted crop ET (mm), FAO-56 Eq. 80
             T       - Adjusted crop transpiration (mm)
             DP      - Deep percolation (mm), FAO-56 Eq. 88
             Dinc    - Depletion increment due to root growth (mm)
