@@ -478,16 +478,18 @@ class Model:
         #and Kcbmid and Kcbend (FAO-56 Eq. 70) based on minimum relative
         #humidity and wind speed
         if self.K_adj is True:
-            days1 = io.Lini+io.Ldev
-            days2 = io.Lini+io.Ldev+io.Lmid
-            days3 = io.Lini+io.Ldev+io.Lmid+io.Lend
+            days1 = io.Lini+io.Ldev #mid first
+            days2 = io.Lini+io.Ldev+io.Lmid-1 #mid last
+            days3 = io.Lini+io.Ldev+io.Lmid #end first
+            days4 = io.Lini+io.Ldev+io.Lmid+io.Lend-1 #end last
             date1 = (self.startDate + days1*tdelta).strftime('%Y-%j')
             date2 = (self.startDate + days2*tdelta).strftime('%Y-%j')
             date3 = (self.startDate + days3*tdelta).strftime('%Y-%j')
+            date4 = (self.startDate + days4*tdelta).strftime('%Y-%j')
 
             convert = 4.87/math.log(67.8*io.wndht-5.42) #Wndsp to u2
 
-            #Compute adjustment for Kcbmid
+            #Compute adjustment for Kcmid and Kcbmid
             rhmin_sub = self.wth.wdata.loc[date1:date2]['RHmin']
             rhmin_mean = sorted([20.0,rhmin_sub.mean(),80.0])[1]
             wndsp_sub = self.wth.wdata.loc[date1:date2]['Wndsp']
@@ -501,10 +503,10 @@ class Model:
             if io.Kcbmid >= 0.45:
                 io.Kcbmid = io.Kcbmid + round(term3,3)
 
-            #Compute adjustment for Kcbend
-            rhmin_sub = self.wth.wdata.loc[date2:date3]['RHmin']
+            #Compute adjustment for Kcend and Kcbend
+            rhmin_sub = self.wth.wdata.loc[date3:date4]['RHmin']
             rhmin_mean = sorted([20.0,rhmin_sub.mean(),80.0])[1]
-            wndsp_sub = self.wth.wdata.loc[date2:date3]['Wndsp']
+            wndsp_sub = self.wth.wdata.loc[date3:date4]['Wndsp']
             u2_mean = wndsp_sub.apply(lambda x: x*convert).mean()
             u2_mean = sorted([1.0,u2_mean,6.0])[1]
             term1 = 0.04*(u2_mean-2.)
