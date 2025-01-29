@@ -33,7 +33,7 @@ The model.py module contains the following:
 12/12/2023 Added the runoff functionality by Dinesh Gulati
 02/15/2024 Added functionality for automatic irrigation scheduling
 09/30/2024 Added single crop coefficient calculations
-01/29/2025 Added Kcb adjustment methodology (FAO-56 Eq. 70)
+01/29/2025 Added Kcb weather-based adjustment method (FAO-56 Eq. 70)
 ########################################################################
 """
 
@@ -78,8 +78,9 @@ class Model:
     aq_Ks : boolean, optional
         If False, Ks follows FAO-56; if True, Ks via AquaCrop equation
         (default = False)
-    Kcb_adj : boolean, optional
-        If True, Kcb is adjusted for weather following FAO-56 Eq. 70
+    K_adj : boolean, optional
+        If True, Kcmid, Kcend, Kcbmid, and Kcbend are adjusted for
+        weather following FAO-56 Eqs. 62, 65, and 70
         (default = False)
     comment : str, optional
         User-defined file descriptions or metadata (default = '')
@@ -164,7 +165,7 @@ class Model:
 
     def __init__(self, start, end, par, wth, irr=None, autoirr=None,
                  sol=None, upd=None, roff=False, cons_p=False,
-                 aq_Ks=False, Kcb_adj=False, comment=''):
+                 aq_Ks=False, K_adj=False, comment=''):
         """Initialize the Model class attributes.
 
         Parameters
@@ -198,8 +199,9 @@ class Model:
         aq_Ks : boolean, optional
             If False, Ks follows FAO-56; if True, Ks via AquaCrop Eqn
             (default = False)
-        Kcb_adj : boolean, optional
-            If True, Kcb is adjusted for weather following FAO-56 Eq. 70
+        K_adj : boolean, optional
+            If True, Kcmid, Kcend, Kcbmid, and Kcbend are adjusted for
+            weather following FAO-56 Eqs. 62, 65, and 70
             (default = False)
         comment : str, optional
             User-defined file descriptions or metadata (default = '')
@@ -216,7 +218,7 @@ class Model:
         self.roff = roff
         self.cons_p = cons_p
         self.aq_Ks = aq_Ks
-        self.Kcb_adj = Kcb_adj
+        self.K_adj = K_adj
         self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
         self.cnames = ['Year','DOY','DOW','Date','ETref','Kc1','ETc1',
@@ -472,9 +474,10 @@ class Model:
         io.aq_Ks  = self.aq_Ks
         self.odata = pd.DataFrame(columns=self.cnames)
 
-        #Adjustments of Kcbmid and Kcbend based on minimum relative
-        #humidity and wind speed (FAO-56 Eq. 70 page 136)
-        if self.Kcb_adj is True:
+        #Adjustments of Kcmid (FAO-56 Eq. 62), Kcend (FAO-56 Eq. 65),
+        #and Kcbmid and Kcbend (FAO-56 Eq. 70) based on minimum relative
+        #humidity and wind speed
+        if self.K_adj is True:
             days1 = io.Lini+io.Ldev
             days2 = io.Lini+io.Ldev+io.Lmid
             days3 = io.Lini+io.Ldev+io.Lmid+io.Lend
@@ -490,10 +493,12 @@ class Model:
             wndsp_sub = self.wth.wdata.loc[date1:date2]['Wndsp']
             u2_mean = wndsp_sub.apply(lambda x: x*convert).mean()
             u2_mean = sorted([1.0,u2_mean,6.0])[1]
+            term1 = 0.04*(u2_mean-2.)
+            term2 = 0.004*(rhmin_mean-45.)
+            term3 = (term1-term2)*(io.hmax/3.)**0.3
+            if io.Kcmid >= 0.45:
+                io.Kcmid = io.Kcmid + round(term3,3)
             if io.Kcbmid >= 0.45:
-                term1 = 0.04*(u2_mean-2.)
-                term2 = 0.004*(rhmin_mean-45.)
-                term3 = (term1-term2)*(io.hmax/3.)**0.3
                 io.Kcbmid = io.Kcbmid + round(term3,3)
 
             #Compute adjustment for Kcbend
@@ -502,10 +507,12 @@ class Model:
             wndsp_sub = self.wth.wdata.loc[date2:date3]['Wndsp']
             u2_mean = wndsp_sub.apply(lambda x: x*convert).mean()
             u2_mean = sorted([1.0,u2_mean,6.0])[1]
+            term1 = 0.04*(u2_mean-2.)
+            term2 = 0.004*(rhmin_mean-45.)
+            term3 = (term1-term2)*(io.hmax/3.)**0.3
+            if io.Kcend >= 0.45:
+                io.Kcend = io.Kcend + round(term3,3)
             if io.Kcbend >= 0.45:
-                term1 = 0.04*(u2_mean-2.)
-                term2 = 0.004*(rhmin_mean-45.)
-                term3 = (term1-term2)*(io.hmax/3.)**0.3
                 io.Kcbend = io.Kcbend + round(term3,3)
 
         while tcurrent <= self.endDate:
