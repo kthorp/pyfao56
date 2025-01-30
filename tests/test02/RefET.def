@@ -1,0 +1,22 @@
+ 63 64 10 3 4 17 20 19 29 56 52
+3,1.5,361,33.069,0
+2,1,-999
+1.25,.5,.12,.12,1000
+ .. 
+Longitude of timezone needed for hourly data)and Output flags:
+0
+0,0,2,1,1,1,0,1,0
+0,0,3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0 
+1,.16,0,1,2,1,0,90
+abaaaaaaa, <--delimiter code.  The next line contains 24hr, daytime, &nighttime rs for alfalfa and for grass
+45,30,200,70,50,200
+
+This definition file is named:
+"F:\RefET.def"
+This definition file is used to read data file:
+"F:\RefET.csv"
+
+This definition file was created by and is used by program REF-ET Windows Ver 3.1
+NOTE:  It is important that you do not change the order or structure
+       of this definition file.  Otherwise, REF-ET may have difficulty
+       reading it the next time it is utilized.
