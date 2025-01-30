@@ -1,8 +1,8 @@
 """
 ########################################################################
 The cotton2018.py module from test4 has been modified to provide tests
-of using tabular data from FAO-56 tables and automated adjustment of
-crop coefficients based on weather data inputs.
+of methods for using tabular data from FAO-56 tables and automated
+adjustment of crop coefficients based on weather data inputs.
 
 The cotton2018.py module contains the following:
     run - function to setup and run pyfao56 for the 100%-100% irrigation
@@ -17,8 +17,6 @@ import pyfao56 as fao
 import pyfao56.tools as tools
 import pyfao56.custom as custom
 import os
-import time
-import sys
 
 def run():
     """Setup and run pyfao56 for a 2018 cotton field study"""
@@ -29,13 +27,13 @@ def run():
     #Search FAO56 tables
     tables = tools.FAO56Tables()
     t11_cotton = tables.search11("cotton")
-    print(t11_cotton) #Use table row index #93 for "desert usa"
+    print(t11_cotton) #Use row index #93 for "desert usa"
     t12_cotton = tables.search12("CoTtOn") #case insensitive
-    print(t12_cotton) #Use table row index #55
+    print(t12_cotton) #Use row index #55
     t17_cotton = tables.search17("cotton")
-    print(t17_cotton) #Use table row index #54
+    print(t17_cotton) #Use row index #54
     t22_cotton = tables.search22("cotton")
-    print(t22_cotton) #Use table row index #48
+    print(t22_cotton) #Use row index #48
 
     #Specify the model parameters
     par = fao.Parameters(comment = '2018 Cotton')
