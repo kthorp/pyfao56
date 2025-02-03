@@ -40,6 +40,7 @@ The model.py module contains the following:
 import pandas as pd
 import datetime
 import math
+from .__version__ import __version__
 
 class Model:
     """A class for managing FAO-56 soil water balance computations.
@@ -267,7 +268,8 @@ class Model:
                 'Runoff':'{:7.3f}'.format}
         ast='*'*72
         s = ('{:s}\n'
-             'pyfao56: FAO-56 Evapotranspiration in Python\n'
+             'pyfao56: FAO-56 Evapotranspiration in Python '
+             '(ver. {:s})\n'
              'Output Data\n'
              'Timestamp: {:s}\n'
              'Simulation start date: {:s}\n'
@@ -284,6 +286,7 @@ class Model:
              '     fDb   Irrig IrrLoss    Rain  Runoff  Year  DOY  DOW'
              '      Date\n'
              ).format(ast,
+                      __version__,
                       timestamp,
                       sdate,
                       edate,
