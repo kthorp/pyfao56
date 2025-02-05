@@ -24,18 +24,18 @@ class Parameters:
 
     Attributes
     ----------
-    Kcini : float
-        Kc Initial (FAO-56 Table 12)
-    Kcmid : float
-        Kc Mid (FAO-56 Table 12)
-    Kcend : float
-        Kc End (FAO-56 Table 12)
+    Kcmini : float
+        Single (mean) crop coefficient Initial (FAO-56 Table 12)
+    Kcmmid : float
+        Single (mean) crop coefficient Mid (FAO-56 Table 12)
+    Kcmend : float
+        Single (mean) crop coefficient End (FAO-56 Table 12)
     Kcbini : float
-        Kcb Initial (FAO-56 Table 17)
+        Basal crop coefficient Initial (FAO-56 Table 17)
     Kcbmid : float
-        Kcb Mid (FAO-56 Table 17)
+        Basal crop coefficient Mid (FAO-56 Table 17)
     Kcbend : float
-        Kcb End (FAO-56 Table 17)
+        Basal crop coefficient End (FAO-56 Table 17)
     Lini : int
         Length Stage Initial (days) (FAO-56 Table 11)
     Ldev : int
@@ -80,8 +80,8 @@ class Parameters:
     setfrom11(index, setLini=True, setLdev=True, setLmid=True,
               setLend=True):
         Set growth stage lengths from FAO-56 Table 11
-    setfrom12(index, setKcini=True, setKcmid=True,
-              setKcend=True, sethmax=True):
+    setfrom12(index, setKcmini=True, setKcmmid=True,
+              setKcmend=True, sethmax=True):
         Set Kc values and maximum crop height from FAO-56 Table 12
     setfrom17(index, setKcbini=True, setKcbmid=True,
               setKcbend=True):
@@ -91,11 +91,12 @@ class Parameters:
         Set Zrmax and pbase values from FAO-56 Table 22
     """
 
-    def __init__(self, Kcini=0.35, Kcmid=1.15, Kcend=0.60, Kcbini=0.15,
-                 Kcbmid=1.10, Kcbend=0.50, Lini=25, Ldev=50, Lmid=50,
-                 Lend=25, hini=0.010, hmax=1.20, thetaFC=0.250,
-                 thetaWP=0.100, theta0=0.100, Zrini=0.20, Zrmax=1.40,
-                 pbase=0.50, Ze=0.10, REW=8.0, CN2=70, comment=''):
+    def __init__(self, Kcmini=0.35, Kcmmid=1.15, Kcmend=0.60,
+                 Kcbini=0.15, Kcbmid=1.10, Kcbend=0.50, Lini=25,
+                 Ldev=50, Lmid=50, Lend=25, hini=0.010, hmax=1.20,
+                 thetaFC=0.250, thetaWP=0.100, theta0=0.100, Zrini=0.20,
+                 Zrmax=1.40, pbase=0.50, Ze=0.10, REW=8.0, CN2=70,
+                 comment=''):
         """Initialize the Parameters class attributes.
 
         Default parameter values are given below. Users should update
@@ -105,9 +106,9 @@ class Parameters:
         Parameters
         ----------
         See Parameters class docstring for parameter definitions.
-        Kcini   : float, optional, default = 0.35
-        Kcmid   : float, optional, default = 1.15
-        Kcend   : float, optional, default = 0.60
+        Kcmini  : float, optional, default = 0.35
+        Kcmmid  : float, optional, default = 1.15
+        Kcmend  : float, optional, default = 0.60
         Kcbini  : float, optional, default = 0.15
         Kcbmid  : float, optional, default = 1.10
         Kcbend  : float, optional, default = 0.50
@@ -129,9 +130,9 @@ class Parameters:
         comment : str  , optional, default = ''
         """
 
-        self.Kcini  = Kcini
-        self.Kcmid  = Kcmid
-        self.Kcend  = Kcend
+        self.Kcmini  = Kcmini
+        self.Kcmmid  = Kcmmid
+        self.Kcmend  = Kcmend
         self.Kcbini  = Kcbini
         self.Kcbmid  = Kcbmid
         self.Kcbend  = Kcbend
@@ -166,9 +167,9 @@ class Parameters:
            '{:s}\n'
            '{:s}\n'
            '{:s}\n'
-           '{:9.4f} Kcini, Kc Initial (FAO-56 Table 12)\n'
-           '{:9.4f} Kcmid, Kc Mid (FAO-56 Table 12)\n'
-           '{:9.4f} Kcend, Kc End (FAO-56 Table 12)\n'
+           '{:9.4f} Kcmini, Kc Initial (FAO-56 Table 12)\n'
+           '{:9.4f} Kcmmid, Kc Mid (FAO-56 Table 12)\n'
+           '{:9.4f} Kcmend, Kc End (FAO-56 Table 12)\n'
            '{:9.4f} Kcbini, Kcb Initial (FAO-56 Table 17)\n'
            '{:9.4f} Kcbmid, Kcb Mid (FAO-56 Table 17)\n'
            '{:9.4f} Kcbend, Kcb End (FAO-56 Table 17)\n'
@@ -195,8 +196,8 @@ class Parameters:
            '(FAO-56 Table 19)\n'
            '{:9d} CN2, Curve Number for AWCII '
            '(ASCE (2016) Table 14-3 or SCS (1972))\n'
-          ).format(ast,timestamp,ast,self.comment,ast,self.Kcini,
-                   self.Kcmid,self.Kcend,self.Kcbini,self.Kcbmid,
+          ).format(ast,timestamp,ast,self.comment,ast,self.Kcmini,
+                   self.Kcmmid,self.Kcmend,self.Kcbini,self.Kcbmid,
                    self.Kcbend,self.Lini,self.Ldev,self.Lmid,
                    self.Lend,self.hini,self.hmax,self.thetaFC,
                    self.thetaWP,self.theta0,self.Zrini,self.Zrmax,
@@ -259,12 +260,12 @@ class Parameters:
                 self.tmstmp = ts
             for line in lines[endast+1:]:
                 line = line.strip().split(',')[0].split()
-                if line[1].lower() == 'kcini':
-                    self.Kcini = float(line[0])
-                elif line[1].lower() == 'kcmid':
-                    self.Kcmid = float(line[0])
-                elif line[1].lower() == 'kcend':
-                    self.Kcend = float(line[0])
+                if line[1].lower() == 'kcmini':
+                    self.Kcmini = float(line[0])
+                elif line[1].lower() == 'kcmmid':
+                    self.Kcmmid = float(line[0])
+                elif line[1].lower() == 'kcmend':
+                    self.Kcmend = float(line[0])
                 elif line[1].lower() == 'kcbini':
                     self.Kcbini = float(line[0])
                 elif line[1].lower() == 'kcbmid':
@@ -299,7 +300,7 @@ class Parameters:
                     self.Ze = float(line[0])
                 elif line[1].lower() == 'rew':
                     self.REW = float(line[0])
-                elif line[1].lower() == 'CN2':
+                elif line[1].lower() == 'cn2':
                     self.CN2 = int(line[0])
 
     def setfrom11(self, index, setLini=True, setLdev=True,
@@ -330,31 +331,31 @@ class Parameters:
         value = table11.iloc[index].loc['Llate']
         if setLend and value!='': self.Lend = int(value)
 
-    def setfrom12(self, index, setKcini=True, setKcmid=True,
-                  setKcend=True, sethmax=True):
-        """Set Kc values and maximum crop height from FAO-56 Table 12
+    def setfrom12(self, index, setKcmini=True, setKcmmid=True,
+                  setKcmend=True, sethmax=True):
+        """Set Kcm values and maximum crop height from FAO-56 Table 12
 
         Parameters
         ----------
         index : int
             row index for FAO56Tables.table12 DataFrame
-        setKcini : boolean, optional
-            Set Kcini value from FAO-56 Table 12 or not (default = True)
-        setKcmid : boolean, optional
-            Set Kcmid value from FAO-56 Table 12 or not (default = True)
-        setKcend : boolean, optional
-            Set Kcend value from FAO-56 Table 12 or not (default = True)
+        setKcmini : boolean, optional
+            Set Kcmini value from FAO-56 Table 12 or not (default=True)
+        setKcmmid : boolean, optional
+            Set Kcmmid value from FAO-56 Table 12 or not (default=True)
+        setKcmend : boolean, optional
+            Set Kcmend value from FAO-56 Table 12 or not (default=True)
         sethmax : boolean, optional
-            Set hmax value from FAO-56 Table 12 or not (default = True)
+            Set hmax value from FAO-56 Table 12 or not (default=True)
         """
 
         table12 = FAO56Tables().table12
-        value = table12.iloc[index].loc['Kcini']
-        if setKcini and value!='': self.Kcini = float(value)
-        value = table12.iloc[index].loc['Kcmid']
-        if setKcmid and value!='': self.Kcmid = float(value)
-        value = table12.iloc[index].loc['Kcend']
-        if setKcend and value!='': self.Kcend = float(value)
+        value = table12.iloc[index].loc['Kcmini']
+        if setKcmini and value!='': self.Kcmini = float(value)
+        value = table12.iloc[index].loc['Kcmmid']
+        if setKcmmid and value!='': self.Kcmmid = float(value)
+        value = table12.iloc[index].loc['Kcmend']
+        if setKcmend and value!='': self.Kcmend = float(value)
         value = table12.iloc[index].loc['hmax']
         if sethmax and value!='': self.hmax = float(value)
 
