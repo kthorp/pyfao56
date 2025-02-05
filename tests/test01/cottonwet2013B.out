@@ -1,14 +1,14 @@
 ************************************************************************
-pyfao56: FAO-56 Evapotranspiration in Python
+pyfao56: FAO-56 Evapotranspiration in Python (ver. 1.4.0)
 Output Data
-Timestamp: 09/30/2024 13:47:00
+Timestamp: 02/05/2025 07:56:13
 Simulation start date: 04/23/2013
 Simulation end date: 11/08/2013
 Soil method: D - Default FAO-56 homogenous soil bucket approach
 ************************************************************************
 Comments: 2013 Cotton Wet
 ************************************************************************
-Year-DOY  Year  DOY  DOW      Date  ETref   Kc1   ETc1  tKcb   Kcb     h Kcmax    fc    fw   few      De    Kr    Ke      E     DPe   Kc2   ETc2     TAW TAWrmax    TAWb    Zr     p     RAW    Ks Kcadj ETcadj      T      DP    Dinc      Dr     fDr   Drmax  fDrmax      Db     fDb   Irrig IrrLoss    Rain  Runoff  Year  DOY  DOW      Date
+Year-DOY  Year  DOY  DOW      Date  ETref   Kcm   ETcm  tKcb   Kcb     h Kcmax    fc    fw   few      De    Kr    Ke      E     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p     RAW    Ks    Ka    ETa      T      DP    Dinc      Dr     fDr   Drmax  fDrmax      Db     fDb   Irrig IrrLoss    Rain  Runoff  Year  DOY  DOW      Date
 2013-113  2013  113  Tue  04/23/13  6.970 0.350  2.439 0.150 0.150 0.050 1.230 0.000 1.000 1.000  20.003 0.000 0.000  0.000   0.000 0.150  1.045  75.000 -99.999 -99.999 0.600 0.800  60.000 0.000 0.000  0.000  0.000   0.000 -99.999  75.000   1.000 -99.999 -99.999 -99.999 -99.999   0.000   0.000   0.000   0.000  2013  113  Tue  04/23/13
 2013-114  2013  114  Wed  04/24/13  6.420 0.350  2.247 0.150 0.150 0.050 1.226 0.000 1.000 1.000  20.003 0.000 0.000  0.000   0.000 0.150  0.963  75.000 -99.999 -99.999 0.600 0.800  60.000 0.000 0.000  0.000  0.000   0.000 -99.999  75.000   1.000 -99.999 -99.999 -99.999 -99.999   0.000   0.000   0.000   0.000  2013  114  Wed  04/24/13
 2013-115  2013  115  Thu  04/25/13  7.400 0.350  2.590 0.150 0.150 0.050 1.239 0.000 0.500 0.500   0.000 0.000 0.000  0.000  45.998 0.150  1.110  75.000 -99.999 -99.999 0.600 0.800  60.000 0.000 0.000  0.000  0.000   0.000 -99.999  42.000   0.560 -99.999 -99.999 -99.999 -99.999  33.000   0.000   0.000   0.000  2013  115  Thu  04/25/13

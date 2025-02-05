@@ -31,10 +31,10 @@ def plot(results):
     plt.legend()
 
     ax01  = ax1.twinx()
-    plt.plot(results['DOY'],results['ETc2'],color='coral',label='ETc2')
-    plt.plot(results['DOY'],results['ETcadj'],color='olive',
-             label='ETcadj')
-    ax01.set_ylabel('ETc & ETcadj (mm)')
+    plt.plot(results['DOY'],results['ETc'],color='coral',label='ETc')
+    plt.plot(results['DOY'],results['ETa'],color='olive',
+             label='ETa')
+    ax01.set_ylabel('ETc & ETa (mm)')
     ax01.set_xticks([])
     plt.legend(loc='upper left',)
 

@@ -1,14 +1,14 @@
 ************************************************************************
 pyfao56: FAO-56 Evapotranspiration in Python (ver. 1.4.0)
 Output Data
-Timestamp: 02/03/2025 11:52:45
+Timestamp: 02/05/2025 08:08:59
 Simulation start date: 04/18/2019
 Simulation end date: 10/01/2019
 Soil method: D - Default FAO-56 homogenous soil bucket approach
 ************************************************************************
 Comments: 2019 Cotton
 ************************************************************************
-Year-DOY  Year  DOY  DOW      Date  ETref   Kc1   ETc1  tKcb   Kcb     h Kcmax    fc    fw   few      De    Kr    Ke      E     DPe   Kc2   ETc2     TAW TAWrmax    TAWb    Zr     p     RAW    Ks Kcadj ETcadj      T      DP    Dinc      Dr     fDr   Drmax  fDrmax      Db     fDb   Irrig IrrLoss    Rain  Runoff  Year  DOY  DOW      Date
+Year-DOY  Year  DOY  DOW      Date  ETref   Kcm   ETcm  tKcb   Kcb     h Kcmax    fc    fw   few      De    Kr    Ke      E     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p     RAW    Ks    Ka    ETa      T      DP    Dinc      Dr     fDr   Drmax  fDrmax      Db     fDb   Irrig IrrLoss    Rain  Runoff  Year  DOY  DOW      Date
 2019-108  2019  108  Thu  04/18/19  5.650 0.350  1.978 0.150 0.150 0.050 1.221 0.000 1.000 1.000   9.693 0.000 0.000  0.000   0.000 0.150  0.848  90.692 -99.999 -99.999 0.820 0.800  72.554 1.000 0.150  0.848  0.848   0.000 -99.999  23.397   0.258 -99.999 -99.999 -99.999 -99.999   0.000   0.000   0.000   0.000  2019  108  Thu  04/18/19
 2019-109  2019  109  Fri  04/19/19  6.630 0.350  2.321 0.150 0.150 0.050 1.222 0.000 1.000 1.000   0.000 0.000 0.000  0.000  10.707 0.150  0.994  90.692 -99.999 -99.999 0.820 0.800  72.554 1.000 0.150  0.994  0.994   0.000 -99.999   3.992   0.044 -99.999 -99.999 -99.999 -99.999  20.400   0.000   0.000   0.000  2019  109  Fri  04/19/19
 2019-110  2019  110  Sat  04/20/19  8.740 0.350  3.059 0.150 0.152 0.052 1.244 0.002 1.000 0.998   9.563 1.000 1.092  9.545   0.000 1.244 10.874  90.692 -99.999 -99.999 0.820 0.415  37.641 1.000 1.244 10.874  1.328   0.000 -99.999  14.866   0.164 -99.999 -99.999 -99.999 -99.999   0.000   0.000   0.000   0.000  2019  110  Sat  04/20/19

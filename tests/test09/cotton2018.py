@@ -214,14 +214,14 @@ def run(case=0):
         mdl = fao.Model('2018-108','2018-303', par, wth, autoirr=airr)
     #Case 18: Autoirrigate with mad=0.4 and replace ET less
     #         precipitation since last watering event > 14 mm.
-    #         Default ET is ETcadj.
+    #         Default ET is ETa.
     elif case==18:
         airr.addset('2018-108','2018-250',mad=0.4,evnt=14,ietre=True)
         mdl = fao.Model('2018-108','2018-303', par, wth, autoirr=airr)
     #Case 19: Autoirrigate every 5 days with 5-day ET replacement
-    #         less precipitation. Use ETc2 instead of ETcadj.
+    #         less precipitation. Use ETc instead of ETa.
     elif case==19:
-        airr.addset('2018-108','2018-250',dsli=5,ietrd=5,ettyp='ETc2')
+        airr.addset('2018-108','2018-250',dsli=5,ietrd=5,ettyp='ETc')
         mdl = fao.Model('2018-108','2018-303', par, wth, autoirr=airr)
     #Case 20: Autoirrigate with mad=0.45 and apply 90% of Dr
     elif case==20:

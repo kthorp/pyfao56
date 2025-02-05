@@ -1,14 +1,14 @@
 ************************************************************************
 pyfao56: FAO-56 Evapotranspiration in Python (ver. 1.4.0)
 Output Data
-Timestamp: 02/03/2025 12:10:56
+Timestamp: 02/05/2025 08:52:04
 Simulation start date: 05/02/2023
 Simulation end date: 11/01/2023
 Soil method: L - Fort Collins ARS stratified soil layers approach
 ************************************************************************
 Comments: 
 ************************************************************************
-Year-DOY  Year  DOY  DOW      Date  ETref   Kc1   ETc1  tKcb   Kcb     h Kcmax    fc    fw   few      De    Kr    Ke      E     DPe   Kc2   ETc2     TAW TAWrmax    TAWb    Zr     p     RAW    Ks Kcadj ETcadj      T      DP    Dinc      Dr     fDr   Drmax  fDrmax      Db     fDb   Irrig IrrLoss    Rain  Runoff  Year  DOY  DOW      Date
+Year-DOY  Year  DOY  DOW      Date  ETref   Kcm   ETcm  tKcb   Kcb     h Kcmax    fc    fw   few      De    Kr    Ke      E     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p     RAW    Ks    Ka    ETa      T      DP    Dinc      Dr     fDr   Drmax  fDrmax      Db     fDb   Irrig IrrLoss    Rain  Runoff  Year  DOY  DOW      Date
 2023-122  2023  122  Tue  05/02/23  7.950 0.240  1.908 0.150 0.150 0.001 1.000 0.000 1.000 1.000  11.935 0.000 0.000  0.000   0.000 0.150  1.192  35.100  96.600  61.500 0.300 0.500  17.550 1.000 0.150  1.192  1.192   0.000   0.000  18.743   0.534  49.492   0.512  30.750   0.500   0.000   0.000   0.000   0.000  2023  122  Tue  05/02/23
 2023-123  2023  123  Wed  05/03/23  6.090 0.240  1.462 0.150 0.150 0.001 1.000 0.000 1.000 1.000  11.935 0.000 0.000  0.000   0.000 0.150  0.913  35.100  96.600  61.500 0.300 0.500  17.550 0.932 0.140  0.851  0.851   0.000   0.000  19.594   0.558  50.344   0.521  30.750   0.500   0.000   0.000   0.000   0.000  2023  123  Wed  05/03/23
 2023-124  2023  124  Thu  05/04/23  5.810 0.240  1.394 0.150 0.150 0.001 1.000 0.000 1.000 1.000  11.685 0.000 0.000  0.000   0.000 0.150  0.871  35.100  96.600  61.500 0.300 0.500  17.550 0.884 0.133  0.770  0.770   0.000   0.000  20.114   0.573  50.864   0.527  30.750   0.500   0.000   0.000   0.250   0.000  2023  124  Thu  05/04/23

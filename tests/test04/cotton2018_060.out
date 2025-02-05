@@ -1,14 +1,14 @@
 ************************************************************************
 pyfao56: FAO-56 Evapotranspiration in Python (ver. 1.4.0)
 Output Data
-Timestamp: 02/03/2025 11:55:33
+Timestamp: 02/05/2025 08:11:21
 Simulation start date: 04/18/2018
 Simulation end date: 10/30/2018
 Soil method: D - Default FAO-56 homogenous soil bucket approach
 ************************************************************************
 Comments: 2018 Cotton, 60%-60% irrigation treatment
 ************************************************************************
-Year-DOY  Year  DOY  DOW      Date  ETref   Kc1   ETc1  tKcb   Kcb     h Kcmax    fc    fw   few      De    Kr    Ke      E     DPe   Kc2   ETc2     TAW TAWrmax    TAWb    Zr     p     RAW    Ks Kcadj ETcadj      T      DP    Dinc      Dr     fDr   Drmax  fDrmax      Db     fDb   Irrig IrrLoss    Rain  Runoff  Year  DOY  DOW      Date
+Year-DOY  Year  DOY  DOW      Date  ETref   Kcm   ETcm  tKcb   Kcb     h Kcmax    fc    fw   few      De    Kr    Ke      E     DPe    Kc    ETc     TAW TAWrmax    TAWb    Zr     p     RAW    Ks    Ka    ETa      T      DP    Dinc      Dr     fDr   Drmax  fDrmax      Db     fDb   Irrig IrrLoss    Rain  Runoff  Year  DOY  DOW      Date
 2018-108  2018  108  Wed  04/18/18  5.430 0.350  1.901 0.150 0.150 0.050 1.222 0.000 1.000 1.000   9.360 0.000 0.000  0.000   0.000 0.150  0.815  21.400 -99.999 -99.999 0.200 0.800  17.120 1.000 0.150  0.815  0.815   0.000 -99.999  11.515   0.538 -99.999 -99.999 -99.999 -99.999   0.000   0.000   0.000   0.000  2018  108  Wed  04/18/18
 2018-109  2018  109  Thu  04/19/18  7.966 0.350  2.788 0.150 0.150 0.050 1.249 0.000 1.000 1.000   9.360 0.000 0.000  0.000   0.000 0.150  1.195  21.400 -99.999 -99.999 0.200 0.800  17.120 1.000 0.150  1.195  1.195   0.000 -99.999  12.709   0.594 -99.999 -99.999 -99.999 -99.999   0.000   0.000   0.000   0.000  2018  109  Thu  04/19/18
 2018-110  2018  110  Fri  04/20/18  6.461 0.350  2.261 0.150 0.150 0.050 1.240 0.000 1.000 1.000   0.000 0.000 0.000  0.000  11.040 0.150  0.969  21.400 -99.999 -99.999 0.200 0.800  17.120 1.000 0.150  0.969  0.969   6.721 -99.999   0.000   0.000 -99.999 -99.999 -99.999 -99.999  20.400   0.000   0.000   0.000  2018  110  Fri  04/20/18
