@@ -1,7 +1,7 @@
 ************************************************************************
 pyfao56: FAO-56 Evapotranspiration in Python
 Seasonal Water Balance Summary
-Timestamp: 02/05/2025 09:04:03
+Timestamp: 02/05/2025 10:30:24
 Simulation start date: 04/18/2018
 Simulation end date: 12/31/2018
 All values expressed in mm.
@@ -10,6 +10,8 @@ Comments:
 ************************************************************************
 1488.760 : ETref
 1125.240 : ETcm
+ 931.088 : ETcb
+1859.508 : ETmax
 1110.838 : ETc
  954.562 : ETa
  179.750 : E
