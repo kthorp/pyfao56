@@ -42,11 +42,11 @@ class FAO56Tables:
     table12 : DataFrame
         FAO-56 Table 12 data as str
         index - row number as int
-        columns - ['Crop','Kcini','Kcmid','Kcend','hmax']
+        columns - ['Crop','Kcmini','Kcmmid','Kcmend','hmax']
             Crop  - Crop description
-            Kcini - Kc Initial
-            Kcmid - Kc Mid
-            Kcend - Kc End
+            Kcmini - Kc Initial
+            Kcmmid - Kc Mid
+            Kcmend - Kc End
             hmax  - Plant Height Maximum (m)
     table17 : DataFrame
         FAO-56 Table 17 data as str
@@ -259,7 +259,7 @@ class FAO56Tables:
         for col in self.table11.columns:
             self.table11[col] = self.table11[col].str.strip()
 
-        #FAO-56 Table 12. Single (time-averaged) crop coefficients, Kc, and mean maximum plant
+        #FAO-56 Table 12. Single (time-averaged) crop coefficients, Kcm, and mean maximum plant
         #heights for non stressed, well-managed crops in subhumid climates (RHmin=45%, u2=2m/s)
         #for use with the FAO Penman-Monteith ETo.
         #   Crop                                                          ,Kcini,Kcmid,Kcend,hmax
@@ -402,7 +402,7 @@ class FAO56Tables:
             open water < 2 m depth or in subhumid climates or tropics     ,     , 1.05, 1.05, 
             open water > 5 m depth clear of turbidity temperate climate   ,     , 0.65, 1.25,  """
         self.table12 = pd.read_csv(io.StringIO(table12data),
-                                   names=['Crop','Kcini','Kcmid','Kcend','hmax'],
+                                   names=['Crop','Kcmini','Kcmmid','Kcmend','hmax'],
                                    dtype=str)
         for col in self.table12.columns:
             self.table12[col] = self.table12[col].str.strip()

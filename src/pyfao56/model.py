@@ -937,9 +937,11 @@ class Model:
             io.Ks = sorted([0.0,(io.TAW-io.Dr)/(io.TAW-io.RAW),1.0])[1]
 
         #Actual crop coefficient (Ka) - FAO-56 Eq. 80
+        #DeJonge et al. (2025) updates terminology: Kcadj to Ka
         io.Ka = io.Ks * io.Kcb + io.Ke
 
         #Actual evapotranspiration (ETa, mm) - FAO-56 Eq. 80
+        #DeJonge et al. (2025) updates terminology: ETcadj to ETa
         io.ETa = io.Ka * io.ETref
 
         #Actual plant transpiration (T, mm)
