@@ -124,7 +124,7 @@ class Model:
             Kcb     - Basal crop coefficient, considering updates
             ETcb    - Basal evapotranspiration (mm)
             h       - Plant height (m)
-            Kcmax   - Upper limit crop coefficient, FAO-56 Eq. 72
+            Kcmax   - Maximum crop coefficient, FAO-56 Eq. 72
             ETmax   - Maximum evapotranspiration (mm)
             fc      - Canopy cover fraction, FAO-56 Eq. 76
             fw      - Fraction soil surface wetted, FAO-56 Table 20
@@ -134,7 +134,7 @@ class Model:
             Ke      - Evaporation coefficient, FAO-56 Eq. 71
             E       - Soil water evaporation (mm), FAO-56 Eq. 69
             DPe     - Percolation under exposed soil (mm), FAO-56 Eq. 79
-            Kc      - Dual crop coefficient, FAO-56 Eq. 69
+            Kc      - Dual non-stressed crop coefficient, FAO-56 Eq. 69
             ETc     - Dual non-stressed ET (mm), FAO-56 Eq. 69
             TAW     - Total available water (mm), FAO-56 Eq. 82
             TAWrmax - Total available water for max root depth (mm)
@@ -142,7 +142,7 @@ class Model:
             Zr      - Root depth (m), FAO-56 page 279
             p       - Fraction depleted TAW, FAO-56 p162 and Table 22
             RAW     - Readily available water (mm), FAO-56 Equation 83
-            Ks      - Transpiration reduction factor, FAO-56 Eq. 84
+            Ks      - Stress coefficient, FAO-56 Eq. 84
             Ka      - Actual crop coefficient, FA0-56 Eq. 80
             ETa     - Actual evapotranspiration (mm), FAO-56 Eq. 80
             T       - Actual plant transpiration (mm)
@@ -823,7 +823,7 @@ class Model:
         io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*(io.tKcb-io.Kcbini)/
                      (io.Kcbmid-io.Kcbini),0.001,io.Zr])
 
-        #Upper limit crop coefficient (Kcmax) - FAO-56 Eq. 72
+        #Maximum or upper limit crop coefficient (Kcmax) - FAO-56 Eq. 72
         u2 = io.wndsp * (4.87/math.log(67.8*io.wndht-5.42))
         u2 = sorted([1.0,u2,6.0])[1]
         rhmin = sorted([20.0,io.rhmin,80.0])[1]
@@ -848,7 +848,7 @@ class Model:
         #Effective irrigation (mm)
         effirr = io.idep - io.irrloss
 
-        # Surface runoff (runoff, mm)
+        #Surface runoff (runoff, mm)
         io.runoff = 0.0
         if io.roff is True:
             #Method per ASCE (2016) Eqs. 14-12 to 14-20, page 451-454
@@ -903,7 +903,7 @@ class Model:
         De = io.De - effrain - effirr/io.fw + io.E/io.few + io.DPe
         io.De = sorted([0.0,De,io.TEW])[1]
 
-        #Crop coefficient for standard conditions (Kc) - FAO-56 Eq. 69
+        #Dual drop coefficient, standard conditions (Kc) - FAO-56 Eq. 69
         io.Kc = io.Ke + io.Kcb
 
         #Non-stressed evapotranspiration (ETc, mm) - FAO-56 Eq. 69
@@ -936,7 +936,7 @@ class Model:
         #Readily available water (RAW, mm) - FAO-56 Equation 83
         io.RAW = io.p * io.TAW
 
-        #Transpiration reduction factor (Ks, 0.0-1.0)
+        #Stress coefficient, transpiration reduction factor (Ks,0.0-1.0)
         if io.aq_Ks is True:
             #Ks method from AquaCrop
             rSWD = io.Dr/io.TAW
