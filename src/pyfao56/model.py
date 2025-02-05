@@ -107,11 +107,12 @@ class Model:
         Model output data as float
         index - Year and day of year as string ('yyyy-ddd')
         columns - ['Year','DOY','DOW','Date','ETref','Kcm','ETcm',
-                   'tKcb','Kcb','h','Kcmax','fc','fw','few','De','Kr',
-                   'Ke','E','DPe','Kc','ETc','TAW','TAWrmax','TAWb',
-                   'Zr','p','RAW','Ks','Ka','ETa','T','DP','Dinc',
-                   'Dr','fDr','Drmax','fDrmax','Db','fDb','Irrig',
-                   'IrrLoss','Rain','Runoff','Year','DOY','DOW','Date']
+                   'tKcb','Kcb','ETcb','h','Kcmax','ETmax','fc','fw',
+                   'few','De','Kr','Ke','E','DPe','Kc','ETc','TAW',
+                   'TAWrmax','TAWb','Zr','p','RAW','Ks','Ka','ETa','T',
+                   'DP','Dinc','Dr','fDr','Drmax','fDrmax','Db','fDb',
+                   'Irrig','IrrLoss','Rain','Runoff','Year','DOY','DOW',
+                   'Date']
             Year    - 4-digit year (yyyy)
             DOY     - Day of year (ddd)
             DOW     - Day of week
@@ -121,8 +122,10 @@ class Model:
             ETcm    - Single (mean) non-stressed ET (mm), FAO-56 Eq. 56
             tKcb    - Basal crop coefficient, trapezoidal from FAO-56
             Kcb     - Basal crop coefficient, considering updates
+            ETcb    - Basal evapotranspiration (mm)
             h       - Plant height (m)
             Kcmax   - Upper limit crop coefficient, FAO-56 Eq. 72
+            ETmax   - Maximum evapotranspiration (mm)
             fc      - Canopy cover fraction, FAO-56 Eq. 76
             fw      - Fraction soil surface wetted, FAO-56 Table 20
             few     - Exposed & wetted soil fraction, FAO-56 Eq. 75
@@ -161,9 +164,9 @@ class Model:
             Date    - Month/Day/Year (mm/dd/yy)
     swbdata : dict
         Container for cumulative seasonal water balance data
-        keys - ['ETref','ETcm','ETc','ETa','E','T','DP','Irrig',
-                'IrrLoss','Rain','Runoff','Dr_ini','Dr_end','Drmax_ini',
-                'Drmax_end']
+        keys - ['ETref','ETcm','ETcb','ETmax','ETc','ETa','E','T','DP',
+                'Irrig','IrrLoss','Rain','Runoff','Dr_ini','Dr_end',
+                'Drmax_ini','Drmax_end']
         value - Cumulative water balance data in mm
 
     Methods
@@ -235,12 +238,12 @@ class Model:
         self.comment = 'Comments: ' + comment.strip()
         self.tmstmp = datetime.datetime.now()
         self.cnames = ['Year','DOY','DOW','Date','ETref','Kcm','ETcm',
-                       'tKcb','Kcb','h','Kcmax','fc','fw','few','De',
-                       'Kr','Ke','E','DPe','Kc','ETc','TAW','TAWrmax',
-                       'TAWb','Zr','p','RAW','Ks','Ka','ETa','T','DP',
-                       'Dinc','Dr','fDr','Drmax','fDrmax','Db','fDb',
-                       'Irrig','IrrLoss','Rain','Runoff','Year','DOY',
-                       'DOW','Date']
+                       'tKcb','Kcb','ETcb','h','Kcmax','ETmax','fc','fw',
+                       'few','De','Kr','Ke','E','DPe','Kc','ETc','TAW',
+                       'TAWrmax','TAWb','Zr','p','RAW','Ks','Ka','ETa',
+                       'T','DP','Dinc','Dr','fDr','Drmax','fDrmax','Db',
+                       'fDb','Irrig','IrrLoss','Rain','Runoff','Year',
+                       'DOY','DOW','Date']
         self.odata = pd.DataFrame(columns=self.cnames)
 
     def __str__(self):
@@ -260,8 +263,9 @@ class Model:
                 'DOW':'{:3s}'.format,'Date':'{:8s}'.format,
                 'ETref':'{:6.3f}'.format,'Kcm':'{:5.3f}'.format,
                 'ETcm':'{:6.3f}'.format,'tKcb':'{:5.3f}'.format,
-                'Kcb':'{:5.3f}'.format,'h':'{:5.3f}'.format,
-                'Kcmax':'{:5.3f}'.format,'fc':'{:5.3f}'.format,
+                'Kcb':'{:5.3f}'.format,'ETcb':'{:6.3f}'.format,
+                'h':'{:5.3f}'.format,'Kcmax':'{:5.3f}'.format,
+                'ETmax':'{:6.3f}'.format,'fc':'{:5.3f}'.format,
                 'fw':'{:5.3f}'.format,'few':'{:5.3f}'.format,
                 'De':'{:7.3f}'.format,'Kr':'{:5.3f}'.format,
                 'Ke':'{:5.3f}'.format,'E':'{:6.3f}'.format,
@@ -291,12 +295,12 @@ class Model:
              '{:s}\n'
              '{:s}\n'
              'Year-DOY  Year  DOY  DOW      Date  ETref   Kcm   ETcm'
-             '  tKcb   Kcb     h Kcmax    fc    fw   few      De    Kr'
-             '    Ke      E     DPe    Kc    ETc     TAW TAWrmax'
-             '    TAWb    Zr     p     RAW    Ks    Ka    ETa      T'
-             '      DP    Dinc      Dr     fDr   Drmax  fDrmax      Db'
-             '     fDb   Irrig IrrLoss    Rain  Runoff  Year  DOY  DOW'
-             '      Date\n'
+             '  tKcb   Kcb   ETcb     h Kcmax  ETmax    fc    fw   few'
+             '      De    Kr    Ke      E     DPe    Kc    ETc     TAW'
+             ' TAWrmax    TAWb    Zr     p     RAW    Ks    Ka    ETa'
+             '      T      DP    Dinc      Dr     fDr   Drmax  fDrmax'
+             '      Db     fDb   Irrig IrrLoss    Rain  Runoff  Year'
+             '  DOY  DOW      Date\n'
              ).format(ast,
                       __version__,
                       timestamp,
@@ -364,9 +368,9 @@ class Model:
             '{:s}\n'
             ).format(ast,timestamp,sdate,edate,ast,self.comment,ast)
         if not self.odata.empty:
-            keys = ['ETref','ETcm','ETc','ETa','E','T','DP','Irrig',
-                    'IrrLoss','Rain','Runoff','Dr_ini','Dr_end',
-                    'Drmax_ini','Drmax_end']
+            keys = ['ETref','ETcm','ETcb','ETmax','ETc','ETa','E','T',
+                    'DP','Irrig','IrrLoss','Rain','Runoff','Dr_ini',
+                    'Dr_end','Drmax_ini','Drmax_end']
             for key in keys:
                 s += '{:8.3f} : {:s}\n'.format(self.swbdata[key],key)
 
@@ -729,13 +733,13 @@ class Model:
             dow = tcurrent.strftime('%a') #Day of Week
             dat = tcurrent.strftime('%m/%d/%y') #Date mm/dd/yy
             data = [year, doy, dow, dat, io.ETref, io.Kcm, io.ETcm,
-                    io.tKcb, io.Kcb, io.h, io.Kcmax, io.fc, io.fw,
-                    io.few, io.De, io.Kr, io.Ke, io.E, io.DPe, io.Kc,
-                    io.ETc, io.TAW, io.TAWrmax, io.TAWb, io.Zr, io.p,
-                    io.RAW, io.Ks, io.Ka, io.ETa, io.T, io.DP, io.Dinc,
-                    io.Dr, io.fDr, io.Drmax, io.fDrmax, io.Db, io.fDb,
-                    io.idep, io.irrloss, io.rain, io.runoff, year, doy,
-                    dow, dat]
+                    io.tKcb, io.Kcb, io.ETcb, io.h, io.Kcmax, io.ETmax,
+                    io.fc, io.fw, io.few, io.De, io.Kr, io.Ke, io.E,
+                    io.DPe, io.Kc, io.ETc, io.TAW, io.TAWrmax, io.TAWb,
+                    io.Zr, io.p, io.RAW, io.Ks, io.Ka, io.ETa, io.T,
+                    io.DP, io.Dinc, io.Dr, io.fDr, io.Drmax, io.fDrmax,
+                    io.Db, io.fDb, io.idep, io.irrloss, io.rain,
+                    io.runoff, year, doy, dow, dat]
             self.odata.loc[mykey] = data
 
             tcurrent = tcurrent + tdelta
@@ -746,6 +750,8 @@ class Model:
         edoy = self.endDate.strftime("%Y-%j")
         self.swbdata = {'ETref'    :sum(self.odata['ETref']),
                         'ETcm'     :sum(self.odata['ETcm']),
+                        'ETcb'     :sum(self.odata['ETcb']),
+                        'ETmax'    :sum(self.odata['ETmax']),
                         'ETc'      :sum(self.odata['ETc']),
                         'ETa'      :sum(self.odata['ETa']),
                         'E'        :sum(self.odata['E']),
@@ -801,6 +807,9 @@ class Model:
         #Crop evapotranspiration, single method (ETcm) - FAO-56 Eq. 56
         io.ETcm = io.Kcm * io.ETref
 
+        #Basal evapotranspiration (ETcb) - DeJonge et al. (2025) Table 1
+        io.ETcb = io.Kcb * io.ETref
+
         #Overwrite Kcb if updates are available
         if io.updKcb > 0: io.Kcb = io.updKcb
 
@@ -823,6 +832,9 @@ class Model:
                             (io.h/3.0)**.3, io.Kcb+0.05])
         elif io.rfcrp == 'T':
             io.Kcmax = max([1.0, io.Kcb + 0.05])
+
+        #Maximum evapotranspiration (ETmax) - DeJonge et al. (2025) Tbl1
+        io.ETmax = io.Kcmax * io.ETref
 
         #Canopy cover fraction (fc, 0.0-0.99) - FAO-56 Eq. 76
         io.fc = sorted([0.0,((io.Kcb-io.Kcbini)/(io.Kcmax-io.Kcbini))**
