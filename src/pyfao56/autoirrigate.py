@@ -88,8 +88,9 @@ class AutoIrrigate:
             ietre - Replace ET minus effective precipitation since the
                     last watering event (boolean)
             ettyp - Specify type of ET to replace
-                    'ETcadj' - Replace ETcadj less precip
-                    'ETc'    - Replace ETc less precip
+                    'ETa'  - Replace ETa less precip
+                    'ETcm' - Replace ETcm less precip
+                    'ETc'  - Replace ETc less precip
             iper  - Adjust the autoirrigation amount by a fixed
                     percentage (float, %)
             ieff  - Consider an application efficiency for
@@ -108,8 +109,8 @@ class AutoIrrigate:
     addset(start,end,alre=True,idow='0123456',fpdep=25.,fpday=3,
            fpact='proceed',mad=NaN,madDr=NaN,ksc=NaN,dsli=NaN,dsle=NaN,
            evnt=10.,icon=NaN,itdr=NaN,itfdr=NaN,ietrd=NaN,ietri=NaN,
-           ietre=NaN,ettyp='ETcadj',iper=100.,ieff=100.,imin=NaN,
-           imax=NaN,fw=1.)
+           ietre=NaN,ettyp='ETa',iper=100.,ieff=100.,imin=NaN,imax=NaN,
+           fw=1.)
         Add a set of autoirrigation parameters to self.aidata
     removeset(index)
         Remove a set of autoirrigation parameters from self.aidata
@@ -275,8 +276,8 @@ class AutoIrrigate:
                madDr=float('NaN'),ksc=float('NaN'),dsli=float('NaN'),
                dsle=float('NaN'),evnt=10.,icon=float('NaN'),
                itdr=float('NaN'),itfdr=float('NaN'),ietrd=float('NaN'),
-               ietri=False,ietre=False,ettyp='ETcadj',iper=100.,
-               ieff=100.,imin=0.,imax=float('NaN'),fw=1.):
+               ietri=False,ietre=False,ettyp='ETa',iper=100.,ieff=100.,
+               imin=0.,imax=float('NaN'),fw=1.):
         """Add a set of autoirrigation parameters to aidata
 
         Default parameter values are given below. Users should update
@@ -305,7 +306,7 @@ class AutoIrrigate:
         ietrd : float  , optional, default=NaN
         ietri : boolean, optional, default=False
         ietre : boolean, optional, default=False
-        ettyp : string , optional, default='ETcadj'
+        ettyp : string , optional, default='ETa'
         iper  : float  , optional, default=100.
         ieff  : float  , optional, default=100.
         imin  : float  , optional, default=0.

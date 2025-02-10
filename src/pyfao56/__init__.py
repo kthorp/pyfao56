@@ -26,12 +26,16 @@ https://ascelibrary.org/doi/book/10.1061/9780784408056
 
 
 The pyfao56 package contains the following modules:
+    autoirrigate.py
+        I/O tools for defining conditions for automatic irrigation
     irrigation.py
-        I/O tools to define irrigation management schedules
-    model.py 
+        I/O tools to define irrigation management schedules explicitly
+    model.py
         Equations for daily soil water balance computations
     parameters.py
         I/O tools for required input parameters
+    soil_profile.py
+        I/O tools for defining soil properties stratified by soil layer
     refet.py
         Equations for computing ASCE Standardized Reference ET
     update.py
@@ -51,3 +55,4 @@ from .parameters import Parameters
 from .soil_profile import SoilProfile
 from .update import Update
 from .weather import Weather
+from .__version__ import __version__

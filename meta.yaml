@@ -1,5 +1,8 @@
 {% set name = "pyfao56" %}
-{% set version = "1.3.0" %}
+{% set version_match = load_file_regex(
+  load_file="src/pyfao56/__version__.py",
+  regex_pattern='^__version__ = "(.+)"') %}
+{% set version = version_match[1] %}
 
 
 package:

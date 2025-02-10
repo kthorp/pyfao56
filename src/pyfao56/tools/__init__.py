@@ -22,3 +22,4 @@ from .forecast import Forecast
 from .soil_water import SoilWaterSeries
 from .visualization import Visualization
 from .statistics import Statistics
+from .tables import FAO56Tables
