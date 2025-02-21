@@ -77,10 +77,12 @@ class Visualization:
         else:
             self.vdata = odatasub
 
-        #Set zero rain and irrigation to NaN
+        #Set zero rain, irrigation, DP, and runoff to NaN
         NaN = float('NaN')
         self.vdata['Rain'] = self.vdata['Rain'].replace(0.0,NaN)
         self.vdata['Irrig'] = self.vdata['Irrig'].replace(0.0,NaN)
+        self.vdata['DP'] = self.vdata['DP'].replace(0.0,NaN)
+        self.vdata['Runoff'] = self.vdata['Runoff'].replace(0.0,NaN)
 
         #Determine today's index
         self.todayidx = ''
@@ -124,7 +126,10 @@ class Visualization:
         """
 
         #Check plotting conditions to determine axes
-        dpro_max = round(self.vdata[['DP','Runoff']].to_numpy().max())
+        if self.vdata[['DP','Runoff']].isnull().all().all():
+            dpro_max = 0
+        else:
+            dpro_max = round(self.vdata[['DP','Runoff']].max().max())
         if dpro and ks and dpro_max > 0.0:
             htrat = {'height_ratios':[4, 32, 6]}
             fig, (ax2,ax,ax3) = plt.subplots(3, sharex='all',
@@ -269,7 +274,7 @@ class Visualization:
         if vline is not float('NaN'):
             ax.axvline(x=vline, color='red', linestyle='--',
                        linewidth=0.5)
-        plt.suptitle(title, fontsize=10)
+        plt.suptitle(title, fontsize=10)#Hunsaker et al. (2005)
 
         #Save and show the plot if requested
         if filepath is not None:
