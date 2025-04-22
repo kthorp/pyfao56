@@ -3,7 +3,7 @@ pyfao56: FAO-56 Evapotranspiration in Python
 Soil Profile Data
 Timestamp: 08/22/2023 16:35:44
 ************************************************************************
-Comments: 
+Comments: 2022 Cotton, plot 10-2
 ************************************************************************
 Depth thetaFC thetaWP  theta0
    20   0.249   0.113   0.058
