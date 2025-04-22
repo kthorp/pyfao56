@@ -1,9 +1,9 @@
 ************************************************************************
 pyfao56: FAO-56 Evapotranspiration in Python
 Irrigation Data
-Timestamp: 02/05/2025 10:30:08
+Timestamp: 04/22/2025 13:21:08
 ************************************************************************
-Comments: 2018 Cotton, 100%-100% irrigation treatment, first half schedule
+Comments: 2018 Cotton, p16-4
 ************************************************************************
 Year-DOY  Depth     fw IrrEff
 2018-110  20.40   1.00  100.0
