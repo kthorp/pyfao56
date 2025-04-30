@@ -25,7 +25,7 @@ import numpy as np
 import pandas as pd
 import geojson
 
-def run(case=0, plot='p15-4'):
+def run(case=0, plot='p06-1'):
     """Setup and run pyfao56 for a 2018 cotton field study"""
 
     start = time.time()
@@ -51,7 +51,7 @@ def run(case=0, plot='p15-4'):
     par.thetaWP = 0.0980
     par.theta0  = 0.1515
     par.Zrini = 0.18 #Adjusted to eliminate early-season stress
-    par.Zrmax = 1.2 #This one optimzed below.
+    par.Zrmax = 1.2 #This one optimized below.
     par.pbase = 0.65 #FAO-56 Table 22
     par.Ze = 0.05 #Adjusted to reduce early-season Dr
     par.REW = 4.0 #Adjusted to reduce early-season Dr
@@ -238,14 +238,14 @@ def run(case=0, plot='p15-4'):
         mdl = fao.Model('2018-108','2018-303', par, wth, sol=sol,
                         autoirr=airr, K_adj=True)
     #Case 16: Autoirrigate every 5 days with 5-day ET replacement
-    #         less precipitation. Default ET is ETcadj.
+    #         less precipitation. Default ET is ETa.
     elif case==16:
-        airr.addset('2018-108','2018-250',dsli=5,ietrd=5)
+        airr.addset('2018-108','2018-250',dsli=5,ietrd=5,ettyp='ETa')
         mdl = fao.Model('2018-108','2018-303', par, wth, sol=sol,
                         autoirr=airr, K_adj=True)
     #Case 17: Autoirrigate with mad=0.4 and replace ET less
     #         precipitation since last irrigation event. Default ET is
-    #         ETcadj.
+    #         ETa.
     elif case==17:
         airr.addset('2018-108','2018-250',mad=0.4,ietri=True)
         mdl = fao.Model('2018-108','2018-303', par, wth, sol=sol,
@@ -363,5 +363,8 @@ if __name__ == '__main__':
              'p14-1','p14-2','p14-3','p14-4',
              'p15-1','p15-2','p15-3','p15-4',
              'p16-1','p16-2','p16-3','p16-4']
-    for plot in plots:
-        run(case,plot)
+    if case==0:
+        for plot in plots:
+            run(case,plot)
+    else:
+        run(case,'p06-1')

@@ -1,7 +1,7 @@
 ************************************************************************
 pyfao56: FAO-56 Evapotranspiration in Python
 Parameter Data
-Timestamp: 04/22/2025 13:21:08
+Timestamp: 04/29/2025 16:06:17
 ************************************************************************
 Comments: 2018 Cotton
 ************************************************************************
@@ -21,7 +21,7 @@ Comments: 2018 Cotton
    0.0980 thetaWP, Vol. Soil Water Content, Wilting Point (cm3/cm3)
    0.1515 theta0, Vol. Soil Water Content, Initial (cm3/cm3)
    0.1800 Zrini, Rooting Depth Initial (m)
-   0.3340 Zrmax, Rooting Depth Maximum (m) (FAO-56 Table 22)
+   0.8280 Zrmax, Rooting Depth Maximum (m) (FAO-56 Table 22)
    0.6500 pbase, Depletion Fraction (p) (FAO-56 Table 22)
    0.0500 Ze, Depth of surface evaporation layer (m) (FAO-56 Table 19 and Page 144)
    4.0000 REW, Total depth Stage 1 evaporation (mm) (FAO-56 Table 19)
