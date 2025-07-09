@@ -274,7 +274,7 @@ class Visualization:
         if vline is not float('NaN'):
             ax.axvline(x=vline, color='red', linestyle='--',
                        linewidth=0.5)
-        plt.suptitle(title, fontsize=10)#Hunsaker et al. (2005)
+        plt.suptitle(title, fontsize=10)
 
         #Save and show the plot if requested
         if filepath is not None:

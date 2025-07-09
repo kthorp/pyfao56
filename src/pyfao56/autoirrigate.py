@@ -106,7 +106,7 @@ class AutoIrrigate:
         Save the autoirrigate parameters to a file
     loadfile(filepath='pyfao56.ati')
         Load the autoirrigate parameters from a file
-    addset(start,end,alre=True,idow='0123456',fpdep=25.,fpday=3,
+    addset(start,end,alre=True,idow='0123456',fpdep=25.,fpday=0,
            fpact='proceed',mad=NaN,madDr=NaN,ksc=NaN,dsli=NaN,dsle=NaN,
            evnt=10.,icon=NaN,itdr=NaN,itfdr=NaN,ietrd=NaN,ietri=NaN,
            ietre=NaN,ettyp='ETa',iper=100.,ieff=100.,imin=NaN,imax=NaN,
@@ -272,7 +272,7 @@ class AutoIrrigate:
                 self.aidata.loc[i] = data
 
     def addset(self,start,end,alre=True,idow='0123456',fpdep=25.,
-               fpday=3,fpact='proceed',mad=float('NaN'),
+               fpday=0,fpact='proceed',mad=float('NaN'),
                madDr=float('NaN'),ksc=float('NaN'),dsli=float('NaN'),
                dsle=float('NaN'),evnt=10.,icon=float('NaN'),
                itdr=float('NaN'),itfdr=float('NaN'),ietrd=float('NaN'),
@@ -292,7 +292,7 @@ class AutoIrrigate:
         alre  : boolean, optional, default=True
         idow  : str    , optional, default='0123456'
         fpdep : float  , optional, default=25.
-        fpday : float  , optional, default=3
+        fpday : float  , optional, default=0
         fpact : str    , optional, default='proceed'
         mad   : float  , optional, default=NaN
         madDr : float  , optional, default=NaN

@@ -46,6 +46,7 @@ The model.py module contains the following:
 09/30/2024 Added single crop coefficient calculations
 01/29/2025 Added Kcb weather-based adjustment method (FAO-56 Eq. 70)
 02/04/2025 Updated ET terminology based on DeJonge et al. (2025)
+07/09/2025 Added Ksend computation for end of timestep
 ########################################################################
 """
 
@@ -111,8 +112,8 @@ class Model:
                    'few','De','Kr','Ke','E','DPe','Kc','ETc','TAW',
                    'TAWrmax','TAWb','Zr','p','RAW','Ks','Ka','ETa','T',
                    'DP','Dinc','Dr','fDr','Drmax','fDrmax','Db','fDb',
-                   'Irrig','IrrLoss','Rain','Runoff','Year','DOY','DOW',
-                   'Date']
+                   'Ksend','Irrig','IrrLoss','Rain','Runoff','Year',
+                   'DOY','DOW','Date']
             Year    - 4-digit year (yyyy)
             DOY     - Day of year (ddd)
             DOW     - Day of week
@@ -142,7 +143,7 @@ class Model:
             Zr      - Root depth (m), FAO-56 page 279
             p       - Fraction depleted TAW, FAO-56 p162 and Table 22
             RAW     - Readily available water (mm), FAO-56 Equation 83
-            Ks      - Stress coefficient, FAO-56 Eq. 84
+            Ks      - Stress coefficient, timestep start, FAO-56 Eq. 84
             Ka      - Actual crop coefficient, FA0-56 Eq. 80
             ETa     - Actual evapotranspiration (mm), FAO-56 Eq. 80
             T       - Actual plant transpiration (mm)
@@ -154,6 +155,7 @@ class Model:
             fDrmax  - Fractional depletion for max root depth (mm/mm)
             Db      - Soil water depletion in the bottom layer (mm)
             fDb     - Fractional depletion in the bottom layer (mm/mm)
+            Ksend   - Stress coefficient, timestep end, FAO-56, Eq. 84
             Irrig   - Depth of applied irrigation (mm)
             IrrLoss - Depth of irrigation loss due to inefficiency (mm)
             Rain    - Depth of precipitation (mm)
@@ -242,8 +244,8 @@ class Model:
                        'few','De','Kr','Ke','E','DPe','Kc','ETc','TAW',
                        'TAWrmax','TAWb','Zr','p','RAW','Ks','Ka','ETa',
                        'T','DP','Dinc','Dr','fDr','Drmax','fDrmax','Db',
-                       'fDb','Irrig','IrrLoss','Rain','Runoff','Year',
-                       'DOY','DOW','Date']
+                       'fDb','Ksend','Irrig','IrrLoss','Rain','Runoff',
+                       'Year','DOY','DOW','Date']
         self.odata = pd.DataFrame(columns=self.cnames)
 
     def __str__(self):
@@ -279,9 +281,9 @@ class Model:
                 'Dinc':'{:7.3f}'.format,'Dr':'{:7.3f}'.format,
                 'fDr':'{:7.3f}'.format,'Drmax':'{:7.3f}'.format,
                 'fDrmax':'{:7.3f}'.format,'Db':'{:7.3f}'.format,
-                'fDb':'{:7.3f}'.format,'Irrig':'{:7.3f}'.format,
-                'IrrLoss':'{:7.3f}'.format,'Rain':'{:7.3f}'.format,
-                'Runoff':'{:7.3f}'.format}
+                'fDb':'{:7.3f}'.format,'Ksend':'{:5.3f}'.format,
+                'Irrig':'{:7.3f}'.format,'IrrLoss':'{:7.3f}'.format,
+                'Rain':'{:7.3f}'.format,'Runoff':'{:7.3f}'.format}
         ast='*'*72
         s = ('{:s}\n'
              'pyfao56: FAO-56 Evapotranspiration in Python '
@@ -299,8 +301,8 @@ class Model:
              '      De    Kr    Ke      E     DPe    Kc    ETc     TAW'
              ' TAWrmax    TAWb    Zr     p     RAW    Ks    Ka    ETa'
              '      T      DP    Dinc      Dr     fDr   Drmax  fDrmax'
-             '      Db     fDb   Irrig IrrLoss    Rain  Runoff  Year'
-             '  DOY  DOW      Date\n'
+             '      Db     fDb Ksend   Irrig IrrLoss    Rain  Runoff'
+             '  Year  DOY  DOW      Date\n'
              ).format(ast,
                       __version__,
                       timestamp,
@@ -482,7 +484,6 @@ class Model:
             io.TAWb = io.TAWrmax - io.TAW
         #Initial root zone soil water depletion fraction (fDr, mm/mm)
         io.fDr = 1.0 - ((io.TAW - io.Dr) / io.TAW)
-        io.Ks = 1.0
         io.h = io.hini
         io.Zr = io.Zrini
         io.fw = 1.0
@@ -491,6 +492,20 @@ class Model:
         io.roff   = self.roff
         io.cons_p = self.cons_p
         io.aq_Ks  = self.aq_Ks
+        #Initial stress coefficients (Ks & Ksend, 0.0-1.0)
+        #Transpiration reduction factor
+        io.Ks = 1.0
+        if io.aq_Ks is True:
+            #Ks method from AquaCrop
+            rSWD = io.Dr/io.TAW
+            Drel = (rSWD-io.pbase)/(1.0-io.pbase)
+            sf = 1.5
+            aqKs = 1.0-(math.exp(sf*Drel)-1.0)/(math.exp(sf)-1.0)
+            io.Ksend = sorted([0.0, aqKs, 1.0])[1]
+        else:
+            #FAO-56 Eq. 84
+            io.Ksend=sorted([0.0,(io.TAW-io.Dr)/(io.TAW-io.RAW),1.0])[1]
+        io.Ka = io.Kcmini
         self.odata = pd.DataFrame(columns=self.cnames)
 
         #Adjustments of Kcmmid (FAO-56 Eq. 62), Kcmend (FAO-56 Eq. 65),
@@ -612,7 +627,7 @@ class Model:
                     if io.Dr <= self.autoirr.aidata.loc[i,'madDr']:
                         continue
                     #Evaluate critical Ks
-                    if io.Ks >= self.autoirr.aidata.loc[i,'ksc']:
+                    if io.Ksend >= self.autoirr.aidata.loc[i,'ksc']:
                         continue
                     #Evaluate days since last irrigation (dsli)
                     idays = self.odata[self.odata['Irrig']>0.]
@@ -637,9 +652,12 @@ class Model:
                     if dsle < self.autoirr.aidata.loc[i,'dsle']:
                         continue
 
-                    #All conditions were met, need to autoirrigate
-                    #Default rate is root-zone soil water depletion (Dr)
-                    rate = max([0.0,io.Dr - reduceirr])
+                    #All conditions were met, need to autoirrigate.
+                    #Target a full profile (Dr=0) at end of timestep.
+                    #Use yesterday's Dr (io.Dr) plus an estimate of
+                    #today's ETa (from today's ETref and yesterday's Ka)
+                    ETest = io.Ka * io.ETref
+                    rate = max([0.0,io.Dr + ETest - reduceirr])
 
                     #Alternatively, the default rate may be modified:
                     #Use a contant rate
@@ -649,12 +667,12 @@ class Model:
                     #Target a specific root-zone soil water depletion
                     itdr  = self.autoirr.aidata.loc[i,'itdr']
                     if not math.isnan(itdr):
-                        rate = max([0.0,io.Dr - reduceirr - itdr])
+                        rate = max([0.0,io.Dr+ETest-reduceirr-itdr])
                     #Target a fractional root-zone soil water depletion
                     itfdr = self.autoirr.aidata.loc[i,'itfdr']
                     if not math.isnan(itfdr):
                         itdr2 = io.TAW-io.TAW*(1.0-itfdr)
-                        rate = max([0.0,io.Dr - reduceirr - itdr2])
+                        rate = max([0.0,io.Dr+ETest-reduceirr-itdr2])
                     #Use ETa less precip for past X number of days
                     ettyp = self.autoirr.aidata.loc[i,'ettyp']
                     ietrd = self.autoirr.aidata.loc[i,'ietrd']
@@ -738,8 +756,8 @@ class Model:
                     io.DPe, io.Kc, io.ETc, io.TAW, io.TAWrmax, io.TAWb,
                     io.Zr, io.p, io.RAW, io.Ks, io.Ka, io.ETa, io.T,
                     io.DP, io.Dinc, io.Dr, io.fDr, io.Drmax, io.fDrmax,
-                    io.Db, io.fDb, io.idep, io.irrloss, io.rain,
-                    io.runoff, year, doy, dow, dat]
+                    io.Db, io.fDb, io.Ksend, io.idep, io.irrloss,
+                    io.rain, io.runoff, year, doy, dow, dat]
             self.odata.loc[mykey] = data
 
             tcurrent = tcurrent + tdelta
@@ -936,7 +954,8 @@ class Model:
         #Readily available water (RAW, mm) - FAO-56 Equation 83
         io.RAW = io.p * io.TAW
 
-        #Stress coefficient, transpiration reduction factor (Ks,0.0-1.0)
+        #Stress coefficient at beginning of timestep (Ks,0.0-1.0)
+        #Transpiration reduction factor
         if io.aq_Ks is True:
             #Ks method from AquaCrop
             rSWD = io.Dr/io.TAW
@@ -1016,3 +1035,16 @@ class Model:
                 io.fDb = 1.0 - ((io.TAWb - io.Db) / io.TAWb)
             else:
                 io.fDb = 0.0
+
+        #Stress coefficient at end of timestep (Ksend,0.0-1.0)
+        #Transpiration reduction factor
+        if io.aq_Ks is True:
+            #Ks method from AquaCrop
+            rSWD = io.Dr/io.TAW
+            Drel = (rSWD-io.p)/(1.0-io.p)
+            sf = 1.5
+            aqKs = 1.0-(math.exp(sf*Drel)-1.0)/(math.exp(sf)-1.0)
+            io.Ksend = sorted([0.0, aqKs, 1.0])[1]
+        else:
+            #FAO-56 Eq. 84
+            io.Ksend=sorted([0.0,(io.TAW-io.Dr)/(io.TAW-io.RAW),1.0])[1]
