@@ -504,6 +504,7 @@ class Model:
             io.Ksend = sorted([0.0, aqKs, 1.0])[1]
         else:
             #FAO-56 Eq. 84
+            io.RAW = io.pbase * io.TAW
             io.Ksend=sorted([0.0,(io.TAW-io.Dr)/(io.TAW-io.RAW),1.0])[1]
         io.Ka = io.Kcmini
         self.odata = pd.DataFrame(columns=self.cnames)
