@@ -661,10 +661,10 @@ class Model:
                     rate = max([0.0,io.Dr + ETest - reduceirr])
 
                     #Alternatively, the default rate may be modified:
-                    #Use a contant rate
-                    icon  = self.autoirr.aidata.loc[i,'icon']
-                    if not math.isnan(icon):
-                        rate = max([0.0, icon - reduceirr])
+                    #Use a fixed rate
+                    ifix  = self.autoirr.aidata.loc[i,'ifix']
+                    if not math.isnan(ifix):
+                        rate = max([0.0, ifix - reduceirr])
                     #Target a specific root-zone soil water depletion
                     itdr  = self.autoirr.aidata.loc[i,'itdr']
                     if not math.isnan(itdr):
