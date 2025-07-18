@@ -125,31 +125,27 @@ class Visualization:
             (default = None)
         """
 
-        #Check plotting conditions to determine axes
+        #Find a dpro_max divisible by four or five for improved plot
         if self.vdata[['DP','Runoff']].isnull().all().all():
-            dpro_max = 0
+            dpro_max = 0.0
         else:
             dpro_max = round(self.vdata[['DP','Runoff']].max().max())
-        if dpro and ks and dpro_max > 0.0:
+        i = int(max([int(dpro_max)+1.0, 4.0]))
+        while True:
+            if (not i%4) or (not i%5): break
+            else: i+=1
+        dpro_max=float(i)
+        #Check plotting conditions to determine axes
+        if dpro and ks:
             htrat = {'height_ratios':[4, 32, 6]}
             fig, (ax2,ax,ax3) = plt.subplots(3, sharex='all',
                                              gridspec_kw=htrat)
             ax3.yaxis.set_major_locator(plt.MaxNLocator(5))
-        elif dpro and ks and dpro_max <= 0.0:
-            htrat = {'height_ratios':[2, 16, 1]}
-            fig, (ax2,ax,ax3) = plt.subplots(3, sharex='all',
-                                             gridspec_kw=htrat)
-            ax3.yaxis.set_major_locator(plt.MaxNLocator(2))
-        elif dpro and not ks and dpro_max > 0.0:
+        elif dpro and not ks:
             htrat = {'height_ratios':[16, 3]}
             fig, (ax,ax3) = plt.subplots(2, sharex='all',
                                          gridspec_kw=htrat)
             ax3.yaxis.set_major_locator(plt.MaxNLocator(5))
-        elif dpro and not ks and dpro_max <= 0.0:
-            htrat = {'height_ratios':[16, 1]}
-            fig, (ax,ax3) = plt.subplots(2, sharex='all',
-                                         gridspec_kw=htrat)
-            ax3.yaxis.set_major_locator(plt.MaxNLocator(2))
         elif not dpro and ks:
             htrat = {'height_ratios': [1, 8]}
             fig, (ax2,ax) = plt.subplots(2, sharex='all',
@@ -226,7 +222,7 @@ class Visualization:
             ax3.set_xticks(xticks)
             ax3.set_xticklabels(xlabels,fontsize=font)
             ax3.set_xlabel('Day of Year (DOY)', fontsize=font)
-            ax3.set_ylim([0.0, dpro_max + 10.])
+            ax3.set_ylim([0.0, dpro_max])
             yticks = [round(i) for i in ax3.get_yticks()][1:]
             ax3.set_yticks(yticks)
             yticklabels = [str(i) for i in yticks]
