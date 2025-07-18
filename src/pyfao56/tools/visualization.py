@@ -125,14 +125,14 @@ class Visualization:
             (default = None)
         """
 
-        #Find a dpro_max divisible by four or five
+        #Find a dpro_max divisible by four
         if self.vdata[['DP','Runoff']].isnull().all().all():
             dpro_max = 0.0
         else:
             dpro_max = round(self.vdata[['DP','Runoff']].max().max())
         i = int(max([int(dpro_max)+1.0, 4.0]))
         while True:
-            if (not i%4) or (not i%5): break
+            if (not i%4): break
             else: i+=1
         dpro_max=float(i)
         #Check plotting conditions to determine axes
@@ -140,12 +140,12 @@ class Visualization:
             htrat = {'height_ratios':[4, 32, 6]}
             fig, (ax2,ax,ax3) = plt.subplots(3, sharex='all',
                                              gridspec_kw=htrat)
-            ax3.yaxis.set_major_locator(plt.MaxNLocator(5))
+            ax3.yaxis.set_major_locator(plt.MaxNLocator(4))
         elif dpro and not ks:
             htrat = {'height_ratios':[16, 3]}
             fig, (ax,ax3) = plt.subplots(2, sharex='all',
                                          gridspec_kw=htrat)
-            ax3.yaxis.set_major_locator(plt.MaxNLocator(5))
+            ax3.yaxis.set_major_locator(plt.MaxNLocator(4))
         elif not dpro and ks:
             htrat = {'height_ratios': [1, 8]}
             fig, (ax2,ax) = plt.subplots(2, sharex='all',
