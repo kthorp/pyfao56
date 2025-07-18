@@ -226,7 +226,7 @@ class Visualization:
             ax3.set_xticks(xticks)
             ax3.set_xticklabels(xlabels,fontsize=font)
             ax3.set_xlabel('Day of Year (DOY)', fontsize=font)
-            ax3.set_ylim([0.0, dpro_max + 5.])
+            ax3.set_ylim([0.0, dpro_max + 10.])
             yticks = [round(i) for i in ax3.get_yticks()][1:]
             ax3.set_yticks(yticks)
             yticklabels = [str(i) for i in yticks]
