@@ -125,7 +125,7 @@ class Visualization:
             (default = None)
         """
 
-        #Find a dpro_max divisible by four or five for improved plot
+        #Find a dpro_max divisible by four or five
         if self.vdata[['DP','Runoff']].isnull().all().all():
             dpro_max = 0.0
         else:
