@@ -184,6 +184,8 @@ class Visualization:
         maxwat = [d['Dr'].max()]
         if drmax:
             maxwat.append(d['Drmax'].max())
+        if raw:
+            maxwat.append(d['RAW'].max())
         if events:
             maxwat.append(d['Rain'].max())
             maxwat.append(d['Irrig'].max())
