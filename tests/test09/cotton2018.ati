@@ -1,9 +1,14 @@
 ************************************************************************
 pyfao56: FAO-56 Evapotranspiration in Python
 AutoIrrigate Data
-Timestamp: 06/18/2025 13:08:40
+Timestamp: 07/25/2025 10:37:11
 ************************************************************************
 Comments: 
 ************************************************************************
-      start       end   alre     idow  fpdep  fpday    fpact    mad  madDr    ksc   dsli   dsle   evnt   icon   itdr  itfdr  ietrd  ietri  ietre   ettyp   iper   ieff   imin   imax     fw
-0  2018-108  2018-250   True  0123456  25.00      3  proceed    NaN    NaN  0.600    NaN    NaN  10.00    NaN    NaN    NaN    NaN  False  False     ETa 100.00 100.00   0.00    NaN   1.00
+      start       end   alre     idow  fpdep  fpday    fpact    mad  madDr    ksc   dsli   dsle   evnt   ifix   itdr  itfdr  ietrd  ietri  ietre   ettyp   iper   ieff   imin   imax     fw
+0  2018-108  2018-129   True  0123456  25.00      0  proceed    NaN    NaN    NaN      4    NaN  10.00  15.00    NaN    NaN    NaN  False  False     ETa 100.00 100.00   0.00    NaN   0.30
+1  2018-130  2018-150   True       25  25.00      3   reduce    NaN    NaN    NaN    NaN    NaN  10.00  10.00    NaN    NaN    NaN  False  False     ETa 100.00 100.00   0.00    NaN   0.30
+2  2018-151  2018-171   True       25  25.00      3   reduce    NaN    NaN    NaN    NaN    NaN  10.00  20.00    NaN    NaN    NaN  False  False     ETa 100.00 100.00   0.00    NaN   0.30
+3  2018-172  2018-192   True      135  25.00      3   reduce    NaN    NaN    NaN    NaN    NaN  10.00  25.00    NaN    NaN    NaN  False  False     ETa 100.00 100.00   0.00    NaN   0.30
+4  2018-193  2018-228   True      135  25.00      3   reduce    NaN    NaN    NaN    NaN    NaN  10.00  20.00    NaN    NaN    NaN  False  False     ETa 100.00 100.00   0.00    NaN   0.30
+5  2018-229  2018-250   True       25  25.00      3   reduce    NaN    NaN    NaN    NaN    NaN  10.00  20.00    NaN    NaN    NaN  False  False     ETa 100.00 100.00   0.00    NaN   0.30
