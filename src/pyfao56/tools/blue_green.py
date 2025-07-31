@@ -68,9 +68,9 @@ class BlueGreen:
         S_py_prev : float
             Previous day's EP or AW storage.
         Win_py : float
-            Primary water input (e.g., rainfall for EP).
+            Primary wetting influx (e.g., irrigation for EP).
         Win_sy : float
-            Secondary water input (e.g., irrigation for EP).
+            Secondary wetting influx (e.g., rainfall for EP).
         ETa : float
             Actual evapotranspiration (ETa).
         RO : float
@@ -148,7 +148,7 @@ class BlueGreen:
             df_part.loc[idx] = row_data
 
         self.result = df_part
-        return df_part
+        # return df_part
 
     def __str__(self):
         """Formatted string output of BlueGreen water allocation model results."""
@@ -174,7 +174,7 @@ class BlueGreen:
 
         header_note = (
             f"{ast}\n"
-            f"pyfao56 BlueGreen Water Partitioning Output\n"
+            f"pyfao56 wetting influx partitioning into applied water (blue) and effective precipitation (green) output\n"
             f"Timestamp: {timestamp}\n"
             f"Simulation Start Date: {sdate}\n"
             f"Simulation End Date: {edate}\n"
@@ -235,21 +235,20 @@ class BlueGreen:
         df_plot = self.result.reset_index()
 
         # Ensure columns exist
-        base = var
         ep = f"{var}_ep"
         aw = f"{var}_aw"
-        for col in [base, ep, aw]:
+        for col in [var, ep, aw]:
             if col not in df_plot.columns:
                 raise ValueError(f"Column '{col}' not found in result. Try another variable.")
 
         fig, ax = plt.subplots(figsize=(12, 6), dpi=200)
 
-        ax.plot(df_plot['Date'], df_plot[base], linestyle=':', lw=2, color='black', label=base)
+        ax.plot(df_plot['Date'], df_plot[var], linestyle=':', lw=2, color='black', label=var)
         ax.plot(df_plot['Date'], df_plot[ep], linestyle='-', color='green', label=ep)
         ax.plot(df_plot['Date'], df_plot[aw], linestyle='-', color='blue', label=aw)
 
         ax.set_xlabel("Date")
-        ax.set_ylabel(f"{var} (mm/day)")
+        ax.set_ylabel(f"{var} (mm)")
         ax.set_title(f"Partitioned {var} over Crop Span")
         ax.grid(True, which='both', linestyle=':', color='grey', alpha=0.6)
         ax.legend()
