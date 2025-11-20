@@ -4,24 +4,23 @@ import matplotlib.pyplot as plt
 
 class BlueGreen:
     """
-    BlueGreen is a water allocation model that partitions evapotranspiration,
-    evaporation, transpiration, runoff, and deep percolation into:
-    - EP (Effective Precipitation) component (typically rainfall-driven)
-    - AW (Applied Water) component (typically irrigation-driven)
-
-    The partitioning is based on a simplified daily soil water balance, tracking
-    green and blue water storage fractions over time.
+    A water accounting model that partitions water balance components into blue (irrigation) and green (rainfall) water.
+    This class implements the blue-green water accounting framework based on Hoekstra (2019),
+    applying it to FAO-56 dual crop coefficient daily soil water balance model outputs. It tracks
+    the fraction of soil water storage attributable to effective precipitation (EP, green water) 
+    versus applied water (AW, blue water) and partitions evapotranspiration, evaporation, 
+    transpiration, runoff, and deep percolation accordingly.
 
     Attributes:
     -----------
     df : pd.DataFrame
-        Processed input DataFrame with required columns and reset index.
+        Copy of dual crop coefficient soil water balance output dataframe from input model.
     cg : float
-        Initial fraction of EP (green) water storage.
+        Initial fraction of effective precipitation (green water) in available soil water storage.
     cb : float
-        Initial fraction of AW (blue) water storage.
-    result : pd.DataFrame or None
-        Resulting DataFrame after running the allocation model.
+        Initial fraction of applied water (blue water) in available soil water storage.
+    bgdata : pd.DataFrame or None
+        Resulting DataFrame after running the partitioning model.
     """
 
     def __init__(self, mdl, cg=0.5, cb=0.5, comment=''):
@@ -34,28 +33,47 @@ class BlueGreen:
             Object with `odata` attribute (DataFrame) indexed as YYYY-DOY and containing:
                 ['Year', 'DOY', 'Date', 'ETa', 'E', 'T', 'Runoff', 'DP', 'Rain', 'Irrig', 'TAW', 'Dr']
         cg : float, optional
-            Initial EP (green water) fraction of total available water (default is 0.5).
+            Initial EP (green water) fraction of available soil water storage (default is 0.5).
         cb : float, optional
-            Initial AW (blue water) fraction of total available water (default is 0.5).
+            Initial AW (blue water) fraction of available soil water storage (default is 0.5).
         comment : str, optional
             User-defined file descriptions or metadata (default = '')
+        bg_cnames : list of str
+            Column names for the blue-green partitioned output dataframe.
+        startDate : datetime.datetime
+            Simulation start date from input model.
+        endDate : datetime.datetime
+            Simulation end date from input model.
+        tmstmp : datetime.datetime
+            Timestamp of when the model was initialized or last updated.
+        bgdata : pd.DataFrame
+            Resulting dataframe after running the partitioning model, containing partitioned 
+            water balance components (initially empty, populated by `run()` method).
+        Methods
+        -------
+        run()
+            Execute the blue-green water partitioning algorithm on the loaded dataset.
+        plot(var='ETa', filename=None)
+            Generate time series visualization of a variable and its EP/AW components.
+        savefile(filepath='bluegreen_output.IWP')
+            Save the formatted blue-green partitioned results to a text file.
         """
         self.df = mdl.odata.copy().iloc[:, :-4]
         self.cg = cg
         self.cb = cb
         self.comment = 'Comments: ' + comment.strip()
         self.bg_cnames = ['Year', 'DOY', 'DOW', 'Date',
-                        'S', 'Sep', 'Saw',
+                        'Rain', 'Irrig', 'S', 'Sep', 'Saw',
                         'ETa', 'ETa_ep', 'ETa_aw',
                         'E', 'E_ep', 'E_aw',
                         'T', 'T_ep', 'T_aw',
                         'Runoff', 'Runoff_ep', 'Runoff_aw',
                         'DP', 'DP_ep', 'DP_aw'
-                       ]
+                    ]
         self.startDate = mdl.startDate
         self.endDate = mdl.endDate
         self.tmstmp = datetime.datetime.now()
-        self.result = pd.DataFrame(columns=self.bg_cnames)
+        self.bgdata = pd.DataFrame(columns=self.bg_cnames)
 
     def _water_fraction(self, S_tot_prev, S_py_prev, Win_py, Win_sy, ETa, RO, DP):
         """
@@ -66,7 +84,7 @@ class BlueGreen:
         S_tot_prev : float
             Total available soil water on previous day.
         S_py_prev : float
-            Previous day's EP or AW storage.
+            Previous day's  primary storage (EP or AW).
         Win_py : float
             Primary wetting influx (e.g., irrigation for EP).
         Win_sy : float
@@ -84,7 +102,7 @@ class BlueGreen:
             Updated water storage component.
         """
         if S_tot_prev == 0:
-            return max(0, S_py_prev + Win_py - (0 if RO == 0 else (Win_py / (Win_py + Win_sy)) * RO))
+            return max(0, S_py_prev + Win_py - (0 if RO == 0 else (Win_py / (Win_py + Win_sy)) * RO)) # To avoid division by zero
         else:
             return max(0,
                 S_py_prev + Win_py
@@ -103,10 +121,10 @@ class BlueGreen:
             A DataFrame with EP and AW partitioned outputs for all water balance components.
         """
         df = self.df
-        result_cols = self.bg_cnames
+        # bg_cnames = self.bg_cnames
 
-        df_part = pd.DataFrame(columns=result_cols)
-        sep, saw = 0, 0  # initialize EP and AW storage
+        # df_part = pd.DataFrame(columns=bg_cnames)
+        sep, saw = 0.0, 0.0  # initialize EP and AW storage
 
         for idx, row in df.iterrows():
             ETa = row['ETa']
@@ -114,7 +132,8 @@ class BlueGreen:
             DP = row['DP']
             Rain = row['Rain']
             Irrig = row['Irrig']
-            S = row['TAW'] - row['Dr']
+            S_prev = S if idx > self.startDate.strftime('%Y-%j') else 0.0 # previous day's available soil water
+            S = row['TAW'] - row['Dr'] # current day's available soil water
             E = row['E']
             T = row['T']
 
@@ -123,11 +142,11 @@ class BlueGreen:
                 sep = self.cg * S
                 saw = self.cb * S
             else:
-                prev_idx = (datetime.datetime.strptime(idx, '%Y-%j') - datetime.timedelta(days=1)).strftime('%Y-%j')
-                prev = df_part.loc[prev_idx]
-                Sp = prev['S']
-                sep = self._water_fraction(Sp, sep, Rain, Irrig, ETa, RO, DP)
-                saw = self._water_fraction(Sp, saw, Irrig, Rain, ETa, RO, DP)
+                # prev_idx = (datetime.datetime.strptime(idx, '%Y-%j') - datetime.timedelta(days=1)).strftime('%Y-%j')
+                # prev = df_part.loc[prev_idx]
+                # S_prev = prev['S']
+                sep = self._water_fraction(S_prev, sep, Rain, Irrig, ETa, RO, DP)
+                saw = self._water_fraction(S_prev, saw, Irrig, Rain, ETa, RO, DP)
 
             if sep + saw == 0:
                 fep = faw = 0
@@ -137,7 +156,7 @@ class BlueGreen:
 
             row_data = [
                 row['Year'], row['DOY'], row['DOW'], row['Date'],
-                S, sep, saw,
+                Rain, Irrig, S, sep, saw,
                 ETa, fep * ETa, faw * ETa,
                 E, fep * E, faw * E,
                 T, fep * T, faw * T,
@@ -145,10 +164,7 @@ class BlueGreen:
                 DP, fep * DP, faw * DP
             ]
 
-            df_part.loc[idx] = row_data
-
-        self.result = df_part
-        # return df_part
+            self.bgdata.loc[idx] = row_data
 
     def __str__(self):
         """Formatted string output of BlueGreen water allocation model results."""
@@ -158,12 +174,13 @@ class BlueGreen:
         sdate = self.startDate.strftime('%m/%d/%Y')
         edate = self.endDate.strftime('%m/%d/%Y')
 
-        method_note = 'Partitioned using EP (Rain) and AW (Irrigation) based on Hoekstra (2019)' #need to verify this
+        method_note = 'Based on conceptual framework of Hoekstra (2019)'
         ast = '*' * 72
 
         # Format specifiers
         fmts = {
             'Year': '{:>4}'.format, 'DOY': '{:>3}'.format, 'Date': '{:10s}'.format,
+            'Rain': '{:7.2f}'.format, 'Irrig': '{:7.2f}'.format,
             'S': '{:7.2f}'.format, 'Sep': '{:7.2f}'.format, 'Saw': '{:7.2f}'.format,
             'ETa': '{:7.2f}'.format, 'ETa_ep': '{:7.2f}'.format, 'ETa_aw': '{:7.2f}'.format,
             'E': '{:7.2f}'.format, 'E_ep': '{:7.2f}'.format, 'E_aw': '{:7.2f}'.format,
@@ -174,7 +191,7 @@ class BlueGreen:
 
         header_note = (
             f"{ast}\n"
-            f"pyfao56 wetting influx partitioning into applied water (blue) and effective precipitation (green) output\n"
+            f"pyfao56 wetting influx partitioning into applied water (AP) (blue) and effective precipitation (EP) (green) output\n"
             f"Timestamp: {timestamp}\n"
             f"Simulation Start Date: {sdate}\n"
             f"Simulation End Date: {edate}\n"
@@ -182,16 +199,16 @@ class BlueGreen:
             f"{ast}\n"
             f"{self.comment}\n"
             f"{ast}\n"
-            "Year-DOY  Year  DOY  DOW      Date   S     Sep    Saw" \
-                "ETa  ETa_ep  ETa_aw     E  E_ep  E_aw     T  T_ep  T_aw" 
-                "Runoff  Runoff_ep  Runoff_aw     DP  DP_ep  DP_aw\n"
+            "Year-DOY Year DOY DOW   Date        Rain   Irrig     S      Sep     Saw" \
+                "     ETa    ETa_ep  ETa_aw    E      E_ep    E_aw     T      T_ep    T_aw" \
+                "     RO    RO_ep   RO_aw     DP     DP_ep  DP_aw\n"
         )
 
         # Print output table if results exist
         body = ''
-        if self.result is not None and not self.result.empty:
-            display_df = self.result.reset_index().copy()
-            body = display_df.to_string(index=False, header=True, formatters=fmts)
+        if self.bgdata is not None and not self.bgdata.empty:
+            display_df = self.bgdata.reset_index().copy()
+            body = display_df.to_string(index=False, header=False, formatters=fmts)
 
         return header_note + body
 
@@ -220,44 +237,70 @@ class BlueGreen:
 
     def plot(self, var='ETa', filename=None):
         """
-        Plot a selected variable and its EP/AW components over time.
+        Time series plot of a variable and its EP/AW components.
+        saaves the figure if filename is provided. Returns plt.show().
 
         Parameters
         ----------
-        var : str, optional
-            The variable to plot (e.g., 'ETa', 'T', 'E', 'Runoff', 'DP'). Default is 'ETa'.
+        var : str
+            Variable name in res_pyfao.bgdata (e.g., 'ETa', 'T', 'E', 'Runoff', 'DP').
         filename : str, optional
-            If provided, saves the figure to this filename in 300 DPI PNG format.
+            If provided, save the figure to this filename (PNG, 300 DPI).
         """
-        if self.result is None:
-            raise ValueError("Run the model before plotting.")
 
-        df_plot = self.result.reset_index()
-
-        # Ensure columns exist
+        if self.bgdata is None or self.bgdata.empty:
+            raise ValueError("No BlueGreen data available. Please run the model first.")
         ep = f"{var}_ep"
         aw = f"{var}_aw"
         for col in [var, ep, aw]:
-            if col not in df_plot.columns:
+            if col not in self.bgdata.columns:
                 raise ValueError(f"Column '{col}' not found in result. Try another variable.")
 
-        fig, ax = plt.subplots(figsize=(12, 6), dpi=200)
+        # Create figure with higher quality
+        fig, ax = plt.subplots(figsize=(14, 6), dpi=200)
 
-        ax.plot(df_plot['Date'], df_plot[var], linestyle=':', lw=2, color='black', label=var)
-        ax.plot(df_plot['Date'], df_plot[ep], linestyle='-', color='green', label=ep)
-        ax.plot(df_plot['Date'], df_plot[aw], linestyle='-', color='blue', label=aw)
+        # Plot filled areas for components
+        ax.fill_between(self.bgdata['Date'], 0, self.bgdata[ep], color='#2ecc71', alpha=0.4, label=f'{var} (eff. precip.)')
+        ax.fill_between(self.bgdata['Date'], 0, self.bgdata[aw], color='#3498db', alpha=0.4, label=f'{var} (applied water)')
+        ax.plot(self.bgdata['Date'], self.bgdata[var], linestyle='--', lw=2.5, color='black', label=f'{var} (Total)', zorder=5)
 
-        ax.set_xlabel("Date")
-        ax.set_ylabel(f"{var} (mm)")
-        ax.set_title(f"Partitioned {var} over Crop Span")
-        ax.grid(True, which='both', linestyle=':', color='grey', alpha=0.6)
-        ax.legend()
+        # Secondary y-axis for precipitation and irrigation
+        ax01 = ax.twinx()
+        ax01.bar(self.bgdata['Date'], self.bgdata['Rain'], width=0.5, color="#05EF6E", 
+             alpha=0.2, label='Rainfall', edgecolor='none')
+        ax01.bar(self.bgdata['Date'], self.bgdata["Irrig"], width=0.5, color="#0B7BD7", 
+             alpha=0.2, label='Irrigation', edgecolor='none')
+        ax01.set_ylim(self.bgdata[['Rain', 'Irrig']].max().max()*1.2, 0)
+        ax01.set_ylabel("Rainfall & Irrigation (mm)", fontsize=11, fontweight='bold', rotation=270, labelpad=20)
+        ax01.tick_params(axis='y', labelsize=10)
+        ax01.spines['right'].set_linewidth(1.5)
 
-        ticks = df_plot['Date'][::int(len(df_plot)/10)]
-        ax.set_xticks(ticks, ticks, rotation=30)
+        # Primary axis styling
+        ax.set_xticks(self.bgdata['Date'][::15].to_list())
+        ax.set_xlabel("Date", fontsize=12, fontweight='bold')
+        ax.set_ylabel(f"{var} (mm/day)", fontsize=12, fontweight='bold')
+        ax.grid(axis='y', linestyle='--', alpha=0.3, linewidth=0.8)
+        ax.set_ylim(bottom=0)
+        ax.set_xlim(self.bgdata['Date'].min(), self.bgdata['Date'].max())
+        
+        # Format x-axis dates
+        ax.tick_params(axis='x', rotation=30, labelsize=10)
+        ax.tick_params(axis='y', labelsize=10)
+        
+        # Spines
+        for spine in ['top', 'right', 'left', 'bottom']:
+            ax.spines[spine].set_linewidth(1.5)
+
+        # Combined legend
+        lines1, labels1 = ax.get_legend_handles_labels()
+        lines2, labels2 = ax01.get_legend_handles_labels()
+        ax.legend(lines1 + lines2, labels1 + labels2, loc='upper center', 
+                bbox_to_anchor=(0.5, 1.15), ncol=5, frameon=True, 
+                fontsize=10, fancybox=True,)
+
+        plt.tight_layout()
 
         if filename:
-            plt.savefig(filename, dpi=300, bbox_inches='tight')
-        else:
-            plt.show()
+            plt.savefig(filename, dpi=300, bbox_inches='tight', facecolor='white')
+        return plt.show()
 
