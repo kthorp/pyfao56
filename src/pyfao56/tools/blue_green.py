@@ -121,9 +121,7 @@ class BlueGreen:
             A DataFrame with EP and AW partitioned outputs for all water balance components.
         """
         df = self.df
-        # bg_cnames = self.bg_cnames
 
-        # df_part = pd.DataFrame(columns=bg_cnames)
         sep, saw = 0.0, 0.0  # initialize EP and AW storage
 
         for idx, row in df.iterrows():
@@ -137,14 +135,11 @@ class BlueGreen:
             E = row['E']
             T = row['T']
 
-            # if idx == 0:
             if idx == self.startDate.strftime('%Y-%j'):
                 sep = self.cg * S
                 saw = self.cb * S
             else:
-                # prev_idx = (datetime.datetime.strptime(idx, '%Y-%j') - datetime.timedelta(days=1)).strftime('%Y-%j')
-                # prev = df_part.loc[prev_idx]
-                # S_prev = prev['S']
+                # Update EP and AW storage using previous day's values
                 sep = self._water_fraction(S_prev, sep, Rain, Irrig, ETa, RO, DP)
                 saw = self._water_fraction(S_prev, saw, Irrig, Rain, ETa, RO, DP)
 
