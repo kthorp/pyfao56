@@ -191,7 +191,9 @@ Thorp, K. R., DeJonge, K. C., Pokoski, T., Gulati, D., Kukal, M., Farag, F., Has
 
 DeJonge, K. C., Thorp, K. R., Brekel, J., Pokoski, T., Trout, T. J., 2024. Customizing pyfao56 for evapotranspiration estimation and irrigation scheduling at the Limited Irrigation Research Farm (LIRF), Greeley, Colorado. Agricultural Water Management 299, 108891. [doi:10.1016/j.agwat.2024.108891](https://doi.org/10.1016/j.agwat.2024.108891).
 
-Thorp, K. R., Gulati, D., Kukal, M., Ames, R., Pokoski, T., DeJonge, K. C., 2025. Version 1.4.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX. In review.
+Thorp, K. R., Gulati, D., Kukal, M., Ames, R., Pokoski, T., DeJonge, K. C., 2025. Version 1.4.0 - pyfao56: FAO-56 evapotranspiration in Python. SoftwareX 30, 102109. [doi:10.1016/j.softx.2025.102109](https://doi.org/10.1016/j.softx.2025.102109).
+
+Thorp, K. R., DeJonge, K. C., Kukal, M. S., 2025. The pyfao56 automatic irrigation scheduling algorithm. Agricultural Water Management 322, 110013. [doi:10.1016/j.agwat.2025.110013](https://doi.org/10.1016/j.agwat.2025.110013).
 
 
 Also, the pyfao56 package was used to conduct the following research:
