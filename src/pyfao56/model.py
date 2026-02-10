@@ -533,9 +533,9 @@ class Model:
             term1 = 0.04*(u2_mean-2.)
             term2 = 0.004*(rhmin_mean-45.)
             term3 = (term1-term2)*(io.hmax/3.)**0.3
-            if io.Kcmmid >= 0.45:
+            if io.Kcmmid >= 0.45 and not math.isnan(term3):
                 io.Kcmmid = io.Kcmmid + round(term3,3)
-            if io.Kcbmid >= 0.45:
+            if io.Kcbmid >= 0.45 and not math.isnan(term3):
                 io.Kcbmid = io.Kcbmid + round(term3,3)
 
             #Compute adjustment for Kcmend and Kcbend
@@ -547,9 +547,9 @@ class Model:
             term1 = 0.04*(u2_mean-2.)
             term2 = 0.004*(rhmin_mean-45.)
             term3 = (term1-term2)*(io.hmax/3.)**0.3
-            if io.Kcmend >= 0.45:
+            if io.Kcmend >= 0.45 and not math.isnan(term3):
                 io.Kcmend = io.Kcmend + round(term3,3)
-            if io.Kcbend >= 0.45:
+            if io.Kcbend >= 0.45 and not math.isnan(term3):
                 io.Kcbend = io.Kcbend + round(term3,3)
 
         while tcurrent <= self.endDate:
