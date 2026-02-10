@@ -30,7 +30,7 @@ class AutoIrrigate:
         AutoIrrigate data with mixed data types
         index - counter as int
         columns - ['start','end','alre','idow','fpdep','fpday','fpact',
-                   'mad','madDr','ksc','dsli','dsle','evnt','icon',
+                   'mad','madDr','ksc','dsli','dsle','evnt','ifix',
                    'itdr','itfdr','ietrd','ietri','ietre','ettyp',
                    'iper','ieff','imin','imax','fw']
             Variables to determine if autoirrigation occurs or not:
@@ -76,7 +76,7 @@ class AutoIrrigate:
             depletion (Dr, mm). Variables to alter this irrigation
             amount are as follows:
 
-            icon  - Apply a constant autoirrigation amount (float, mm)
+            ifix  - Apply a fixed autoirrigation amount (float, mm)
             itdr  - Target a specfic root-zone soil water depletion (Dr)
                     following autoirrigation (float, mm)
             itfdr - Target a specific fractional root-zone soil water
@@ -106,9 +106,9 @@ class AutoIrrigate:
         Save the autoirrigate parameters to a file
     loadfile(filepath='pyfao56.ati')
         Load the autoirrigate parameters from a file
-    addset(start,end,alre=True,idow='0123456',fpdep=25.,fpday=3,
+    addset(start,end,alre=True,idow='0123456',fpdep=25.,fpday=0,
            fpact='proceed',mad=NaN,madDr=NaN,ksc=NaN,dsli=NaN,dsle=NaN,
-           evnt=10.,icon=NaN,itdr=NaN,itfdr=NaN,ietrd=NaN,ietri=NaN,
+           evnt=10.,ifix=NaN,itdr=NaN,itfdr=NaN,ietrd=NaN,ietri=NaN,
            ietre=NaN,ettyp='ETa',iper=100.,ieff=100.,imin=NaN,imax=NaN,
            fw=1.)
         Add a set of autoirrigation parameters to self.aidata
@@ -136,7 +136,7 @@ class AutoIrrigate:
         self.tmstmp = datetime.datetime.now()
         self.cnames = ['start','end','alre','idow','fpdep','fpday',
                        'fpact','mad','madDr','ksc','dsli','dsle','evnt',
-                       'icon','itdr','itfdr','ietrd','ietri','ietre',
+                       'ifix','itdr','itfdr','ietrd','ietri','ietre',
                        'ettyp','iper','ieff','imin','imax','fw']
         self.aidata = pd.DataFrame(columns=self.cnames)
 
@@ -154,7 +154,7 @@ class AutoIrrigate:
                 'fpact':'{:>7s}'.format ,'mad'  :'{:6.3f}'.format,
                 'madDr':'{:6.2f}'.format,'ksc'  :'{:6.3f}'.format,
                 'dsli' :'{:6.0f}'.format,'dsle' :'{:6.0f}'.format,
-                'evnt' :'{:6.2f}'.format,'icon' :'{:6.2f}'.format,
+                'evnt' :'{:6.2f}'.format,'ifix' :'{:6.2f}'.format,
                 'itdr' :'{:6.2f}'.format,'itfdr':'{:6.3f}'.format,
                 'ietrd':'{:6.0f}'.format,'ietri':'{!s:>5}'.format,
                 'ietre':'{!s:>5}'.format,'ettyp':'{!s:>6}'.format,
@@ -257,7 +257,7 @@ class AutoIrrigate:
                 data.append(float(line[11]))  #dsli
                 data.append(float(line[12]))  #dsle
                 data.append(float(line[13]))  #evnt
-                data.append(float(line[14]))  #icon
+                data.append(float(line[14]))  #ifix
                 data.append(float(line[15]))  #itdr
                 data.append(float(line[16]))  #itfdr
                 data.append(float(line[17]))  #ietrd
@@ -272,9 +272,9 @@ class AutoIrrigate:
                 self.aidata.loc[i] = data
 
     def addset(self,start,end,alre=True,idow='0123456',fpdep=25.,
-               fpday=3,fpact='proceed',mad=float('NaN'),
+               fpday=0,fpact='proceed',mad=float('NaN'),
                madDr=float('NaN'),ksc=float('NaN'),dsli=float('NaN'),
-               dsle=float('NaN'),evnt=10.,icon=float('NaN'),
+               dsle=float('NaN'),evnt=10.,ifix=float('NaN'),
                itdr=float('NaN'),itfdr=float('NaN'),ietrd=float('NaN'),
                ietri=False,ietre=False,ettyp='ETa',iper=100.,ieff=100.,
                imin=0.,imax=float('NaN'),fw=1.):
@@ -292,7 +292,7 @@ class AutoIrrigate:
         alre  : boolean, optional, default=True
         idow  : str    , optional, default='0123456'
         fpdep : float  , optional, default=25.
-        fpday : float  , optional, default=3
+        fpday : float  , optional, default=0
         fpact : str    , optional, default='proceed'
         mad   : float  , optional, default=NaN
         madDr : float  , optional, default=NaN
@@ -300,7 +300,7 @@ class AutoIrrigate:
         dsli  : float  , optional, default=NaN
         dsle  : float  , optional, default=NaN
         evnt  : float  , optional, default=10.
-        icon  : float  , optional, default=NaN
+        ifix  : float  , optional, default=NaN
         itdr  : float  , optional, default=NaN
         itfdr : float  , optional, default=NaN
         ietrd : float  , optional, default=NaN
@@ -318,7 +318,7 @@ class AutoIrrigate:
         data = [str(start),str(end),bool(alre),str(idow),float(fpdep),
                 float(fpday),str(fpact),float(mad),float(madDr),
                 float(ksc),float(dsli),float(dsle),float(evnt),
-                float(icon),float(itdr),float(itfdr),float(ietrd),
+                float(ifix),float(itdr),float(itfdr),float(ietrd),
                 bool(ietri),bool(ietre),str(ettyp),float(iper),
                 float(ieff),float(imin),float(imax),float(fw)]
         self.aidata.loc[i] = data

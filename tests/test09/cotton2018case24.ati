@@ -1,0 +1,9 @@
+************************************************************************
+pyfao56: FAO-56 Evapotranspiration in Python
+AutoIrrigate Data
+Timestamp: 02/09/2026 18:08:57
+************************************************************************
+Comments:
+************************************************************************
+      start       end   alre     idow  fpdep  fpday    fpact    mad  madDr    ksc   dsli   dsle   evnt   ifix   itdr  itfdr  ietrd  ietri  ietre   ettyp   iper   ieff   imin   imax     fw
+0  2018-108  2018-250   True  0123456  25.00      0  proceed  0.400    NaN    NaN    NaN    NaN  10.00    NaN    NaN    NaN    NaN  False  False     ETa 100.00 100.00   0.00    NaN   0.50
