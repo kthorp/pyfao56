@@ -1,7 +1,7 @@
 """
 ########################################################################
 The blue_green.py module contains the BlueGreen class, which provides
-a methodology for partitioning water balance components into into blue
+a methodology for partitioning water balance components into blue
 (irrigation) and green (rainfall) water. The class implements the
 blue-green water accounting framework based on Hoekstra (2019), applying
 it to FAO-56 dual crop coefficient daily soil water balance model

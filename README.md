@@ -75,7 +75,7 @@ An example of the irrigation file format is [here](https://github.com/kthorp/pyf
 * To print the output: `print(mdl)`
 * To save the output to file: `mdl.savefile('myoutputfile.out')`
 
-An example of the model output file is [here](https://github.com/kthorp/pyfao56/tree/main/tests/test1/cottondry2013.out). Definitions of the output file header names are given in the docstring of the constructor (__init__) of the Model class in model.py.
+An example of the model output file is [here](https://github.com/kthorp/pyfao56/tree/main/tests/test1/cottondry2013.out). Definitions of the output file header names are given in the docstring of the Model class in model.py.
 
 ### Specify a layered soil profile (optional)
 * Instantiate a SoilProfile class: `sol = fao.SoilProfile()`
@@ -124,9 +124,11 @@ Further example scripts for setting up and running the model are [here](https://
 
 [test08](https://github.com/kthorp/pyfao56/tree/main/tests/test08) - The runoff.py module contains code to setup and run pyfao56 while considering surface runoff for field conditions in McLean County, Illinois. A customized figure is created to demonstrate the water balance with surface runoff enabled.
 
-[test09](https://github.com/kthorp/pyfao56/tree/main/tests/test09) - The cotton2018.py module contains code to setup and run pyfao56 for a well-watered treatment in a 2018 cotton field study at Maricopa, Arizona. The module provides many examples of ways to parameterize the autoirrigation methododogy in pyfao56.
+[test09](https://github.com/kthorp/pyfao56/tree/main/tests/test09) - The cotton2018.py module contains code to setup and run pyfao56 for 64 plots in a 2018 cotton irrigation study at Maricopa, Arizona. The module provides many examples of ways to parameterize the autoirrigation methododogy in pyfao56 and provides the data used for the Thorp et al. (2025) paper on the pyfao56 automatic irrigation scheduling algorithm.
 
 [test10](https://github.com/kthorp/pyfao56/tree/main/tests/test10) - The cotton2018.py module contains code to setup and run pyfao56 for a well-watered treatment in a 2018 cotton field study at Maricopa, Arizona. The module provides examples of ways to parameterize the model using tabular data from FAO-56 tables and automated adjustment of crop coefficients based on weather data inputs.
+
+[test11](https://github.com/kthorp/pyfao56/tree/main/tests/test11) - The cotton2018.py module contains code to setup and run pyfao56 for a well-watered treatment in a 2018 cotton field study at Maricopa, Arizona. The module then provides an example of the Hoekstra (2019) methodology for attributing soil water balance components to effective precipitation (green water) and applied water (blue water).
 
 ## Detailed Startup Information
 ### Core Functionality
@@ -177,6 +179,8 @@ The FAO56Tables class provides the data from Table 11 (Lini, Ldev, Lmid, and Len
 * #### Visualization Class
 The Visualization class provides tools for visualizing pyfao56 Model output with measured soil water data represented in the SoilWaterSeries class. The methods use Python's matplotlib library to format time series plots of soil water depletion, evapotranspiration, and crop coefficient data.
 
+* #### BlueGreen Class
+The BlueGreen class implements the Hoekstra (2019) methodology for attributing water balance components to blue (applied water from irrigation) and green (effective precipitation) water. The class applies the blue-green water accounting framework to FAO-56 dual crop coefficient daily soil water balance model outputs. It tracks the fraction of soil water storage attributable to effective precipitation (EP, green water) versus applied water (AW, blue water) and partitions evapotranspiration, evaporation, transpiration, runoff, and deep percolation accordingly.
 
 ## Further information
 The pyfao56 package is further described in the following articles:
