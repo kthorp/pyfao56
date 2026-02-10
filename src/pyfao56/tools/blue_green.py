@@ -142,7 +142,7 @@ class BlueGreen:
         S_py_new : float
             Updated water storage component (mm)
         """
-        if S_tot_prev == 0:
+        if S_tot_prev == 0: # This condition is obsolete since S is set to previous day's value if it becomes zero, but included for safety
             S_py_new = S_py_prev + Win_py \
                 - (0. if RO==0 else (Win_py / (Win_py + Win_sy)) * RO)
         else:
@@ -173,6 +173,10 @@ class BlueGreen:
             E = row['E']
             T = row['T']
 
+            # To make sure S remains non-zero, use previous day's S 
+            if S <= 0:
+                S = S_prev
+
             if idx == self.startDate.strftime('%Y-%j'):
                 sep = self.cg * S
                 saw = self.cb * S
@@ -183,11 +187,15 @@ class BlueGreen:
                 saw = self._water_fraction(S_prev, saw, Irrig, Rain,
                                            ETa, RO, DP)
 
+            # Save sep and saw if non-zero to use if next day's fractions turned to zero
+            if sep + saw > 0:
+                last_sep, last_saw = sep, saw
+            # Handle case where both sep and saw are zero
             if sep + saw == 0:
-                fep = faw = 0
-            else:
-                fep = sep / (sep + saw)
-                faw = saw / (sep + saw)
+                sep, saw = last_sep, last_saw
+
+            fep = sep / (sep + saw)
+            faw = saw / (sep + saw)
 
             row_data = [
                 row['Year'], row['DOY'], row['DOW'], row['Date'],
@@ -303,11 +311,15 @@ class BlueGreen:
         fig, ax = plt.subplots(figsize=(14, 6), dpi=200)
 
         # Plot filled areas for components
+        if self.bgdata[aw].sum() > self.bgdata[ep].sum():
+            z_aw, z_ep = 0, 3  # AW on bottom, EP on top
+        else:
+            z_ep, z_aw = 0, 3  # EP on bottom, AW on top
         ax.fill_between(self.bgdata['Date'], 0, self.bgdata[ep],
-                        color='#2ecc71', alpha=0.4,
+                        color='#2ecc71', alpha=0.4, zorder=z_ep,
                         label=f'{var} (eff. precip.)')
         ax.fill_between(self.bgdata['Date'], 0, self.bgdata[aw],
-                        color='#3498db', alpha=0.4,
+                        color='#3498db', alpha=0.4, zorder=z_aw,
                         label=f'{var} (applied water)')
         ax.plot(self.bgdata['Date'], self.bgdata[var], linestyle='--',
                 lw=2.5, color='black', label=f'{var} (Total)', zorder=5)
@@ -315,10 +327,10 @@ class BlueGreen:
         # Secondary y-axis for precipitation and irrigation
         ax01 = ax.twinx()
         ax01.bar(self.bgdata['Date'], self.bgdata['Rain'], width=0.5,
-                 color="#05EF6E", alpha=0.2, label='Rainfall',
+                 color="#05EF6E", alpha=0.4, label='Rainfall',
                  edgecolor='none')
         ax01.bar(self.bgdata['Date'], self.bgdata["Irrig"], width=0.5,
-                 color="#0B7BD7", alpha=0.2, label='Irrigation',
+                 color="#0B7BD7", alpha=0.4, label='Irrigation',
                  edgecolor='none')
         ax01.set_ylim(self.bgdata[['Rain', 'Irrig']].max().max()*1.2, 0)
         ax01.set_ylabel("Rainfall & Irrigation (mm)", fontsize=11,
