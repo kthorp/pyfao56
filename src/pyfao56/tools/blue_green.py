@@ -142,7 +142,7 @@ class BlueGreen:
         S_py_new : float
             Updated water storage component (mm)
         """
-        if S_tot_prev == 0: # This condition is obsolete since S is set to previous day's value if it becomes zero, but included for safety
+        if S_tot_prev == 0: #Should not occur but included for safety
             S_py_new = S_py_prev + Win_py \
                 - (0. if RO==0 else (Win_py / (Win_py + Win_sy)) * RO)
         else:
@@ -173,8 +173,8 @@ class BlueGreen:
             E = row['E']
             T = row['T']
 
-            # To make sure S remains non-zero, use previous day's S 
-            if S <= 0:
+            # To make sure S remains non-zero, use previous day's S
+            if S <= 0.:
                 S = S_prev
 
             if idx == self.startDate.strftime('%Y-%j'):
@@ -187,11 +187,11 @@ class BlueGreen:
                 saw = self._water_fraction(S_prev, saw, Irrig, Rain,
                                            ETa, RO, DP)
 
-            # Save sep and saw if non-zero to use if next day's fractions turned to zero
-            if sep + saw > 0:
+            # Save non-zero sep and saw to avoid zero divide
+            if sep + saw > 0.:
                 last_sep, last_saw = sep, saw
             # Handle case where both sep and saw are zero
-            if sep + saw == 0:
+            if sep + saw == 0.:
                 sep, saw = last_sep, last_saw
 
             fep = sep / (sep + saw)
