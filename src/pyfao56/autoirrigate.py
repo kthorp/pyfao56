@@ -4,6 +4,12 @@ The autoirrigate.py module contains the AutoIrrigate class, which
 provides I/O tools for defining conditions for scheduling irrigation
 automatically in pyfao56.
 
+The autoirrigation methodology is described and tested in the following
+documentation:
+Thorp, K. R., DeJonge, K. C., Kukal, M. S., 2025. The pyfao56 automatic
+irrigation scheduling algorithm. Agricultural Water Management 322,
+110013. https://doi.org/10.1016/j.agwat.2025.110013
+
 The autoirrigate.py module contains the following:
     AutoIrrigate - A class for managing multiple sets of conditions for
                    automatic irrigation
