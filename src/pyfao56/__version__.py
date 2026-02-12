@@ -8,7 +8,14 @@ The FAO-56 method is described in the following documentation:
 Allen, R. G., Pereira, L. S., Raes, D., Smith, M., 1998.  FAO Irrigation
 and Drainage Paper No. 56. Crop Evapotranspiration: Guidelines for
 Computing Crop Water Requirements. Food and Agriculture Organization of
-the United Nations, Rome Italy.
+the United Nations, Rome, Italy.
+
+Pereira, L. S., Allen, R. G., Paredes, P., Lopez-Urrea, R., Raes, D.,
+Smith, M., Kilic, A., Salman, M., 2025. FAO Irrigation and Drainage
+Paper No. 56. Crop Evapotranspiration: Guidelines for Computing Crop
+Water Requirements, Second edition, revised 2025. Food and Agriculture
+Organization of the United Nations, Rome, Italy.
+https://doi.org/10.4060/cd6621en
 
 http://www.fao.org/3/x0490e/x0490e00.htm
 
@@ -28,4 +35,4 @@ https://ascelibrary.org/doi/book/10.1061/9780784408056
 ########################################################################
 """
 
-__version__ = "1.4.2"
+__version__ = "1.4.3"

@@ -24,7 +24,7 @@ requirements:
     - setuptools
     - python {{ python_min }}
   run:
-    - matplotlib-base
+    - matplotlib
     - numpy
     - pandas
     - python >=(( python_min }}

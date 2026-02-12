@@ -8,7 +8,14 @@ The FAO-56 method is described in the following documentation:
 Allen, R. G., Pereira, L. S., Raes, D., Smith, M., 1998.  FAO Irrigation
 and Drainage Paper No. 56. Crop Evapotranspiration: Guidelines for
 Computing Crop Water Requirements. Food and Agriculture Organization of
-the United Nations, Rome Italy.
+the United Nations, Rome, Italy.
+
+Pereira, L. S., Allen, R. G., Paredes, P., Lopez-Urrea, R., Raes, D.,
+Smith, M., Kilic, A., Salman, M., 2025. FAO Irrigation and Drainage
+Paper No. 56. Crop Evapotranspiration: Guidelines for Computing Crop
+Water Requirements, Second edition, revised 2025. Food and Agriculture
+Organization of the United Nations, Rome, Italy.
+https://doi.org/10.4060/cd6621en
 
 http://www.fao.org/3/x0490e/x0490e00.htm
 
@@ -34,10 +41,10 @@ The pyfao56 package contains the following modules:
         Equations for daily soil water balance computations
     parameters.py
         I/O tools for required input parameters
-    soil_profile.py
-        I/O tools for defining soil properties stratified by soil layer
     refet.py
         Equations for computing ASCE Standardized Reference ET
+    soil_profile.py
+        I/O tools for defining soil properties stratified by soil layer
     update.py
         I/O tools and methods for state variable updating
     weather.py
