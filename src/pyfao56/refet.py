@@ -172,7 +172,8 @@ def ascedaily(rfcrp,z,lat,doy,israd,tmax,tmin,
     return etsz
 
 def ascehourly(rfcrp,z,lat,lon,lzn,doy,sct,israd,tavg,vapr=float('NaN'),
-               tdew=float('NaN'),rhum=float('NaN'),tmin=float('NaN'),               wndsp=float('NaN'),wndht=2.0,tl=1.0,csreq='D',fcdpt=1.0):
+               tdew=float('NaN'),rhum=float('NaN'),tmin=float('NaN'),
+               wndsp=float('NaN'),wndht=2.0,tl=1.0,csreq='D',fcdpt=1.0):
     """Compute hourly ASCE Standardized Reference Evapotranspiration
 
     Parameters
