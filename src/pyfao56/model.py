@@ -832,15 +832,23 @@ class Model:
         #Overwrite Kcb if updates are available
         if io.updKcb > 0: io.Kcb = io.updKcb
 
+        #Canopy development as a fraction of Kcbini to Kcbmid. A crop
+        #whose Kcb does not develop (Kcbmid == Kcbini: turfgrass, an
+        #established pasture, a crop already at full cover) is taken
+        #as fully developed rather than dividing by zero.
+        if io.Kcbmid != io.Kcbini:
+            fh = (io.Kcb-io.Kcbini)/(io.Kcbmid-io.Kcbini)
+            fz = (io.tKcb-io.Kcbini)/(io.Kcbmid-io.Kcbini)
+        else:
+            fh = fz = 1.0
+
         #Plant height (h, m)
-        io.h = max([io.hini+(io.hmax-io.hini)*(io.Kcb-io.Kcbini)/
-                    (io.Kcbmid-io.Kcbini),0.001,io.h])
+        io.h = max([io.hini+(io.hmax-io.hini)*fh,0.001,io.h])
         #Overwrite h if updates are available
         if io.updh > 0: io.h = io.updh
 
         #Root depth (Zr, m) - FAO-56 page 279
-        io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*(io.tKcb-io.Kcbini)/
-                     (io.Kcbmid-io.Kcbini),0.001,io.Zr])
+        io.Zr = max([io.Zrini + (io.Zrmax-io.Zrini)*fz,0.001,io.Zr])
 
         #Maximum or upper limit crop coefficient (Kcmax) - FAO-56 Eq. 72
         u2 = io.wndsp * (4.87/math.log(67.8*io.wndht-5.42))
