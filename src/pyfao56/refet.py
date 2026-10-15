@@ -28,10 +28,10 @@ The refet.py module contains the following:
 
 import math
 
-def ascedaily(rfcrp,z,lat,doy,israd,tmax,tmin,
-              vapr=float('NaN'),tdew=float('NaN'),
-              rhmax=float('NaN'),rhmin=float('NaN'),
-              wndsp=float('NaN'),wndht=2.0):
+def ascedaily(rfcrp, z, lat, doy, israd, tmax, tmin,
+              vapr=float('NaN'), tdew=float('NaN'),
+              rhmax=float('NaN'), rhmin=float('NaN'),
+              wndsp=float('NaN'), wndht=2.0):
     """Compute daily ASCE Standardized Reference Evapotranspiration
 
     Parameters
@@ -164,16 +164,17 @@ def ascedaily(rfcrp,z,lat,doy,israd,tmax,tmin,
         Cn = 1600.0 #K mm s^3 Mg^-1 d^-1
         Cd = 0.38   #s m^-1
 
-    #etsz (float) : Standardized daily reference crop ET (mm d^-1)
+    #etsz (float) : Standardized daily reference ET (mm d^-1)
     #ASCE (2005) Eq. 1
     etsz = 0.408*Udelta*(rn-g)+psycon*(Cn/(tavg+273.0))*u2*(es-ea)
     etsz = etsz/(Udelta+psycon*(1.0+Cd*u2))
 
     return etsz
 
-def ascehourly(rfcrp,z,lat,lon,lzn,doy,sct,israd,tavg,vapr=float('NaN'),
-               tdew=float('NaN'),rhum=float('NaN'),tmin=float('NaN'),
-               wndsp=float('NaN'),wndht=2.0,tl=1.0,csreq='D',fcdpt=1.0):
+def ascehourly(rfcrp, z, lat, lon, lzn, doy, sct, israd, tavg,
+               vapr=float('NaN'), tdew=float('NaN'), rhum=float('NaN'),
+               tmin=float('NaN'), wndsp=float('NaN'), wndht=2.0,
+               tl=1.0, csreq='D', fcdpt=1.0):
     """Compute hourly ASCE Standardized Reference Evapotranspiration
 
     Parameters
@@ -223,7 +224,8 @@ def ascehourly(rfcrp,z,lat,lon,lzn,doy,sct,israd,tavg,vapr=float('NaN'),
     etsz : float
         Hourly standardized reference evapotranspiration for the
         short or tall reference crop (mm)
-    fcd : Cloudiness value for possible use in next timestep
+    fcd : float
+        Cloudiness value for possible use in next timestep
     """
 
     #patm (float) : Mean atmospheric pressure at weather station (kPa)
@@ -293,22 +295,21 @@ def ascehourly(rfcrp,z,lat,lon,lzn,doy,sct,israd,tavg,vapr=float('NaN'),
     beta1 = math.sin(latrad)*math.sin(ldelta)
     beta2 = math.cos(latrad)*math.cos(ldelta)*math.cos(wmid)
     beta = math.asin(beta1+beta2) #Eq. 62 or D.6
-    if csreq == 'S':
+    if wmid < -1.0*ws or wmid > ws: #nightime, ASCE (2005) p. 41
+        rso = 0.0
+    elif csreq == 'S':
         rso = (0.75+2e-5*z)*ra #Eq. 47
     else:
-        if beta < 0.3:
-            rso = 0.0
+        pwat = 0.14*ea*patm+2.1 #Eq. D.3
+        kt = 1.0
+        kb1 = -0.00146*patm/(kt*math.sin(beta))
+        kb2 = 0.075*(pwat/math.sin(beta))**0.4
+        kb = 0.98*math.exp(kb1-kb2) #Eq. D.2
+        if kb >= 0.15:
+            kd = 0.35-0.36*kb #Eq. D.4
         else:
-            pwat = 0.14*ea*patm+2.1 #Eq. D.3
-            kt = 1.0
-            kb1 = -0.00146*patm/(kt*math.sin(beta))
-            kb2 = 0.075*(pwat/math.sin(beta))**0.4
-            kb = 0.98*math.exp(kb1-kb2) #Eq. D.2
-            if kb >= 0.15:
-                kd = 0.35-0.36*kb #Eq. D.4
-            else:
-                kd = 0.18+0.82*kb #Eq. D.4
-            rso = (kb + kd)*ra #Eq. D.1
+            kd = 0.18+0.82*kb #Eq. D.4
+        rso = (kb + kd)*ra #Eq. D.1
 
     #rnl (float) : Net longwave radiation (MJ m^-2 h^-1)
     #ASCE (2005) Eqs. 44, 45, and 62
@@ -350,7 +351,7 @@ def ascehourly(rfcrp,z,lat,lon,lzn,doy,sct,israd,tavg,vapr=float('NaN'),
     if math.isnan(wndsp): wndsp = 2.0
     u2 = wndsp * (4.87/math.log(67.8*wndht-5.42))
 
-    #etsz (float) : Standardized daily reference crop ET (mm h^-1)
+    #etsz (float) : Standardized hourly reference ET (mm h^-1)
     #ASCE (2005) Eq. 1
     etsz = 0.408*Udelta*(rn-g)+psycon*(Cn/(tavg+273.0))*u2*(es-ea)
     etsz = etsz/(Udelta+psycon*(1.0+Cd*u2))

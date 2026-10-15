@@ -3,15 +3,17 @@
 The refet_testC.py module contains a function to compare the hourly
 short crop reference evapotranspiration (ETo) and hourly tall crop
 reference evapotranspiration (ETr) calculations from the pyfao56
-refet.py module with ETo and ETr computed by Ref-ET software (University
-of Idaho) based on weather data from the Arizona Meteorological Network
-(AZMET) station at Maricopa, Arizona for 2003 through 2020.
+refet.py and refet2.py modules with ETo and ETr computed by Ref-ET
+software (University of Idaho) based on weather data from the Arizona
+Meteorological Network (AZMET) station at Maricopa, Arizona for 2003
+through 2020.
 
 The refet_testC.py module contains the following:
     run - function to compute the root mean squared error (RMSE) between
     hourly reference ET from pyfao56 and that from Ref-ET software
 
 08/01/2022 Scripts developed for comparing ET from pyfao56 and Ref-ET
+10/15/2026 Added functionality to make tests for refet2.py
 ########################################################################
 """
 
@@ -22,6 +24,7 @@ import math
 import pandas as pd
 import numpy as np
 from pyfao56 import refet
+from pyfao56 import refet2
 
 def run(start='2003-001',end='2020-366'):
     """Compare hourly ETo and ETr from pyfao56 and Ref-ET software
@@ -128,6 +131,9 @@ def run(start='2003-001',end='2020-366'):
     fcdr  = 1.0         #Initial cloudiness for ETr
     etos=[]
     etrs=[]
+    etos2=[]
+    etrs2=[]
+    ETrefcalc = refet2.RefET2()
     for row in azmet:
         eto, fcdo = refet.ascehourly('S',z,lat,lon,lzn,
                                      row[1], #doy
@@ -159,16 +165,49 @@ def run(start='2003-001',end='2020-366'):
                                      'D', #csreq
                                      fcdr) #fcdpt
         etrs.append(etr)
+        eto2, fcdo = ETrefcalc.hourly(z,lat,lon,lzn,
+                                     row[1], #doy
+                                     row[2]-.5, #sct
+                                     row[4], #tmean
+                                     rfcrp='S',
+                                     srad=row[3], #srad
+                                     tdew=row[5], #tdew
+                                     rhum=row[6], #rhum
+                                     wndsp=row[7], #wndsp
+                                     wndht=wndht, #wndht
+                                     csreq='D',
+                                     fcdpt=fcdo) #fcdpt
+        etos2.append(eto2)
+        etr2, fcdr = ETrefcalc.hourly(z,lat,lon,lzn,
+                                     row[1], #doy
+                                     row[2]-.5, #sct
+                                     row[4], #tmean
+                                     rfcrp='T',
+                                     srad=row[3], #srad
+                                     tdew=row[5], #tdew
+                                     rhum=row[6], #rhum
+                                     wndsp=row[7], #wndsp
+                                     wndht=wndht, #wndht
+                                     csreq='D',
+                                     fcdpt=fcdr) #fcdpt
+        etrs2.append(etr2)
     n = len(etos)
     etos = np.array(etos)
     etos = np.reshape(etos,(n,1))
     n = len(etrs)
     etrs = np.array(etrs)
     etrs = np.reshape(etrs,(n,1))
-    azmet = np.concatenate((azmet,etos,etrs),axis=1)
+    n = len(etos2)
+    etos2 = np.array(etos2)
+    etos2 = np.reshape(etos2,(n,1))
+    n = len(etrs2)
+    etrs2 = np.array(etrs2)
+    etrs2 = np.reshape(etrs2,(n,1))
+    azmet = np.concatenate((azmet,etos,etrs,etos2,etrs2),axis=1)
     azmet = pd.DataFrame(azmet,columns=['Year','DOY','Hour','Srad',
                                         'Tavg','Tdew','Rhum','Wndsp',
-                                        'Rain','ETo','ETr'])
+                                        'Rain','ETo','ETr','ETo2',
+                                        'ETr2'])
     azmet.insert(0,'Date','')
     azmet['Date'] = azmet.apply(lambda row : makedate(row), axis=1)
     azmet.drop_duplicates(subset='Date',keep='first',inplace=True)
@@ -227,33 +266,47 @@ def run(start='2003-001',end='2020-366'):
     tcurrent = startDate
     refetETo = []
     pyfaoETo = []
+    pfaoETo2 = []
     refetETr = []
     pyfaoETr = []
+    pfaoETr2 = []
     while tcurrent <= endDate:
         for hr in list(range(1,25)):
             mykey = tcurrent.strftime('%Y-%j')+'-{:02d}'.format(hr)
-            pyfaoETo.append(azmet.loc[mykey,'ETo'])
             refetETo.append(RefET.loc[mykey,'ETo'])
-            pyfaoETr.append(azmet.loc[mykey,'ETr'])
+            pyfaoETo.append(azmet.loc[mykey,'ETo'])
+            pfaoETo2.append(azmet.loc[mykey,'ETo2'])
             refetETr.append(RefET.loc[mykey,'ETr'])
+            pyfaoETr.append(azmet.loc[mykey,'ETr'])
+            pfaoETr2.append(azmet.loc[mykey,'ETr2'])
         tcurrent = tcurrent + tdelta
 
     refetETo = np.array(refetETo)
     pyfaoETo = np.array(pyfaoETo)
+    pfaoETo2 = np.array(pfaoETo2)
     refetETr = np.array(refetETr)
     pyfaoETr = np.array(pyfaoETr)
-    conc = np.concatenate(([refetETo],[pyfaoETo],
-                           [refetETr],[pyfaoETr]),axis=0)
+    pfaoETr2 = np.array(pfaoETr2)
+    conc = np.concatenate(([refetETo],[pyfaoETo],[pfaoETo2],
+                           [refetETr],[pyfaoETr],[pfaoETr2]),axis=0)
     np.savetxt("outputC.csv",conc.transpose(),delimiter=',')
 
     rmseETo = np.sqrt(np.mean((refetETo-pyfaoETo)**2))
     rmseETr = np.sqrt(np.mean((refetETr-pyfaoETr)**2))
+    rmseETo2 = np.sqrt(np.mean((refetETo-pfaoETo2)**2))
+    rmseETr2 = np.sqrt(np.mean((refetETr-pfaoETr2)**2))
 
-    s  = 'The RMSE between pyfao56 ETo and Ref-ET ETo is ' #0.057 mm
+    s  = 'The RMSE between refet.py ETo and Ref-ET ETo is ' #0.057 mm
     s += '{:6.3f} mm.'.format(rmseETo)
     print(s)
-    s  = 'The RMSE between pyfao56 ETr and Ref-ET ETr is ' #0.070 mm
+    s  = 'The RMSE between refet2.py ETo and Ref-ET ETo is ' #0.057 mm
+    s += '{:6.3f} mm.'.format(rmseETo2)
+    print(s)
+    s  = 'The RMSE between refet.py ETr and Ref-ET ETr is ' #0.070 mm
     s += '{:6.3f} mm.'.format(rmseETr)
+    print(s)
+    s  = 'The RMSE between refet2.py ETr and Ref-ET ETr is ' #0.070 mm
+    s += '{:6.3f} mm.'.format(rmseETr2)
     print(s)
 
 def makedate(row):

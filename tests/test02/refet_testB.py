@@ -2,16 +2,18 @@
 ########################################################################
 The refet_testB.py module contains a function to compare the daily short
 crop reference evapotranspiration (ETo) and daily tall crop reference
-evapotranspiration (ETr) calculations from the pyfao56 refet.py module
-with ETo and ETr computed by Ref-ET software (University of Idaho) based
-on weather data from the Arizona Meteorological Network (AZMET) station
-at Maricopa, Arizona for 2003 through 2020.
+evapotranspiration (ETr) calculations from the pyfao56 refet.py and
+refet2.py modules with ETo and ETr computed by Ref-ET software
+(University of Idaho) based on weather data from the Arizona
+Meteorological Network (AZMET) station at Maricopa, Arizona for 2003
+through 2020.
 
 The refet_testB.py module contains the following:
     run - function to compute the root mean squared error (RMSE) between
     daily reference ET from pyfao56 and that from Ref-ET software
 
 12/02/2021 Scripts developed for comparing ET from pyfao56 and Ref-ET
+09/28/2026 Added functionality to make tests for refet2.py
 ########################################################################
 """
 
@@ -72,36 +74,52 @@ def run(start='2003-001',end='2020-366'):
     tdelta = datetime.timedelta(days=1)
     refetETo = []
     pyfaoETo = []
+    pfao2ETo = []
     refetETr = []
     pyfaoETr = []
+    pfao2ETr = []
     while tcurrent <= endDate:
         mykey = tcurrent.strftime('%Y-%j')
-        ETref = wthETo.compute_etref(mykey) #pyfao56 ETo
+        ETref = wthETo.compute_etref(mykey,algorithm='refet') #py ETo
         pyfaoETo.append(ETref)
+        ETref = wthETo.compute_etref(mykey,algorithm='refet2') #py2 ETo
+        pfao2ETo.append(ETref)
         ETref = refet.loc[mykey,'ETo'] #Ref-ET ETo
         refetETo.append(ETref)
-        ETref = wthETr.compute_etref(mykey) #pyfao56 ETr
+        ETref = wthETr.compute_etref(mykey,algorithm='refet') #py ETr
         pyfaoETr.append(ETref)
+        ETref = wthETr.compute_etref(mykey,algorithm='refet2') #py2 ETr
+        pfao2ETr.append(ETref)
         ETref = refet.loc[mykey,'ETr'] #Ref-ET ETr
         refetETr.append(ETref)
         tcurrent = tcurrent + tdelta
 
     refetETo = np.array(refetETo)
     pyfaoETo = np.array(pyfaoETo)
+    pfao2ETo = np.array(pfao2ETo)
     refetETr = np.array(refetETr)
     pyfaoETr = np.array(pyfaoETr)
-    conc = np.concatenate(([refetETo],[pyfaoETo],
-                           [refetETr],[pyfaoETr]),axis=0)
-    np.savetxt("outputB.csv",conc.transpose(),delimiter=',')
+    pfao2ETr = np.array(pfao2ETr)
+    conc = np.concatenate(([refetETo],[pyfaoETo],[pfao2ETo],
+                           [refetETr],[pyfaoETr],[pfao2ETr]),axis=0)
+    np.savetxt('outputB.csv',conc.transpose(),delimiter=',')
 
-    rmseETo = np.sqrt(np.mean((refetETo-pyfaoETo)**2))
-    rmseETr = np.sqrt(np.mean((refetETr-pyfaoETr)**2))
+    rmseETo1 = np.sqrt(np.mean((refetETo-pyfaoETo)**2))
+    rmseETo2 = np.sqrt(np.mean((refetETo-pfao2ETo)**2))
+    rmseETr1 = np.sqrt(np.mean((refetETr-pyfaoETr)**2))
+    rmseETr2 = np.sqrt(np.mean((refetETr-pfao2ETr)**2))
 
-    s  = 'The RMSE between pyfao56 ETo and Ref-ET ETo is ' #0.070 mm
-    s += '{:6.3f} mm.'.format(rmseETo)
+    s  = 'The RMSE between refet.py ETo and Ref-ET ETo is ' #0.070 mm
+    s += '{:6.3f} mm.'.format(rmseETo1)
     print(s)
-    s  = 'The RMSE between pyfao56 ETr and Ref-ET ETr is ' #0.071 mm
-    s += '{:6.3f} mm.'.format(rmseETr)
+    s  = 'The RMSE between refet2.py ETo and Ref-ET ETo is ' #0.070 mm
+    s += '{:6.3f} mm.'.format(rmseETo2)
+    print(s)
+    s  = 'The RMSE between refet.py ETr and Ref-ET ETr is ' #0.071 mm
+    s += '{:6.3f} mm.'.format(rmseETr1)
+    print(s)
+    s  = 'The RMSE between refet2.py ETr and Ref-ET ETr is ' #0.071 mm
+    s += '{:6.3f} mm.'.format(rmseETr2)
     print(s)
 
 if __name__ == '__main__':

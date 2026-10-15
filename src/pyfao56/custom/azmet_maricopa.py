@@ -44,15 +44,19 @@ class AzmetMaricopa(Weather):
     wdata : DataFrame
         Weather data as float
         index - Year and day of year as string ('yyyy-ddd')
-        columns - ['Srad','Tmax','Tmin','Tdew','RHmax','RHmin',
-                   'Wndsp','Rain','ETref','MorP']
+        columns - ['Srad','Sunhr','Rnet','Tmax','Tmin','Vapr','Tdew',
+                   'RHmax','RHmin','RHavg','Wndsp','Rain','ETref',
+                   'MorP']
             Srad  - Incoming solar radiation (MJ/m2)
+            Sunhr - Daily duration of sunshine (hours)
+            Rnet  - Daily net radiation (MJ/m2)
             Tmax  - Daily maximum air temperature (deg C)
             Tmin  - Daily minimum air temperature (deg C)
             Vapr  - Daily average vapor pressure (kPa)
             Tdew  - Daily average dew point temperature (deg C)
             RHmax - Daily maximum relative humidity (%)
             RHmin - Daily minimum relative humidity (%)
+            RHavg - Daily average relative humidity (%)
             Wndsp - Daily average wind speed (m/s)
             Rain  - Daily precipitation (mm)
             ETref - Daily reference ET (mm)
@@ -110,6 +114,8 @@ class AzmetMaricopa(Weather):
                 mydict.update({'Date':mykey})
                 if 0.0 <= float(line[10]) <= 110.0:
                     mydict.update({'Srad':float(line[10])})
+                mydict.update({'Sunhr':float('NaN')})
+                mydict.update({'Rnet':float('NaN')})
                 if 0.0 <= float(line[3]) <= 55.0:
                     mydict.update({'Tmax':float(line[3])})
                 if -15.0 <= float(line[4]) <= 40.0:
@@ -131,14 +137,16 @@ class AzmetMaricopa(Weather):
                     mydict.update({'RHmax':float(line[6])})
                 if 0.0 <= float(line[7]) <= 100.0:
                     mydict.update({'RHmin':float(line[7])})
+                if 0.0 <= float(line[8]) <= 100.0:
+                    mydict.update({'RHavg':float(line[8])})
                 if 0.0 <= float(line[18]) <= 30.0:
                     mydict.update({'Wndsp':float(line[18])})
                 if 0.0 <= float(line[11]) <= 200.0:
                     mydict.update({'Rain':float(line[11])})
                 azmet.append(mydict)
         azmet = pd.DataFrame(azmet)
-        lessvapr = azmet.drop('Vapr', axis=1)
-        nanrows = lessvapr.isna().any(1).to_numpy().nonzero()[0]
+        lesscol = azmet.drop(columns=['Sunhr','Rnet','Vapr'])
+        nanrows = lesscol.index[lesscol.isna().any(axis=1)].tolist()
         for item in nanrows:
             mykey = azmet.loc[item,'Date']
             print('Warning: Questionable weather data: ' + mykey)
@@ -213,8 +221,8 @@ class AzmetMaricopa(Weather):
             self.wdata.loc[index,'ETref'] = etref
 
         #Check for NaN
-        lessvapr = self.wdata.drop('Vapr', axis=1)
-        nanrows = lessvapr.isna().any(1).to_numpy().nonzero()[0]
+        lesscol = self.wdata.drop(columns=['Sunhr','Rnet','Vapr'])
+        nanrows = lesscol.index[lesscol.isna().any(axis=1)].tolist()
         if len(nanrows) > 0:
             print('There were problems with the following records:')
             for item in nanrows:

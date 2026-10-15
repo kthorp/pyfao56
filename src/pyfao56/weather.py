@@ -1,7 +1,7 @@
 """
 ########################################################################
 The weather.py module contains the Weather class, which provides I/O
-tools for defining weather input data, as required for FAO-56
+tools for defining daily weather input data, as required for FAO-56
 calculations.
 
 The weather.py module contains the following:
@@ -10,11 +10,13 @@ The weather.py module contains the following:
 01/07/2016 Initial Python functions developed by Kelly Thorp
 11/04/2021 Finalized updates for inclusion in the pyfao56 Python package
 08/03/2022 Added an input variable for measured vapor pressure
+09/28/2026 Updated weather inputs to accommodate refet2 module
 ########################################################################
 """
 
 import pandas as pd
 from pyfao56 import refet
+from pyfao56 import refet2
 import datetime
 
 class Weather:
@@ -39,15 +41,19 @@ class Weather:
     wdata : DataFrame
         Weather data as float
         index - Year and day of year as string ('yyyy-ddd')
-        columns - ['Srad','Tmax','Tmin','Vapr','Tdew','RHmax','RHmin',
-                   'Wndsp','Rain','ETref','MorP']
+        columns - ['Srad','Sunhr','Rnet','Tmax','Tmin','Vapr','Tdew',
+                   'RHmax','RHmin','RHavg','Wndsp','Rain','ETref',
+                   'MorP']
             Srad  - Incoming solar radiation (MJ/m2)
+            Sunhr - Daily duration of sunshine (hours)
+            Rnet  - Daily net radiation (MJ/m2)
             Tmax  - Daily maximum air temperature (deg C)
             Tmin  - Daily minimum air temperature (deg C)
             Vapr  - Daily average vapor pressure (kPa)
             Tdew  - Daily average dew point temperature (deg C)
             RHmax - Daily maximum relative humidity (%)
             RHmin - Daily minimum relative humidity (%)
+            RHavg - Daily average relative humidity (%)
             Wndsp - Daily average wind speed (m/s)
             Rain  - Daily precipitation (mm)
             ETref - Daily reference ET (mm)
@@ -63,7 +69,7 @@ class Weather:
         Users can override for custom weather loading, for example from
         meteorological network webpages
     compute_etref(index)
-        Compute ASCE standardized reference ET for the weather data at
+        Compute daily standardized reference ET for the weather data at
         index in self.wdata
     """
 
@@ -86,8 +92,9 @@ class Weather:
         self.z     = float('NaN')
         self.lat   = float('NaN')
         self.wndht = float('NaN')
-        self.cnames = ['Srad','Tmax','Tmin','Vapr','Tdew','RHmax',
-                       'RHmin','Wndsp','Rain','ETref','MorP']
+        self.cnames = ['Srad','Sunhr','Rnet','Tmax','Tmin','Vapr',
+                       'Tdew','RHmax','RHmin','RHavg','Wndsp','Rain',
+                       'ETref','MorP']
         self.wdata = pd.DataFrame(columns=self.cnames)
 
         if filepath is not None:
@@ -98,12 +105,13 @@ class Weather:
 
         self.tmstmp = datetime.datetime.now()
         timestamp = self.tmstmp.strftime('%m/%d/%Y %H:%M:%S')
-        fmts = {'Srad':'{:6.2f}'.format,'Tmax':'{:6.2f}'.format,
-                'Tmin':'{:6.2f}'.format,'Tdew':'{:6.2f}'.format,
-                'Vapr':'{:6.2f}'.format,'RHmax':'{:6.2f}'.format,
-                'RHmin':'{:6.2f}'.format,'Wndsp':'{:6.2f}'.format,
-                'Rain':'{:6.2f}'.format,'ETref':'{:6.2f}'.format,
-                'MorP':'{:>5s}'.format}
+        fmts = {'Srad':'{:6.2f}'.format,'Sunhr':'{:6.2f}'.format,
+                'Rnet':'{:6.2f}'.format,'Tmax':'{:6.2f}'.format,
+                'Tmin':'{:6.2f}'.format,'Vapr':'{:6.2f}'.format,
+                'Tdew':'{:6.2f}'.format,'RHmax':'{:6.2f}'.format,
+                'RHmin':'{:6.2f}'.format,'RHavg':'{:6.2f}'.format,
+                'Wndsp':'{:6.2f}'.format,'Rain':'{:6.2f}'.format,
+                'ETref':'{:6.2f}'.format,'MorP':'{:>5s}'.format}
         ast='*'*72
         s = ('{:s}\n'
              'pyfao56: FAO-56 Evapotranspiration in Python\n'
@@ -173,7 +181,7 @@ class Weather:
             f.close()
             ast = '*' * 72
             a = [i for i,line in enumerate(lines) if line.strip()==ast]
-            endast = a[-1] 
+            endast = a[-1]
             if endast == 3: #v1.1.0 and prior - no timestamps & metadata
                 self.comment = 'Comments: '
             else:
@@ -193,9 +201,9 @@ class Weather:
                 doy = line[0][-3:]
                 key = '{:04d}-{:03d}'.format(int(year),int(doy))
                 data = list()
-                for i in list(range(1,11)):
+                for i in list(range(1,14)):
                     data.append(float(line[i]))
-                data.append(line[11].strip())
+                data.append(line[14].strip())
                 self.wdata.loc[key] = data
 
     def customload(self):
@@ -203,32 +211,53 @@ class Weather:
 
         pass
 
-    def compute_etref(self,index):
-        """Compute ASCE standardized reference ET for data at index.
+    def compute_etref(self,index,algorithm='refet2'):
+        """Compute daily standardized reference ET for data at index.
 
         Parameters
         ----------
         index : str
             The Year-DOY ('yyyy-ddd') index of self.wdata
+        algorithm : str, optional
+            Which pyfao56 algorithm to use for reference ET calculation
 
         Returns
         -------
         ETref : float
             Daily standardized reference evapotranspiration for the
-            short or tall reference crop (mm)
+            short or tall reference crop (mm d^-1)
         """
 
-        ETref = refet.ascedaily(self.rfcrp,
-                                self.z,
-                                self.lat,
-                                float(index[-3:]),#DOY
-                                self.wdata.loc[index,'Srad'],
-                                self.wdata.loc[index,'Tmax'],
-                                self.wdata.loc[index,'Tmin'],
-                                self.wdata.loc[index,'Vapr'],
-                                self.wdata.loc[index,'Tdew'],
-                                self.wdata.loc[index,'RHmax'],
-                                self.wdata.loc[index,'RHmin'],
-                                self.wdata.loc[index,'Wndsp'],
-                                self.wndht)
+        if algorithm == 'refet':
+            ETref = refet.ascedaily(self.rfcrp,
+                                    self.z,
+                                    self.lat,
+                                    float(index[-3:]),#DOY
+                                    self.wdata.loc[index,'Srad'],
+                                    self.wdata.loc[index,'Tmax'],
+                                    self.wdata.loc[index,'Tmin'],
+                                    self.wdata.loc[index,'Vapr'],
+                                    self.wdata.loc[index,'Tdew'],
+                                    self.wdata.loc[index,'RHmax'],
+                                    self.wdata.loc[index,'RHmin'],
+                                    self.wdata.loc[index,'Wndsp'],
+                                    self.wndht)
+        elif algorithm == 'refet2':
+            ETrefcalc = refet2.RefET2()
+            ETref = ETrefcalc.daily(self.z,
+                                    self.lat,
+                                    float(index[-3:]),#DOY
+                                    self.wdata.loc[index,'Tmax'],
+                                    self.wdata.loc[index,'Tmin'],
+                                    self.rfcrp,
+                                    self.wdata.loc[index,'Srad'],
+                                    self.wdata.loc[index,'Sunhr'],
+                                    self.wdata.loc[index,'Rnet'],
+                                    self.wdata.loc[index,'Vapr'],
+                                    self.wdata.loc[index,'Tdew'],
+                                    self.wdata.loc[index,'RHmax'],
+                                    self.wdata.loc[index,'RHmin'],
+                                    self.wdata.loc[index,'RHavg'],
+                                    self.wdata.loc[index,'Wndsp'],
+                                    self.wndht)
         return ETref

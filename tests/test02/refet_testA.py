@@ -2,14 +2,16 @@
 ########################################################################
 The refet_testA.py module contains a function to compare the daily short
 crop reference evapotranspiration (ETo) calculation from the pyfao56
-refet.py module with ETo reported by the Arizona Meteorological Network
-(AZMET) station at Maricopa, Arizona for 2003 through 2020.
+refet.py and refet2.py modules with ETo reported by the Arizona
+Meteorological Network (AZMET) station at Maricopa, Arizona for 2003
+through 2020.
 
 The refet_testA.py module contains the following:
     run - function to compute the root mean squared error (RMSE) between
     daily ETo from pyfao56 and daily ETo from AZMET
 
 11/30/2021 Scripts developed for comparing ETo from pyfao56 and AZMET
+09/28/2026 Added functionality to make tests for refet2.py
 ########################################################################
 """
 
@@ -66,22 +68,32 @@ def run(start='2003-001',end='2020-366'):
     tdelta = datetime.timedelta(days=1)
     azmetETo = []
     pyfaoETo = []
+    pyfao2ETo = []
     while tcurrent <= endDate:
         mykey = tcurrent.strftime('%Y-%j')
-        ETref = wth.compute_etref(mykey) #pyfao56 ETref
+        ETref = wth.compute_etref(mykey,algorithm='refet') #refet.py
         pyfaoETo.append(ETref)
+        ETref = wth.compute_etref(mykey,algorithm='refet2') #refet2.py
+        pyfao2ETo.append(ETref)
         ETref = azmet.loc[mykey,'ETref'] #AZMET ETref
         azmetETo.append(ETref)
         tcurrent = tcurrent + tdelta
 
     azmetETo = np.array(azmetETo)
     pyfaoETo = np.array(pyfaoETo)
-    conc = np.concatenate(([azmetETo],[pyfaoETo]),axis=0)
+    pyfao2ETo = np.array(pyfao2ETo)
+    conc = np.concatenate(([azmetETo],[pyfaoETo],[pyfao2ETo]),axis=0)
     np.savetxt("outputA.csv",conc.transpose(),delimiter=',')
 
     rmse = np.sqrt(np.mean((azmetETo-pyfaoETo)**2))
 
-    s  = 'The RMSE between pyfao56 ETo and AZMET ETo is ' #0.049 mm
+    s  = 'The RMSE between refet.py ETo and AZMET ETo is ' #0.049 mm
+    s += '{:6.3f} mm.'.format(rmse)
+    print(s)
+
+    rmse = np.sqrt(np.mean((azmetETo-pyfao2ETo)**2))
+
+    s  = 'The RMSE between refet2.py ETo and AZMET ETo is ' #0.049 mm
     s += '{:6.3f} mm.'.format(rmse)
     print(s)
 

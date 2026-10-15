@@ -12,8 +12,8 @@ the United Nations, Rome, Italy.
 
 Pereira, L. S., Allen, R. G., Paredes, P., Lopez-Urrea, R., Raes, D.,
 Smith, M., Kilic, A., Salman, M., 2025. FAO Irrigation and Drainage
-Paper No. 56. Crop Evapotranspiration: Guidelines for Computing Crop
-Water Requirements, Second edition, revised 2025. Food and Agriculture
+Paper No. 56. Rev. 1. Crop Evapotranspiration: Guidelines for Computing
+Crop Water Requirements, Second edition. Food and Agriculture
 Organization of the United Nations, Rome, Italy.
 https://doi.org/10.4060/cd6621en
 
@@ -43,6 +43,8 @@ The pyfao56 package contains the following modules:
         I/O tools for required input parameters
     refet.py
         Equations for computing ASCE Standardized Reference ET
+    refet2.py
+        Updated algorithms for standardized reference ET
     soil_profile.py
         I/O tools for defining soil properties stratified by soil layer
     update.py
@@ -59,6 +61,7 @@ from .autoirrigate import AutoIrrigate
 from .irrigation import Irrigation
 from .model import Model
 from .parameters import Parameters
+from .refet2 import RefET2
 from .soil_profile import SoilProfile
 from .update import Update
 from .weather import Weather
