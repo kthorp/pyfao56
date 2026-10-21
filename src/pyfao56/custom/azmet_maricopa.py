@@ -226,6 +226,6 @@ class AzmetMaricopa(Weather):
         if len(nanrows) > 0:
             print('There were problems with the following records:')
             for item in nanrows:
-                print(self.wdata.iloc[item])
+                print(self.wdata.loc[item])
         else:
             print('The weather data was loaded with no issue.')
