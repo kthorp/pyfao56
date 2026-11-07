@@ -167,5 +167,5 @@ class Update:
 
         try:
             return self.udata.loc[index,var]
-        except:
+        except KeyError:
             return float('NaN')
